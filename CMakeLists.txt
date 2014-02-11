@@ -41,26 +41,26 @@ qt4_add_resources(RESOURCES
 
 qt4_wrap_ui(CORE_UI
   # .ui para Qt
-  #MainWindow.ui
+  MainWindow.ui
   
-  Camera/CameraConnectDialog.ui
-  Camera/CameraView.ui
-  Camera/ImageProcessingSettingsDialog.ui
-  Camera/MainWindow.ui
+  #Camera/CameraConnectDialog.ui
+  #Camera/CameraView.ui
+  #Camera/ImageProcessingSettingsDialog.ui
+  #Camera/MainWindow.ui
   )
 	
 qt4_wrap_cpp(CORE_MOC
   # .h para Qt
-  #Screenshot.h
-  #MainWindow.h
+  Screenshot.h
+  MainWindow.h
   
-  Camera/CameraConnectDialog.h
-  Camera/CameraView.h
-  Camera/CaptureThread.h
-  Camera/FrameLabel.h
-  Camera/ImageProcessingSettingsDialog.h
-  Camera/MainWindow.h
-  Camera/ProcessingThread.h
+  #Camera/CameraConnectDialog.h
+  #Camera/CameraView.h
+  #Camera/CaptureThread.h
+  #Camera/FrameLabel.h
+  #Camera/ImageProcessingSettingsDialog.h
+  #Camera/MainWindow.h
+  #Camera/ProcessingThread.h
   )
 
 set (CORE_SOURCES
@@ -68,20 +68,20 @@ set (CORE_SOURCES
   ${RESOURCES}
   ${CORE_MOC}
   ${CORE_UI}
-  #Main.cpp
-  #Screenshot.cpp
-  #MainWindow.cpp
+  Main.cpp
+  Screenshot.cpp
+  MainWindow.cpp
   
-  Camera/CameraConnectDialog.cpp
-  Camera/CameraView.cpp
-  Camera/CaptureThread.cpp
-  Camera/FrameLabel.cpp
-  Camera/ImageProcessingSettingsDialog.cpp
-  Camera/main.cpp
-  Camera/MainWindow.cpp
-  Camera/MatToQImage.cpp
-  Camera/ProcessingThread.cpp
-  Camera/SharedImageBuffer.cpp
+  #Camera/CameraConnectDialog.cpp
+  #Camera/CameraView.cpp
+  #Camera/CaptureThread.cpp
+  #Camera/FrameLabel.cpp
+  #Camera/ImageProcessingSettingsDialog.cpp
+  #Camera/main.cpp
+  #Camera/MainWindow.cpp
+  #Camera/MatToQImage.cpp
+  #Camera/ProcessingThread.cpp
+  #Camera/SharedImageBuffer.cpp
   ${CMAKE_CURRENT_BINARY_DIR}/DesktopCapture.rc
   )
 

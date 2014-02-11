@@ -98,22 +98,6 @@ void CaptureThread::run()
 
 bool CaptureThread::connectToCamera()
 {
-		cap.open(deviceNumber);
-	double newwidth = -1, newheight = -1;
-	double oldwidth = 0, oldheight = 0;
-	while (newwidth != oldwidth || newheight != oldheight)
-	{
-		oldwidth = newwidth;
-		oldheight = newheight;
-
-		newwidth = cap.get(CV_CAP_PROP_FRAME_WIDTH);
-		newheight = cap.get(CV_CAP_PROP_FRAME_HEIGHT);
-
-		qDebug() << "resolution" << newheight << newheight;
-	}
-
-    disconnectCamera();
-
     // Open camera
     bool camOpenResult = cap.open(deviceNumber);
     cap.set(CV_CAP_PROP_CONVERT_RGB, false);

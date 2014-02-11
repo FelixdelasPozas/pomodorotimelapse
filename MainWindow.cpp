@@ -5,14 +5,14 @@
  *      Author: Felix de las Pozas Alvarez
  */
 
-#include <QtGui>
+// Project
 #include "MainWindow.h"
+#include "Resolutions.h"
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
+// Qt
+#include <QtGui>
 #include <QDebug>
+
 
 //-----------------------------------------------------------------
 MainWindow::MainWindow()
@@ -21,71 +21,101 @@ MainWindow::MainWindow()
 
 	this->setWindowTitle("Desktop Capture");
 	this->setWindowIcon(QIcon(":/DesktopCapture/DesktopCapture.ico"));
+	this->showMaximized();
+
+	setupMonitors();
+	setupCameraResolutions();
 }
 
 //-----------------------------------------------------------------
-void MainWindow::open()
+MainWindow::~MainWindow()
 {
-	QString fileName = QFileDialog::getOpenFileName(this, tr("Open a DXF file"), QDir::currentPath(), tr("(DXF files) *.DXF"));
-	if (!fileName.isEmpty())
-		loadFile(fileName);
+	if(cap.isOpened())
+		cap.release();
 }
 
 //-----------------------------------------------------------------
-void MainWindow::about()
+void MainWindow::setupMonitors()
 {
-	QMessageBox::about(this, tr("DesktopSpy Demo"), tr("Demo de capturador de pantallas + webcam."));
-}
+	QDesktopWidget *desktop = QApplication::desktop();
+	QStringList monitors;
 
-//-----------------------------------------------------------------
-void MainWindow::loadFile(const QString &fileName)
-{
-	QFile file(fileName);
-	if (!file.open(QFile::ReadOnly | QFile::Text))
+	for (int i = 0; i < desktop->numScreens(); ++i)
 	{
-		QMessageBox::warning(this, tr("Application"), tr("Cannot read file %1:\n%2.").arg(fileName).arg(file.errorString()));
-		return;
+		auto geometry = desktop->screenGeometry(i);
+		if (desktop->primaryScreen() == i)
+			monitors << QString("Primary Screen (Size: %1x%2 - Position: %3x%4)").arg(geometry.width()).arg(geometry.height()).arg(geometry.x()).arg(geometry.y());
+		else
+			monitors << QString("Additional Screen %1 (Size: %2x%3 - Position: %4x%5)").arg(i).arg(geometry.width()).arg(geometry.height()).arg(geometry.x()).arg(geometry.y());
 	}
+	m_captureMonitorComboBox->insertItems(0, monitors);
 
-  qDebug() << "Reading file:" << fileName;
-
-  this->setWindowTitle(QString("Energia Demo - ") + fileName);
-
-  m_filename = fileName;
-  parserSelected(true);
-}
-
-void MainWindow::parserSelected(bool value)
-{
-  QAction *origin = qobject_cast<QAction *>(sender());
-
-	if (value == false)
-	{
-		origin->setChecked(true);
-		return;
-	}
-
-	if (m_filename.isEmpty())
-		return;
-
-	statusBar()->showMessage(tr("File loaded correctly."), 2000);
+	connect(m_captureAllMonitors, SIGNAL(stateChanged(int)), this, SLOT(updateMonitorsComboBox(int)));
 }
 
 //-----------------------------------------------------------------
-bool MainWindow::saveFile(const QString &fileName)
+void MainWindow::setupCameraResolutions()
 {
-	Q_ASSERT(false);
+	QDesktopWidget *desktop = QApplication::desktop();
+	QStringList cameraResolutions;
 
-	QFile file(fileName);
-	if (!file.open(QFile::WriteOnly | QFile::Text))
+	if (!cap.open(0))
 	{
-		QMessageBox::warning(this, tr("Application"), tr("Cannot write file %1:\n%2.").arg(fileName).arg(file.errorString()));
-		return false;
+		m_enableCamera->setChecked(false);
+		m_cameraResolutionComboBox->insertItem(0, QString("No cameras detected."));
+		m_cameraResolutionComboBox->setEnabled(false);
+		m_resolutionsScan->setEnabled(false);
 	}
+	else
+	{
+		QMessageBox resolutionsTry;
+		resolutionsTry.setWindowIcon(QIcon(":/DesktopCapture/DesktopCapture.ico"));
+		resolutionsTry.setVisible(true);
+		resolutionsTry.setWindowTitle(QString("Checking camera resolutions"));
+		resolutionsTry.setStandardButtons(0);
 
-	QApplication::setOverrideCursor(Qt::WaitCursor);
-	QApplication::restoreOverrideCursor();
+		QSpacerItem* horizontalSpacer = new QSpacerItem(300, 0, QSizePolicy::Minimum, QSizePolicy::Expanding);
+		QGridLayout* layout = (QGridLayout*) resolutionsTry.layout();
+		layout->addItem(horizontalSpacer, layout->rowCount(), 0, 1, layout->columnCount());
 
-	statusBar()->showMessage(tr("File saved"), 2000);
-	return true;
+		resolutionsTry.repaint();
+		resolutionsTry.move((desktop->screenGeometry(desktop->primaryScreen()).width() - 300) / 2,
+				               ((desktop->screenGeometry(desktop->primaryScreen()).height() - resolutionsTry.height()) / 2));
+
+		for (auto resolution : CommonResolutions)
+		{
+			resolutionsTry.setText(QString("Trying ") + checkResolution(resolution.width, resolution.height));
+			resolutionsTry.repaint();
+
+			cap.set(CV_CAP_PROP_FRAME_WIDTH, resolution.width);
+			cap.set(CV_CAP_PROP_FRAME_HEIGHT, resolution.height);
+			auto width = cap.get(CV_CAP_PROP_FRAME_WIDTH);
+			auto height = cap.get(CV_CAP_PROP_FRAME_HEIGHT);
+
+			auto name = checkResolution(width, height);
+
+			if (!cameraResolutions.contains(name))
+				cameraResolutions << name;
+		}
+
+		m_cameraResolutionComboBox->insertItems(0, cameraResolutions);
+		m_cameraResolutionComboBox->setCurrentIndex(cameraResolutions.size() / 2);
+
+		connect(m_enableCamera, SIGNAL(stateChanged(int)), this, SLOT(updateCameraResolutionsComboBox(int)));
+	}
 }
+
+//-----------------------------------------------------------------
+void MainWindow::updateMonitorsComboBox(int status)
+{
+	m_captureMonitorComboBox->setEnabled(status == Qt::Unchecked);
+}
+
+//-----------------------------------------------------------------
+void MainWindow::updateCameraResolutionsComboBox(int status)
+{
+	bool enabled = (status == Qt::Checked);
+	m_cameraResolutionComboBox->setEnabled(enabled);
+	m_resolutionsScan->setEnabled(enabled);
+}
+

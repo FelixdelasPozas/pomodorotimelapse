@@ -8,8 +8,12 @@
 #ifndef MAINWINDOW_H_
 #define MAINWINDOW_H_
 
+// Qt
 #include <QMainWindow>
 #include "ui_MainWindow.h"
+
+// OpenCV
+#include <opencv2/highgui/highgui.hpp>
 
 class QAction;
 class QMenu;
@@ -23,17 +27,17 @@ class MainWindow
 
 	public:
 		MainWindow();
+		~MainWindow();
 
 	private slots:
-		void open();
-		void about();
-		void parserSelected(bool);
+	  void updateMonitorsComboBox(int status);
+	  void updateCameraResolutionsComboBox(int status);
 
 	private:
-		void loadFile(const QString &fileName);
-		bool saveFile(const QString &fileName);
+	  void setupMonitors();
+	  void setupCameraResolutions();
 
-		QString m_filename;
+	  cv::VideoCapture cap;
 };
 
 #endif /* MAINWINDOW_H_ */
