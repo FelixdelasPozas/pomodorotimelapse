@@ -9,8 +9,11 @@
 #define POMODORO_H_
 
 #include <QTimer>
+#include <QObject>
+#include <QString>
 
 class Pomodoro
+: public QObject
 {
 	Q_OBJECT
 	public:

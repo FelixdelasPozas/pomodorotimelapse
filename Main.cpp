@@ -1,13 +1,12 @@
 #include "MainWindow.h"
 
 #include <QApplication>
-#include "Screenshot.h"
 
 int main(int argc, char *argv[])
 {
 	QApplication app(argc, argv);
-	MainWindow screenshot;
-	screenshot.show();
+	MainWindow desktopCapture;
+	desktopCapture.show();
 	return app.exec();
 }
 

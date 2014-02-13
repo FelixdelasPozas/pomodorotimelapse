@@ -52,9 +52,9 @@ qt4_wrap_ui(CORE_UI
 	
 qt4_wrap_cpp(CORE_MOC
   # .h para Qt
-  Screenshot.h
   MainWindow.h
   ProbeResolutionsDialog.h
+  Pomodoro.h
   
   #Camera/CameraConnectDialog.h
   #Camera/CameraView.h
@@ -71,9 +71,9 @@ set (CORE_SOURCES
   ${CORE_MOC}
   ${CORE_UI}
   Main.cpp
-  Screenshot.cpp
   MainWindow.cpp
   ProbeResolutionsDialog.cpp
+  Pomodoro.cpp
   
   #Camera/CameraConnectDialog.cpp
   #Camera/CameraView.cpp

@@ -25,13 +25,26 @@ MainWindow::MainWindow()
 
 	setupMonitors();
 	setupCameraResolutions();
+
+	m_desktopCapture = QPixmap::grabWindow(QApplication::desktop()->winId(), QApplication::desktop()->x(), QApplication::desktop()->y(), QApplication::desktop()->width(), QApplication::desktop()->height());
+	updateCapturedImage();
+	saveCapture();
 }
 
 //-----------------------------------------------------------------
 MainWindow::~MainWindow()
 {
-	if(cap.isOpened())
-		cap.release();
+	if(m_camera.isOpened())
+		m_camera.release();
+}
+
+//-----------------------------------------------------------------
+void MainWindow::resizeEvent(QResizeEvent * /* event */)
+{
+	QSize scaledSize = m_desktopCapture.size();
+	scaledSize.scale(m_screenshotImage->size(), Qt::KeepAspectRatio);
+	if (!m_screenshotImage->pixmap() || scaledSize != m_screenshotImage->pixmap()->size())
+		updateCapturedImage();
 }
 
 //-----------------------------------------------------------------
@@ -56,9 +69,10 @@ void MainWindow::setupMonitors()
 //-----------------------------------------------------------------
 void MainWindow::setupCameraResolutions()
 {
-	if (!cap.open(0))
+	if (!m_camera.open(0))
 	{
 		m_enableCamera->setChecked(false);
+		m_enableCamera->setEnabled(false);
 		m_cameraResolutionComboBox->insertItem(0, QString("No cameras detected."));
 		m_cameraResolutionComboBox->setEnabled(false);
 		m_resolutionsScan->setEnabled(false);
@@ -70,7 +84,6 @@ void MainWindow::setupCameraResolutions()
 		dialog->setWindowTitle(QString("Probing camera resolutions..."));
 		dialog->exec();
 
-		// Query the future to check if was canceled.
 		if (dialog->result() == QDialog::Accepted)
 		{
 			auto resolutions = dialog->getResolutions();
@@ -85,8 +98,11 @@ void MainWindow::setupCameraResolutions()
 		}
 		else
 		{
-			m_cameraResolutionComboBox->setEnabled(false);
+			m_enableCamera->setChecked(false);
 			m_enableCamera->setEnabled(false);
+			m_cameraResolutionComboBox->insertItem(0, QString("No known resolutions."));
+			m_cameraResolutionComboBox->setEnabled(false);
+			m_resolutionsScan->setEnabled(false);
 		}
 
 		delete dialog;
@@ -107,3 +123,17 @@ void MainWindow::updateCameraResolutionsComboBox(int status)
 	m_resolutionsScan->setEnabled(enabled);
 }
 
+//-----------------------------------------------------------------
+void MainWindow::updateCapturedImage()
+{
+	m_screenshotImage->setPixmap(m_desktopCapture.scaled(m_screenshotImage->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation));
+}
+
+//-----------------------------------------------------------------
+void MainWindow::saveCapture()
+{
+	QString format = "png";
+	QString fileName = QDir::currentPath() + tr("/untitled.") + format;
+
+	m_desktopCapture.save(fileName, format.toAscii());
+}

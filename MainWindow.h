@@ -10,6 +10,7 @@
 
 // Application
 #include "Resolutions.h"
+#include "Pomodoro.h"
 
 // Qt
 #include <QMainWindow>
@@ -22,6 +23,7 @@ class QAction;
 class QMenu;
 class QPlainTextEdit;
 class QProgressDialog;
+class QResizeEvent;
 
 class MainWindow
 : public QMainWindow
@@ -33,22 +35,23 @@ class MainWindow
 		MainWindow();
 		~MainWindow();
 
-  signals:
-    void setDialogText(QString);
-    void progressValueChanged(int);
+		void resizeEvent(QResizeEvent *);
 
 	private slots:
 	  void updateMonitorsComboBox(int status);
 	  void updateCameraResolutionsComboBox(int status);
 
 	private:
-	  static void probeResolutions(MainWindow *, QProgressDialog *);
 	  void setupMonitors();
 	  void setupCameraResolutions();
+	  void updateCapturedImage();
+	  void saveCapture();
 
-	  cv::VideoCapture cap;
-		QStringList m_cameraResolutionsNames;
-		ResolutionList m_cameraResolutions;
+	  cv::VideoCapture m_camera;
+		QStringList      m_cameraResolutionsNames;
+		ResolutionList   m_cameraResolutions;
+		Pomodoro         m_pomodoro;
+		QPixmap          m_desktopCapture;
 
 };
 

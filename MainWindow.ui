@@ -21,13 +21,24 @@
     <item>
      <widget class="QLabel" name="m_screenshotImage">
       <property name="sizePolicy">
-       <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
+       <sizepolicy hsizetype="Expanding" vsizetype="Ignored">
         <horstretch>0</horstretch>
         <verstretch>0</verstretch>
        </sizepolicy>
       </property>
+      <property name="styleSheet">
+       <string notr="true"> QLabel {
+     background-image: url(:/DesktopCapture/striped-background.png);
+ }</string>
+      </property>
       <property name="text">
        <string/>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+      <property name="indent">
+       <number>0</number>
       </property>
      </widget>
     </item>
@@ -479,6 +490,8 @@
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
  </widget>
- <resources/>
+ <resources>
+  <include location="rsc/resources.qrc"/>
+ </resources>
  <connections/>
 </ui>
