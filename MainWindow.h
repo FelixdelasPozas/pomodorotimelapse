@@ -8,6 +8,9 @@
 #ifndef MAINWINDOW_H_
 #define MAINWINDOW_H_
 
+// Application
+#include "Resolutions.h"
+
 // Qt
 #include <QMainWindow>
 #include "ui_MainWindow.h"
@@ -18,6 +21,7 @@
 class QAction;
 class QMenu;
 class QPlainTextEdit;
+class QProgressDialog;
 
 class MainWindow
 : public QMainWindow
@@ -29,15 +33,23 @@ class MainWindow
 		MainWindow();
 		~MainWindow();
 
+  signals:
+    void setDialogText(QString);
+    void progressValueChanged(int);
+
 	private slots:
 	  void updateMonitorsComboBox(int status);
 	  void updateCameraResolutionsComboBox(int status);
 
 	private:
+	  static void probeResolutions(MainWindow *, QProgressDialog *);
 	  void setupMonitors();
 	  void setupCameraResolutions();
 
 	  cv::VideoCapture cap;
+		QStringList m_cameraResolutionsNames;
+		ResolutionList m_cameraResolutions;
+
 };
 
 #endif /* MAINWINDOW_H_ */

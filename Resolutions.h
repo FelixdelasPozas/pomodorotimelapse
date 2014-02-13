@@ -8,12 +8,21 @@
 #ifndef COMMON_RESOLUTIONS_LIST_H_
 #define COMMON_RESOLUTIONS_LIST_H_
 
+#include <QString>
+#include <QList>
+
 struct Resolution
 {
-		QString name;
-		double width;
-		double height;
+	QString name;
+	double width;
+	double height;
+
+	bool operator==(const Resolution &lhs) const
+	{
+		return ((lhs.name == name) && (lhs.width == width) && (lhs.height == height));
+	}
 };
+
 
 using ResolutionList = QList<Resolution>;
 
@@ -90,14 +99,25 @@ static const ResolutionList CommonResolutions = { { QString("SQCIF"), 128, 96 },
 																									{ QString("WHUXGA"), 7680, 4800 },
 																									{ QString("QUHD(16K)"), 15360, 8640 } };
 
-static QString checkResolution(int width, int height)
+static QString getResolutionAsString(Resolution res)
 {
-	for (auto resolution: CommonResolutions)
-		if ((resolution.width == width) && (resolution.height == height))
-			return QString("%1x%2 (").arg(width).arg(height) + resolution.name + QString(" resolution)");
-
-	return QString("%1x%2 (Unregistered resolution)").arg(width).arg(height);
+	return QString("%1x%2 - ").arg(res.width).arg(res.height) + res.name;
 }
+
+static Resolution getResolution(int width, int height)
+{
+	Resolution match;
+
+	for (Resolution resolution: CommonResolutions)
+		if (resolution.width == width && resolution.height == height)
+		{
+			match = resolution;
+			break;
+		}
+
+	return match;
+}
+
 #endif // COMMON_RESOLUTIONS_LIST_H_ */
 
 

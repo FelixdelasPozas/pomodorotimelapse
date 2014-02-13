@@ -7,7 +7,7 @@
 
 // Project
 #include "MainWindow.h"
-#include "Resolutions.h"
+#include "ProbeResolutionsDialog.h"
 
 // Qt
 #include <QtGui>
@@ -56,9 +56,6 @@ void MainWindow::setupMonitors()
 //-----------------------------------------------------------------
 void MainWindow::setupCameraResolutions()
 {
-	QDesktopWidget *desktop = QApplication::desktop();
-	QStringList cameraResolutions;
-
 	if (!cap.open(0))
 	{
 		m_enableCamera->setChecked(false);
@@ -68,40 +65,31 @@ void MainWindow::setupCameraResolutions()
 	}
 	else
 	{
-		QMessageBox resolutionsTry;
-		resolutionsTry.setWindowIcon(QIcon(":/DesktopCapture/DesktopCapture.ico"));
-		resolutionsTry.setVisible(true);
-		resolutionsTry.setWindowTitle(QString("Checking camera resolutions"));
-		resolutionsTry.setStandardButtons(0);
+		ProbeResolutionsDialog *dialog = new ProbeResolutionsDialog(this);
+		dialog->setWindowIcon(QIcon(":/DesktopCapture/config.ico"));
+		dialog->setWindowTitle(QString("Probing camera resolutions..."));
+		dialog->exec();
 
-		QSpacerItem* horizontalSpacer = new QSpacerItem(300, 0, QSizePolicy::Minimum, QSizePolicy::Expanding);
-		QGridLayout* layout = (QGridLayout*) resolutionsTry.layout();
-		layout->addItem(horizontalSpacer, layout->rowCount(), 0, 1, layout->columnCount());
-
-		resolutionsTry.repaint();
-		resolutionsTry.move((desktop->screenGeometry(desktop->primaryScreen()).width() - 300) / 2,
-				               ((desktop->screenGeometry(desktop->primaryScreen()).height() - resolutionsTry.height()) / 2));
-
-		for (auto resolution : CommonResolutions)
+		// Query the future to check if was canceled.
+		if (dialog->result() == QDialog::Accepted)
 		{
-			resolutionsTry.setText(QString("Trying ") + checkResolution(resolution.width, resolution.height));
-			resolutionsTry.repaint();
+			auto resolutions = dialog->getResolutions();
+			QStringList resolutionNames;
+			for (auto resolution: resolutions)
+				resolutionNames << getResolutionAsString(resolution);
 
-			cap.set(CV_CAP_PROP_FRAME_WIDTH, resolution.width);
-			cap.set(CV_CAP_PROP_FRAME_HEIGHT, resolution.height);
-			auto width = cap.get(CV_CAP_PROP_FRAME_WIDTH);
-			auto height = cap.get(CV_CAP_PROP_FRAME_HEIGHT);
+			m_cameraResolutionComboBox->insertItems(0, resolutionNames);
+			m_cameraResolutionComboBox->setCurrentIndex(resolutionNames.size() / 2);
 
-			auto name = checkResolution(width, height);
-
-			if (!cameraResolutions.contains(name))
-				cameraResolutions << name;
+			connect(m_enableCamera, SIGNAL(stateChanged(int)), this, SLOT(updateCameraResolutionsComboBox(int)));
+		}
+		else
+		{
+			m_cameraResolutionComboBox->setEnabled(false);
+			m_enableCamera->setEnabled(false);
 		}
 
-		m_cameraResolutionComboBox->insertItems(0, cameraResolutions);
-		m_cameraResolutionComboBox->setCurrentIndex(cameraResolutions.size() / 2);
-
-		connect(m_enableCamera, SIGNAL(stateChanged(int)), this, SLOT(updateCameraResolutionsComboBox(int)));
+		delete dialog;
 	}
 }
 

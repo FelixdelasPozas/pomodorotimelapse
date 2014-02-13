@@ -42,6 +42,7 @@ qt4_add_resources(RESOURCES
 qt4_wrap_ui(CORE_UI
   # .ui para Qt
   MainWindow.ui
+  ProbeResolutionsDialog.ui
   
   #Camera/CameraConnectDialog.ui
   #Camera/CameraView.ui
@@ -53,6 +54,7 @@ qt4_wrap_cpp(CORE_MOC
   # .h para Qt
   Screenshot.h
   MainWindow.h
+  ProbeResolutionsDialog.h
   
   #Camera/CameraConnectDialog.h
   #Camera/CameraView.h
@@ -71,6 +73,7 @@ set (CORE_SOURCES
   Main.cpp
   Screenshot.cpp
   MainWindow.cpp
+  ProbeResolutionsDialog.cpp
   
   #Camera/CameraConnectDialog.cpp
   #Camera/CameraView.cpp
