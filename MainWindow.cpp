@@ -13,14 +13,14 @@
 #include <QtGui>
 #include <QDebug>
 
-
 //-----------------------------------------------------------------
 MainWindow::MainWindow()
+: m_trayIcon{nullptr}
 {
 	setupUi(this);
 
 	this->setWindowTitle("Desktop Capture");
-	this->setWindowIcon(QIcon(":/DesktopCapture/DesktopCapture.ico"));
+	this->setWindowIcon(QIcon(":/DesktopCapture/application.ico"));
 	this->showMaximized();
 
 	setupMonitors();
@@ -159,7 +159,38 @@ void MainWindow::setupTrayIcon()
 	qDebug() << QApplication::palette().color(QPalette::Window);
 
 	m_trayIcon = new QSystemTrayIcon(this);
-	m_trayIcon->setIcon(QIcon(":/DesktopCapture/DesktopCapture-white.ico"));
-	m_trayIcon->show();
-//	m_trayIcon->setVisible(true);
+	m_trayIcon->setIcon(QIcon(":/DesktopCapture/application.ico"));
+	connect(m_trayIcon, SIGNAL(activated(QSystemTrayIcon::ActivationReason)), this, SLOT(activateTrayIcon(QSystemTrayIcon::ActivationReason)));
+}
+
+//-----------------------------------------------------------------
+void MainWindow::changeEvent(QEvent* e)
+{
+	switch (e->type())
+	{
+		case QEvent::WindowStateChange:
+			if ((windowState() & Qt::WindowMinimized) && (m_trayIcon != nullptr))
+			{
+				QMetaObject::invokeMethod(this, "hide", Qt::QueuedConnection);
+				m_trayIcon->show();
+				e->ignore();
+				return;
+			}
+			break;
+		default:
+			break;
+	}
+
+	QMainWindow::changeEvent(e);
+}
+
+//-----------------------------------------------------------------
+void MainWindow::activateTrayIcon(QSystemTrayIcon::ActivationReason reason)
+{
+	if ((reason) && (reason != QSystemTrayIcon::DoubleClick))
+		return;
+
+	m_trayIcon->hide();
+	show();
+	setWindowState(windowState() & (~Qt::WindowMinimized | Qt::WindowActive));
 }

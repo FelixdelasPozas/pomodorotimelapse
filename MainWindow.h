@@ -11,10 +11,11 @@
 // Application
 #include "Resolutions.h"
 #include "Pomodoro.h"
+#include "ui_MainWindow.h"
 
 // Qt
 #include <QMainWindow>
-#include "ui_MainWindow.h"
+#include <QSystemTrayIcon>
 
 // OpenCV
 #include <opencv2/highgui/highgui.hpp>
@@ -24,7 +25,7 @@ class QMenu;
 class QPlainTextEdit;
 class QProgressDialog;
 class QResizeEvent;
-class QSystemTrayIcon;
+class QEvent;
 
 class MainWindow
 : public QMainWindow
@@ -37,11 +38,13 @@ class MainWindow
 		~MainWindow();
 
 		void resizeEvent(QResizeEvent *);
+		void changeEvent(QEvent*);
 
 	private slots:
 	  void updateMonitorsComboBox(int status);
 	  void updateCameraResolutionsComboBox(int status);
 	  void updateCapturedImage();
+	  void activateTrayIcon(QSystemTrayIcon::ActivationReason);
 
 	private:
 	  void setupMonitors();

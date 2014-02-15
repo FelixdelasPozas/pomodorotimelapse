@@ -1,7 +1,6 @@
 <RCC>
   <qresource prefix="/DesktopCapture">
-    <file>DesktopCapture.ico</file>
-	<file>DesktopCapture-white.ico</file>
+    <file>application.ico</file>
 	<file>0.ico</file>
 	<file>1.ico</file>
 	<file>2.ico</file>
