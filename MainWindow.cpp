@@ -24,11 +24,10 @@ MainWindow::MainWindow()
 	this->showMaximized();
 
 	setupMonitors();
+	setupTrayIcon();
 	setupCameraResolutions();
 
-	m_desktopCapture = QPixmap::grabWindow(QApplication::desktop()->winId(), QApplication::desktop()->x(), QApplication::desktop()->y(), QApplication::desktop()->width(), QApplication::desktop()->height());
 	updateCapturedImage();
-	saveCapture();
 }
 
 //-----------------------------------------------------------------
@@ -39,7 +38,7 @@ MainWindow::~MainWindow()
 }
 
 //-----------------------------------------------------------------
-void MainWindow::resizeEvent(QResizeEvent * /* event */)
+void MainWindow::resizeEvent(QResizeEvent *unused)
 {
 	QSize scaledSize = m_desktopCapture.size();
 	scaledSize.scale(m_screenshotImage->size(), Qt::KeepAspectRatio);
@@ -64,6 +63,7 @@ void MainWindow::setupMonitors()
 	m_captureMonitorComboBox->insertItems(0, monitors);
 
 	connect(m_captureAllMonitors, SIGNAL(stateChanged(int)), this, SLOT(updateMonitorsComboBox(int)));
+	connect(m_captureMonitorComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(updateCapturedImage()));
 }
 
 //-----------------------------------------------------------------
@@ -79,6 +79,7 @@ void MainWindow::setupCameraResolutions()
 	}
 	else
 	{
+		m_camera.release();
 		ProbeResolutionsDialog *dialog = new ProbeResolutionsDialog(this);
 		dialog->setWindowIcon(QIcon(":/DesktopCapture/config.ico"));
 		dialog->setWindowTitle(QString("Probing camera resolutions..."));
@@ -113,6 +114,7 @@ void MainWindow::setupCameraResolutions()
 void MainWindow::updateMonitorsComboBox(int status)
 {
 	m_captureMonitorComboBox->setEnabled(status == Qt::Unchecked);
+	updateCapturedImage();
 }
 
 //-----------------------------------------------------------------
@@ -126,6 +128,16 @@ void MainWindow::updateCameraResolutionsComboBox(int status)
 //-----------------------------------------------------------------
 void MainWindow::updateCapturedImage()
 {
+	QRect captureGeometry;
+	if (this->m_captureAllMonitors->isChecked())
+		captureGeometry = QApplication::desktop()->geometry();
+	else
+	{
+		int monitorIndex = this->m_captureMonitorComboBox->currentIndex();
+		captureGeometry = QApplication::desktop()->screenGeometry(monitorIndex);
+	}
+
+	m_desktopCapture = QPixmap::grabWindow(QApplication::desktop()->winId(), captureGeometry.x(), captureGeometry.y(), captureGeometry.width(), captureGeometry.height());
 	m_screenshotImage->setPixmap(m_desktopCapture.scaled(m_screenshotImage->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation));
 }
 
@@ -133,7 +145,21 @@ void MainWindow::updateCapturedImage()
 void MainWindow::saveCapture()
 {
 	QString format = "png";
-	QString fileName = QDir::currentPath() + tr("/untitled.") + format;
+	QString fileName = QDir::currentPath() + tr("/DesktopCapture.") + format;
 
 	m_desktopCapture.save(fileName, format.toAscii());
+}
+
+//-----------------------------------------------------------------
+void MainWindow::setupTrayIcon()
+{
+	if(!QSystemTrayIcon::isSystemTrayAvailable())
+		return;
+
+	qDebug() << QApplication::palette().color(QPalette::Window);
+
+	m_trayIcon = new QSystemTrayIcon(this);
+	m_trayIcon->setIcon(QIcon(":/DesktopCapture/DesktopCapture-white.ico"));
+	m_trayIcon->show();
+//	m_trayIcon->setVisible(true);
 }

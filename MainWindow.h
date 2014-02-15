@@ -24,6 +24,7 @@ class QMenu;
 class QPlainTextEdit;
 class QProgressDialog;
 class QResizeEvent;
+class QSystemTrayIcon;
 
 class MainWindow
 : public QMainWindow
@@ -40,11 +41,12 @@ class MainWindow
 	private slots:
 	  void updateMonitorsComboBox(int status);
 	  void updateCameraResolutionsComboBox(int status);
+	  void updateCapturedImage();
 
 	private:
 	  void setupMonitors();
 	  void setupCameraResolutions();
-	  void updateCapturedImage();
+	  void setupTrayIcon();
 	  void saveCapture();
 
 	  cv::VideoCapture m_camera;
@@ -52,6 +54,7 @@ class MainWindow
 		ResolutionList   m_cameraResolutions;
 		Pomodoro         m_pomodoro;
 		QPixmap          m_desktopCapture;
+		QSystemTrayIcon *m_trayIcon;
 
 };
 

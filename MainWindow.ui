@@ -26,6 +26,12 @@
         <verstretch>0</verstretch>
        </sizepolicy>
       </property>
+      <property name="minimumSize">
+       <size>
+        <width>240</width>
+        <height>160</height>
+       </size>
+      </property>
       <property name="styleSheet">
        <string notr="true"> QLabel {
      background-image: url(:/DesktopCapture/striped-background.png);
@@ -412,6 +418,13 @@
          </item>
          <item>
           <widget class="QTimeEdit" name="m_screeshotTime">
+           <property name="time">
+            <time>
+             <hour>0</hour>
+             <minute>0</minute>
+             <second>30</second>
+            </time>
+           </property>
            <property name="maximumTime">
             <time>
              <hour>0</hour>
@@ -422,8 +435,8 @@
            <property name="minimumTime">
             <time>
              <hour>0</hour>
-             <minute>1</minute>
-             <second>0</second>
+             <minute>0</minute>
+             <second>5</second>
             </time>
            </property>
            <property name="displayFormat">

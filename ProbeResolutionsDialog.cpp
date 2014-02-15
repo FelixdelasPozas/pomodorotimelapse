@@ -64,7 +64,7 @@ void ProbeThread::run()
 		if (m_cancelled)
 			return;
 
-		emit probed(QString("%1x%2 (").arg(resolution.width).arg(resolution.height) + resolution.name + QString(" resolution)"));
+		emit probed(QString("%1x%2 - ").arg(resolution.width).arg(resolution.height) + resolution.name);
 		emit progress((CommonResolutions.indexOf(resolution)+1)*100/CommonResolutions.size());
 
 		m_camera.set(CV_CAP_PROP_FRAME_WIDTH, resolution.width);
