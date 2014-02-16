@@ -13,8 +13,8 @@
 #include <QDesktopWidget>
 #include <QImage>
 #include <QPainter>
-#include <QDebug>
 #include <QMutexLocker>
+#include <QDebug>
 
 //-----------------------------------------------------------------
 CaptureDesktopThread::CaptureDesktopThread(int capturedMonitor,
@@ -27,8 +27,6 @@ CaptureDesktopThread::CaptureDesktopThread(int capturedMonitor,
 {
 	m_cameraResolution = cameraResolution;
 	setCaptureMonitor(capturedMonitor);
-
-	qDebug() << getResolutionAsString(m_cameraResolution);
 
 	if (m_cameraResolution.name != QString())
 		setCameraEnabled(m_cameraEnabled);
@@ -69,7 +67,6 @@ void CaptureDesktopThread::setCaptureMonitor(int monitor)
 void CaptureDesktopThread::setCameraEnabled(bool enabled)
 {
 	QMutexLocker lock(&m_mutex);
-	qDebug() << "llamada setEnabled con" << enabled << m_cameraResolution.width << m_cameraResolution.height;
 
 	switch(enabled)
 	{
@@ -141,7 +138,6 @@ void CaptureDesktopThread::run()
 		// capture desktop
 		m_image = QPixmap::grabWindow(QApplication::desktop()->winId(), m_x, m_y, m_width, m_height);
 
-
 		// capture camera
 		m_mutex.lock();
 		if (m_camera.isOpened())
@@ -193,7 +189,7 @@ QImage CaptureDesktopThread::MatToQImage(const cv::Mat& mat)
     }
     else
     {
-        qDebug() << "ERROR: Mat could not be converted to QImage.";
+        qDebug() << "ERROR: Mat could not be converted to QImage. Mat type is" << mat.type();
         return QImage();
     }
 }

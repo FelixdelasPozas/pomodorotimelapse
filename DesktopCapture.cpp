@@ -16,7 +16,6 @@
 // Qt
 #include <QtGui>
 #include <QString>
-#include <QDebug>
 #include <QPixmap>
 #include <QSettings>
 
@@ -27,6 +26,7 @@ const QString DesktopCapture::CAMERA_ENABLED = QString("Camera Enabled");
 const QString DesktopCapture::CAMERA_ANIMATED_TRAY_ENABLED = QString("Camera Animated Tray Icon");
 const QString DesktopCapture::CAMERA_RESOLUTIONS = QString("Available Camera Resolutions");
 const QString DesktopCapture::ACTIVE_RESOLUTION = QString("Active Resolution");
+const QString DesktopCapture::APPLICATION_GEOMETRY = QString("Application Geometry");
 
 
 //-----------------------------------------------------------------
@@ -36,16 +36,21 @@ DesktopCapture::DesktopCapture()
 {
 	setupUi(this);
 
+	QSettings settings("DesktopCapture.ini", QSettings::IniFormat);
+
 	setWindowTitle("Desktop Capture");
 	setWindowIcon(QIcon(":/DesktopCapture/application.ico"));
-	showMaximized();
+
+	if (settings.contains(APPLICATION_GEOMETRY))
+		restoreGeometry(settings.value(APPLICATION_GEOMETRY).toByteArray());
+	else
+		showMaximized();
 
 	setupMonitors();
 	setupTrayIcon();
 	setupCameraResolutions();
 	setupCaptureThread();
 
-	QSettings settings("DesktopCapture.ini", QSettings::IniFormat);
 	QString outputDir;
 	if (settings.contains(OUTPUT_DIR))
 		outputDir = settings.value(OUTPUT_DIR, QString()).toString();
@@ -66,6 +71,8 @@ DesktopCapture::DesktopCapture()
 //-----------------------------------------------------------------
 DesktopCapture::~DesktopCapture()
 {
+	saveConfiguration();
+
 	if (m_captureThread)
 	{
 		m_captureThread->abort();
@@ -86,6 +93,14 @@ void DesktopCapture::saveConfiguration()
 		monitors << m_captureMonitorComboBox->itemText(i);
 
 	settings.setValue(MONITORS_LIST, monitors);
+	settings.setValue(OUTPUT_DIR, m_dirEditLabel->text());
+	settings.setValue(CAMERA_ENABLED, m_enableCamera->isChecked());
+	settings.setValue(CAMERA_ANIMATED_TRAY_ENABLED, m_screenshotAnimateTray->isChecked());
+	settings.setValue(CAMERA_RESOLUTIONS, m_cameraResolutionsNames);
+	settings.setValue(ACTIVE_RESOLUTION, m_cameraResolutionComboBox->currentIndex());
+
+	if (this->isVisible())
+		settings.setValue(APPLICATION_GEOMETRY, saveGeometry());
 
 	settings.sync();
 }
@@ -166,7 +181,6 @@ void DesktopCapture::setupCameraResolutions()
 	if (m_captureThread)
 		m_captureThread->pause();
 
-	QStringList resolutionNames;
 	cv::VideoCapture camera;
 	if (!camera.open(0))
 	{
@@ -182,11 +196,13 @@ void DesktopCapture::setupCameraResolutions()
 		camera.release();
 
 		if (settings.contains(CAMERA_RESOLUTIONS))
-		{
-			resolutionNames = settings.value(CAMERA_RESOLUTIONS, QStringList()).toStringList();
-			m_cameraResolutionComboBox->insertItems(0, resolutionNames);
+			m_cameraResolutionsNames = settings.value(CAMERA_RESOLUTIONS, QStringList()).toStringList();
 
-			for(auto resolutionString: resolutionNames)
+		if (!m_cameraResolutionsNames.empty())
+		{
+			m_cameraResolutionComboBox->insertItems(0, m_cameraResolutionsNames);
+
+			for(auto resolutionString: m_cameraResolutionsNames)
 			{
 				QStringList parts = resolutionString.split(" ");
 				QStringList numbers = parts[0].split("x");
@@ -215,10 +231,10 @@ void DesktopCapture::setupCameraResolutions()
 				m_cameraResolutions = dialog->getResolutions();
 
 				for (auto resolution: m_cameraResolutions)
-					resolutionNames << getResolutionAsString(resolution);
+					m_cameraResolutionsNames << getResolutionAsString(resolution);
 
-				m_cameraResolutionComboBox->insertItems(0, resolutionNames);
-				m_cameraResolutionComboBox->setCurrentIndex(resolutionNames.size() / 2);
+				m_cameraResolutionComboBox->insertItems(0, m_cameraResolutionsNames);
+				m_cameraResolutionComboBox->setCurrentIndex(m_cameraResolutionsNames.size() / 2);
 
 				if (m_captureThread)
 				{
@@ -240,7 +256,7 @@ void DesktopCapture::setupCameraResolutions()
 			delete dialog;
 		}
 	}
-	settings.setValue(CAMERA_RESOLUTIONS, resolutionNames);
+	settings.setValue(CAMERA_RESOLUTIONS, m_cameraResolutionsNames);
 
 	if (selectedResolution <= m_cameraResolutionComboBox->count())
 		m_cameraResolutionComboBox->setCurrentIndex(selectedResolution);
@@ -347,7 +363,7 @@ void DesktopCapture::setupCaptureThread()
 
 	Resolution resolution{QString(), 0, 0};
 
-	if (m_enableCamera->isChecked())
+	if (m_enableCamera->isChecked() && !m_cameraResolutions.empty())
 		resolution = m_cameraResolutions.at(m_cameraResolutionComboBox->currentIndex());
 
 	m_captureThread = new CaptureDesktopThread(monitor, resolution, this);

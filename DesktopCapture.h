@@ -57,6 +57,7 @@ class DesktopCapture
 	  static const QString CAMERA_ANIMATED_TRAY_ENABLED;
 	  static const QString CAMERA_RESOLUTIONS;
 	  static const QString ACTIVE_RESOLUTION;
+	  static const QString APPLICATION_GEOMETRY;
 
 	  void saveConfiguration();
 	  void setupCameraResolutions();

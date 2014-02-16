@@ -6,7 +6,7 @@
  */
 
 #include "ProbeResolutionsDialog.h"
-#include <QDebug>
+
 //-----------------------------------------------------------------
 ProbeResolutionsDialog::ProbeResolutionsDialog(QWidget *parent)
 : QDialog(parent)
