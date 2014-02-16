@@ -15,8 +15,19 @@
 
 // Qt
 #include <QtGui>
+#include <QString>
 #include <QDebug>
 #include <QPixmap>
+#include <QSettings>
+
+const QString MainWindow::CAPTURED_MONITOR = QString("Captured Desktop Monitor");
+const QString MainWindow::MONITORS_LIST = QString("Monitor Resolutions");
+const QString MainWindow::OUTPUT_DIR = QString("Output Directory");
+const QString MainWindow::CAMERA_ENABLED = QString("Camera Enabled");
+const QString MainWindow::CAMERA_ANIMATED_TRAY_ENABLED = QString("Camera Animated Tray Icon");
+const QString MainWindow::CAMERA_RESOLUTIONS = QString("Available Camera Resolutions");
+const QString MainWindow::ACTIVE_RESOLUTION = QString("Active Resolution");
+
 
 //-----------------------------------------------------------------
 MainWindow::MainWindow()
@@ -25,16 +36,30 @@ MainWindow::MainWindow()
 {
 	setupUi(this);
 
-	this->setWindowTitle("Desktop Capture");
-	this->setWindowIcon(QIcon(":/DesktopCapture/application.ico"));
-	this->showMaximized();
+	setWindowTitle("Desktop Capture");
+	setWindowIcon(QIcon(":/DesktopCapture/application.ico"));
+	showMaximized();
 
 	setupMonitors();
 	setupTrayIcon();
 	setupCameraResolutions();
 	setupCaptureThread();
 
+	QSettings settings("DesktopCapture.ini", QSettings::IniFormat);
+	QString outputDir;
+	if (settings.contains(OUTPUT_DIR))
+		outputDir = settings.value(OUTPUT_DIR, QString()).toString();
+	else
+	{
+		outputDir = QDir::currentPath();
+		settings.setValue(OUTPUT_DIR, outputDir);
+	}
+	m_dirEditLabel->setText(outputDir);
+
+	settings.sync();
+
 	connect(m_enableCamera, SIGNAL(stateChanged(int)), this, SLOT(updateCameraResolutionsComboBox(int)), Qt::QueuedConnection);
+	connect(m_dirButton, SIGNAL(pressed()), this, SLOT(updateOutputDir()));
 }
 
 //-----------------------------------------------------------------
@@ -48,23 +73,56 @@ MainWindow::~MainWindow()
 }
 
 //-----------------------------------------------------------------
+void MainWindow::saveConfiguration()
+{
+	QSettings settings("DesktopCapture.ini", QSettings::IniFormat);
+	int capturedMonitor = (m_captureAllMonitors->isChecked() ? -1 : m_captureMonitorComboBox->currentIndex());
+
+	settings.setValue(CAPTURED_MONITOR, capturedMonitor);
+
+	QStringList monitors;
+	for (int i = 0; i < m_captureMonitorComboBox->count(); ++i)
+		monitors << m_captureMonitorComboBox->itemText(i);
+
+	settings.setValue(MONITORS_LIST, monitors);
+
+	settings.sync();
+}
+
+//-----------------------------------------------------------------
 void MainWindow::setupMonitors()
 {
-	QDesktopWidget *desktop = QApplication::desktop();
-	QStringList monitors;
+	QSettings settings("DesktopCapture.ini", QSettings::IniFormat);
 
-	for (int i = 0; i < desktop->numScreens(); ++i)
+	int capturedMonitor;
+	if (settings.contains(CAPTURED_MONITOR))
+		capturedMonitor = settings.value(CAPTURED_MONITOR, -1).toInt();
+	else
+		capturedMonitor = -1;
+
+	m_captureAllMonitors->setChecked(capturedMonitor == -1);
+
+	QStringList monitors;
+	if (settings.contains(MONITORS_LIST))
+		monitors = settings.value(MONITORS_LIST, QStringList()).toStringList();
+	else
 	{
-		auto geometry = desktop->screenGeometry(i);
-		if (desktop->primaryScreen() == i)
-			monitors << QString("Primary Screen (Size: %1x%2 - Position: %3x%4)").arg(geometry.width()).arg(geometry.height()).arg(geometry.x()).arg(geometry.y());
-		else
-			monitors << QString("Additional Screen %1 (Size: %2x%3 - Position: %4x%5)").arg(i).arg(geometry.width()).arg(geometry.height()).arg(geometry.x()).arg(geometry.y());
+		QDesktopWidget *desktop = QApplication::desktop();
+		for (int i = 0; i < desktop->numScreens(); ++i)
+		{
+			auto geometry = desktop->screenGeometry(i);
+			if (desktop->primaryScreen() == i)
+				monitors << QString("Primary Screen (Size: %1x%2 - Position: %3x%4)").arg(geometry.width()).arg(geometry.height()).arg(geometry.x()).arg(geometry.y());
+			else
+				monitors << QString("Additional Screen %1 (Size: %2x%3 - Position: %4x%5)").arg(i).arg(geometry.width()).arg(geometry.height()).arg(geometry.x()).arg(geometry.y());
+		}
+		settings.setValue(MONITORS_LIST, monitors);
 	}
 	m_captureMonitorComboBox->insertItems(0, monitors);
 
 	connect(m_captureAllMonitors, SIGNAL(stateChanged(int)), this, SLOT(updateMonitorsCheckBox(int)));
 	connect(m_captureMonitorComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(updateMonitorsComboBox(int)));
+	settings.sync();
 }
 
 //-----------------------------------------------------------------
@@ -73,11 +131,33 @@ void MainWindow::setupCameraResolutions()
 	if (!m_cameraResolutions.empty())
 		return;
 
+	QSettings settings("DesktopCapture.ini", QSettings::IniFormat);
+
+	bool enableCamera;
+	if (settings.contains(CAMERA_ENABLED))
+		enableCamera = settings.value(CAMERA_ENABLED, true).toBool();
+	else
+	{
+		enableCamera = true;
+		settings.setValue(CAMERA_ENABLED, true);
+	}
+	m_enableCamera->setChecked(enableCamera);
+
+	bool animateScreenshot;
+	if (settings.contains(CAMERA_ANIMATED_TRAY_ENABLED))
+		animateScreenshot = settings.value(CAMERA_ANIMATED_TRAY_ENABLED, true).toBool();
+	else
+	{
+		animateScreenshot = true;
+		settings.setValue(CAMERA_ANIMATED_TRAY_ENABLED, true);
+	}
+	m_screenshotAnimateTray->setEnabled(animateScreenshot);
+
 	if (m_captureThread)
 		m_captureThread->pause();
 
+	QStringList resolutionNames;
 	cv::VideoCapture camera;
-
 	if (!camera.open(0))
 	{
 		m_enableCamera->blockSignals(true);
@@ -90,43 +170,82 @@ void MainWindow::setupCameraResolutions()
 	else
 	{
 		camera.release();
-		ProbeResolutionsDialog *dialog = new ProbeResolutionsDialog(this);
-		dialog->setWindowIcon(QIcon(":/DesktopCapture/config.ico"));
-		dialog->setWindowTitle(QString("Probing camera resolutions..."));
-		dialog->exec();
 
-		if (dialog->result() == QDialog::Accepted)
+		if (settings.contains(CAMERA_RESOLUTIONS))
 		{
-			m_cameraResolutions = dialog->getResolutions();
-			QStringList resolutionNames;
-			for (auto resolution: m_cameraResolutions)
-				resolutionNames << getResolutionAsString(resolution);
-
+			resolutionNames = settings.value(CAMERA_RESOLUTIONS, QStringList()).toStringList();
 			m_cameraResolutionComboBox->insertItems(0, resolutionNames);
-			m_cameraResolutionComboBox->setCurrentIndex(resolutionNames.size() / 2);
 
-			if (m_captureThread)
+			for(auto resolutionString: resolutionNames)
 			{
-				m_captureThread->setResolution(m_cameraResolutions[0]);
-				m_captureThread->setCameraEnabled(true);
+				QStringList parts = resolutionString.split(" ");
+				QStringList numbers = parts[0].split("x");
+
+				bool correct;
+				int width = numbers[0].toInt(&correct, 10);
+				if (!correct)
+					continue;
+
+				int height = numbers[1].toInt(&correct, 10);
+				if (!correct)
+					continue;
+
+				m_cameraResolutions << getResolution(width, height);
 			}
 		}
 		else
 		{
-			m_enableCamera->setChecked(false);
-			m_cameraResolutions.clear();
-			m_cameraResolutionComboBox->insertItem(0, QString("No known resolutions."));
-			m_cameraResolutionComboBox->setEnabled(false);
+			ProbeResolutionsDialog *dialog = new ProbeResolutionsDialog(this);
+			dialog->setWindowIcon(QIcon(":/DesktopCapture/config.ico"));
+			dialog->setWindowTitle(QString("Probing camera resolutions..."));
+			dialog->exec();
 
-			if (m_captureThread)
-				m_captureThread->setCameraEnabled(false);
+			if (dialog->result() == QDialog::Accepted)
+			{
+				m_cameraResolutions = dialog->getResolutions();
+
+				for (auto resolution: m_cameraResolutions)
+					resolutionNames << getResolutionAsString(resolution);
+
+				m_cameraResolutionComboBox->insertItems(0, resolutionNames);
+				m_cameraResolutionComboBox->setCurrentIndex(resolutionNames.size() / 2);
+
+				if (m_captureThread)
+				{
+					m_captureThread->setResolution(m_cameraResolutions[0]);
+					m_captureThread->setCameraEnabled(true);
+				}
+			}
+			else
+			{
+				m_enableCamera->setChecked(false);
+				m_cameraResolutions.clear();
+				m_cameraResolutionComboBox->insertItem(0, QString("No known resolutions."));
+				m_cameraResolutionComboBox->setEnabled(false);
+
+				if (m_captureThread)
+					m_captureThread->setCameraEnabled(false);
+			}
+
+			delete dialog;
 		}
-
-		delete dialog;
 	}
+	settings.setValue(CAMERA_RESOLUTIONS, resolutionNames);
+
+	int selectedResolution;
+	if (settings.contains(ACTIVE_RESOLUTION))
+		selectedResolution = settings.value(ACTIVE_RESOLUTION, 0).toInt();
+	else
+	{
+		selectedResolution = 0;
+		settings.setValue(ACTIVE_RESOLUTION, selectedResolution);
+	}
+	if (selectedResolution <= m_cameraResolutionComboBox->count())
+		m_cameraResolutionComboBox->setCurrentIndex(selectedResolution);
 
 	if (m_captureThread)
 		m_captureThread->resume();
+	settings.sync();
 }
 
 //-----------------------------------------------------------------
@@ -235,7 +354,19 @@ void MainWindow::setupCaptureThread()
 //-----------------------------------------------------------------
 void MainWindow::renderImage()
 {
-	QImage *image = m_captureThread->getImage();
-	QPixmap pixmap = QPixmap::fromImage(*image);
-	m_screenshotImage->setPixmap(pixmap.scaled(m_screenshotImage->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation));
+	QPixmap* pixmap = m_captureThread->getImage();
+	m_screenshotImage->setPixmap(pixmap->scaled(m_screenshotImage->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation));
+}
+
+//-----------------------------------------------------------------
+void MainWindow::updateOutputDir()
+{
+	if (m_captureThread)
+		m_captureThread->pause();
+	QString dir = QFileDialog::getExistingDirectory(this, tr("Open Directory"), QDir::currentPath(), QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
+
+	if (m_captureThread)
+		m_captureThread->resume();
+
+	m_dirEditLabel->setText(dir);
 }

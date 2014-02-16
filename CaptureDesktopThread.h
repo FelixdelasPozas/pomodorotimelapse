@@ -42,14 +42,14 @@ class CaptureDesktopThread
 
 		void run();
 
-		QImage *getImage();
+		QPixmap *getImage();
 
 	signals:
 		void render();
 
 	private:
 		bool             m_aborted;
-		QImage           m_image;
+		QPixmap          m_image;
 		int              m_x;
 		int              m_y;
 		int              m_width;

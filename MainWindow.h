@@ -44,10 +44,20 @@ class MainWindow
 	  void updateMonitorsComboBox(int status);
 	  void updateMonitorsCheckBox(int status);
 	  void updateCameraResolutionsComboBox(int status);
+	  void updateOutputDir();
 	  void activateTrayIcon(QSystemTrayIcon::ActivationReason);
 	  void renderImage();
 
 	private:
+	  static const QString CAPTURED_MONITOR;
+	  static const QString MONITORS_LIST;
+	  static const QString OUTPUT_DIR;
+	  static const QString CAMERA_ENABLED;
+	  static const QString CAMERA_ANIMATED_TRAY_ENABLED;
+	  static const QString CAMERA_RESOLUTIONS;
+	  static const QString ACTIVE_RESOLUTION;
+
+	  void saveConfiguration();
 	  void setupCameraResolutions();
 	  void setupMonitors();
 	  void setupTrayIcon();
@@ -62,7 +72,6 @@ class MainWindow
 		CaptureDesktopThread *m_captureThread;
 		QMutex                m_mutex;
 		QPixmap              *m_cameraPixmap;
-
 };
 
 #endif /* MAINWINDOW_H_ */

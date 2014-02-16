@@ -85,7 +85,7 @@ void CaptureDesktopThread::setCameraEnabled(bool enabled)
 }
 
 //-----------------------------------------------------------------
-QImage* CaptureDesktopThread::getImage()
+QPixmap* CaptureDesktopThread::getImage()
 {
 	return &m_image;
 }
@@ -133,8 +133,7 @@ void CaptureDesktopThread::run()
 		m_mutex.unlock();
 
 		// capture desktop
-		auto desktopPixmap = QPixmap::grabWindow(QApplication::desktop()->winId(), m_x, m_y, m_width, m_height);
-		m_image = desktopPixmap.toImage();
+		m_image = QPixmap::grabWindow(QApplication::desktop()->winId(), m_x, m_y, m_width, m_height);
 
 		// capture camera
 		m_mutex.lock();
