@@ -1,12 +1,12 @@
 /*
- * MainWindow.h
+ * DesktopCapture.h
  *
  *  Created on: 21/06/2013
  *      Author: Felix de las Pozas Alvarez
  */
 
-#ifndef MAINWINDOW_H_
-#define MAINWINDOW_H_
+#ifndef DESKTOP_CAPTURE_H_
+#define DESKTOP_CAPTURE_H_
 
 // Application
 #include "Resolutions.h"
@@ -28,15 +28,15 @@ class QPixmap;
 
 class CaptureDesktopThread;
 
-class MainWindow
+class DesktopCapture
 : public QMainWindow
 , public Ui_MainWindow
 {
 	Q_OBJECT
 
 	public:
-		MainWindow();
-		~MainWindow();
+		DesktopCapture();
+		~DesktopCapture();
 
 		void changeEvent(QEvent*);
 
@@ -47,6 +47,7 @@ class MainWindow
 	  void updateOutputDir();
 	  void activateTrayIcon(QSystemTrayIcon::ActivationReason);
 	  void renderImage();
+	  void updateCameraResolution(int status);
 
 	private:
 	  static const QString CAPTURED_MONITOR;
@@ -74,4 +75,4 @@ class MainWindow
 		QPixmap              *m_cameraPixmap;
 };
 
-#endif /* MAINWINDOW_H_ */
+#endif // DESKTOP_CAPTURE_H_

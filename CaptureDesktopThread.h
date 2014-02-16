@@ -48,6 +48,9 @@ class CaptureDesktopThread
 		void render();
 
 	private:
+		void overlayCameraImage(QImage &baseImage, const QImage &overlayImage, const QPoint &position);
+		QImage MatToQImage(const cv::Mat& mat);
+
 		bool             m_aborted;
 		QPixmap          m_image;
 		int              m_x;
@@ -60,6 +63,7 @@ class CaptureDesktopThread
 		bool             m_paused;
 		QMutex           m_mutex;
 		QWaitCondition   m_pauseWaitCondition;
+		cv::Mat          m_frame;
 };
 
 #endif // CAPTURE_DESKTOP_THREAD_H_

@@ -52,7 +52,7 @@ qt4_wrap_ui(CORE_UI
 	
 qt4_wrap_cpp(CORE_MOC
   # .h para Qt
-  MainWindow.h
+  DesktopCapture.h
   ProbeResolutionsDialog.h
   CaptureDesktopThread.h
   Pomodoro.h
@@ -72,7 +72,7 @@ set (CORE_SOURCES
   ${CORE_MOC}
   ${CORE_UI}
   Main.cpp
-  MainWindow.cpp
+  DesktopCapture.cpp
   ProbeResolutionsDialog.cpp
   CaptureDesktopThread.cpp
   Pomodoro.cpp

@@ -1,12 +1,12 @@
 /*
- * MainWindow.cpp
+ * DesktopCapture.cpp
  *
  *  Created on: 21/06/2013
  *      Author: Felix de las Pozas Alvarez
  */
 
 // Project
-#include "MainWindow.h"
+#include "DesktopCapture.h"
 #include "ProbeResolutionsDialog.h"
 #include "CaptureDesktopThread.h"
 
@@ -20,17 +20,17 @@
 #include <QPixmap>
 #include <QSettings>
 
-const QString MainWindow::CAPTURED_MONITOR = QString("Captured Desktop Monitor");
-const QString MainWindow::MONITORS_LIST = QString("Monitor Resolutions");
-const QString MainWindow::OUTPUT_DIR = QString("Output Directory");
-const QString MainWindow::CAMERA_ENABLED = QString("Camera Enabled");
-const QString MainWindow::CAMERA_ANIMATED_TRAY_ENABLED = QString("Camera Animated Tray Icon");
-const QString MainWindow::CAMERA_RESOLUTIONS = QString("Available Camera Resolutions");
-const QString MainWindow::ACTIVE_RESOLUTION = QString("Active Resolution");
+const QString DesktopCapture::CAPTURED_MONITOR = QString("Captured Desktop Monitor");
+const QString DesktopCapture::MONITORS_LIST = QString("Monitor Resolutions");
+const QString DesktopCapture::OUTPUT_DIR = QString("Output Directory");
+const QString DesktopCapture::CAMERA_ENABLED = QString("Camera Enabled");
+const QString DesktopCapture::CAMERA_ANIMATED_TRAY_ENABLED = QString("Camera Animated Tray Icon");
+const QString DesktopCapture::CAMERA_RESOLUTIONS = QString("Available Camera Resolutions");
+const QString DesktopCapture::ACTIVE_RESOLUTION = QString("Active Resolution");
 
 
 //-----------------------------------------------------------------
-MainWindow::MainWindow()
+DesktopCapture::DesktopCapture()
 : m_trayIcon{nullptr}
 , m_captureThread{nullptr}
 {
@@ -60,10 +60,11 @@ MainWindow::MainWindow()
 
 	connect(m_enableCamera, SIGNAL(stateChanged(int)), this, SLOT(updateCameraResolutionsComboBox(int)), Qt::QueuedConnection);
 	connect(m_dirButton, SIGNAL(pressed()), this, SLOT(updateOutputDir()));
+	connect(m_cameraResolutionComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(updateCameraResolution(int)));
 }
 
 //-----------------------------------------------------------------
-MainWindow::~MainWindow()
+DesktopCapture::~DesktopCapture()
 {
 	if (m_captureThread)
 	{
@@ -73,7 +74,7 @@ MainWindow::~MainWindow()
 }
 
 //-----------------------------------------------------------------
-void MainWindow::saveConfiguration()
+void DesktopCapture::saveConfiguration()
 {
 	QSettings settings("DesktopCapture.ini", QSettings::IniFormat);
 	int capturedMonitor = (m_captureAllMonitors->isChecked() ? -1 : m_captureMonitorComboBox->currentIndex());
@@ -90,7 +91,7 @@ void MainWindow::saveConfiguration()
 }
 
 //-----------------------------------------------------------------
-void MainWindow::setupMonitors()
+void DesktopCapture::setupMonitors()
 {
 	QSettings settings("DesktopCapture.ini", QSettings::IniFormat);
 
@@ -126,7 +127,7 @@ void MainWindow::setupMonitors()
 }
 
 //-----------------------------------------------------------------
-void MainWindow::setupCameraResolutions()
+void DesktopCapture::setupCameraResolutions()
 {
 	if (!m_cameraResolutions.empty())
 		return;
@@ -152,6 +153,15 @@ void MainWindow::setupCameraResolutions()
 		settings.setValue(CAMERA_ANIMATED_TRAY_ENABLED, true);
 	}
 	m_screenshotAnimateTray->setEnabled(animateScreenshot);
+
+	int selectedResolution;
+	if (settings.contains(ACTIVE_RESOLUTION))
+		selectedResolution = settings.value(ACTIVE_RESOLUTION, 0).toInt();
+	else
+	{
+		selectedResolution = 0;
+		settings.setValue(ACTIVE_RESOLUTION, selectedResolution);
+	}
 
 	if (m_captureThread)
 		m_captureThread->pause();
@@ -212,7 +222,7 @@ void MainWindow::setupCameraResolutions()
 
 				if (m_captureThread)
 				{
-					m_captureThread->setResolution(m_cameraResolutions[0]);
+					m_captureThread->setResolution(m_cameraResolutions.at(selectedResolution));
 					m_captureThread->setCameraEnabled(true);
 				}
 			}
@@ -232,14 +242,6 @@ void MainWindow::setupCameraResolutions()
 	}
 	settings.setValue(CAMERA_RESOLUTIONS, resolutionNames);
 
-	int selectedResolution;
-	if (settings.contains(ACTIVE_RESOLUTION))
-		selectedResolution = settings.value(ACTIVE_RESOLUTION, 0).toInt();
-	else
-	{
-		selectedResolution = 0;
-		settings.setValue(ACTIVE_RESOLUTION, selectedResolution);
-	}
 	if (selectedResolution <= m_cameraResolutionComboBox->count())
 		m_cameraResolutionComboBox->setCurrentIndex(selectedResolution);
 
@@ -249,7 +251,7 @@ void MainWindow::setupCameraResolutions()
 }
 
 //-----------------------------------------------------------------
-void MainWindow::updateMonitorsCheckBox(int status)
+void DesktopCapture::updateMonitorsCheckBox(int status)
 {
 	bool checked = (status == Qt::Checked);
 	m_captureMonitorComboBox->setEnabled(!checked);
@@ -264,14 +266,14 @@ void MainWindow::updateMonitorsCheckBox(int status)
 }
 
 //-----------------------------------------------------------------
-void MainWindow::updateMonitorsComboBox(int index)
+void DesktopCapture::updateMonitorsComboBox(int index)
 {
 	if (m_captureThread)
 		m_captureThread->setCaptureMonitor(index);
 }
 
 //-----------------------------------------------------------------
-void MainWindow::updateCameraResolutionsComboBox(int status)
+void DesktopCapture::updateCameraResolutionsComboBox(int status)
 {
 	bool enabled = (status == Qt::Checked);
 
@@ -279,10 +281,13 @@ void MainWindow::updateCameraResolutionsComboBox(int status)
 		setupCameraResolutions();
 
 	m_cameraResolutionComboBox->setEnabled(enabled);
+
+	if (m_captureThread)
+		m_captureThread->setCameraEnabled(enabled);
 }
 
 //-----------------------------------------------------------------
-void MainWindow::saveCapture()
+void DesktopCapture::saveCapture()
 {
 	QString format = "png";
 	QString fileName = QDir::currentPath() + tr("/DesktopCapture.") + format;
@@ -291,7 +296,7 @@ void MainWindow::saveCapture()
 }
 
 //-----------------------------------------------------------------
-void MainWindow::setupTrayIcon()
+void DesktopCapture::setupTrayIcon()
 {
 	if(!QSystemTrayIcon::isSystemTrayAvailable())
 		return;
@@ -302,7 +307,7 @@ void MainWindow::setupTrayIcon()
 }
 
 //-----------------------------------------------------------------
-void MainWindow::changeEvent(QEvent* e)
+void DesktopCapture::changeEvent(QEvent* e)
 {
 	switch (e->type())
 	{
@@ -323,7 +328,7 @@ void MainWindow::changeEvent(QEvent* e)
 }
 
 //-----------------------------------------------------------------
-void MainWindow::activateTrayIcon(QSystemTrayIcon::ActivationReason reason)
+void DesktopCapture::activateTrayIcon(QSystemTrayIcon::ActivationReason reason)
 {
 	if ((reason) && (reason != QSystemTrayIcon::DoubleClick))
 		return;
@@ -334,7 +339,7 @@ void MainWindow::activateTrayIcon(QSystemTrayIcon::ActivationReason reason)
 }
 
 //-----------------------------------------------------------------
-void MainWindow::setupCaptureThread()
+void DesktopCapture::setupCaptureThread()
 {
 	int monitor = -1;
 	if (!m_captureAllMonitors->isChecked())
@@ -352,14 +357,14 @@ void MainWindow::setupCaptureThread()
 }
 
 //-----------------------------------------------------------------
-void MainWindow::renderImage()
+void DesktopCapture::renderImage()
 {
 	QPixmap* pixmap = m_captureThread->getImage();
 	m_screenshotImage->setPixmap(pixmap->scaled(m_screenshotImage->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation));
 }
 
 //-----------------------------------------------------------------
-void MainWindow::updateOutputDir()
+void DesktopCapture::updateOutputDir()
 {
 	if (m_captureThread)
 		m_captureThread->pause();
@@ -369,4 +374,11 @@ void MainWindow::updateOutputDir()
 		m_captureThread->resume();
 
 	m_dirEditLabel->setText(dir);
+}
+
+//-----------------------------------------------------------------
+void DesktopCapture::updateCameraResolution(int status)
+{
+	if (m_captureThread)
+		m_captureThread->setResolution(this->m_cameraResolutions.at(status));
 }
