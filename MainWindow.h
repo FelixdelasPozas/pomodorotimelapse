@@ -16,9 +16,7 @@
 // Qt
 #include <QMainWindow>
 #include <QSystemTrayIcon>
-
-// OpenCV
-#include <opencv2/highgui/highgui.hpp>
+#include <QMutex>
 
 class QAction;
 class QMenu;
@@ -26,6 +24,9 @@ class QPlainTextEdit;
 class QProgressDialog;
 class QResizeEvent;
 class QEvent;
+class QPixmap;
+
+class CaptureDesktopThread;
 
 class MainWindow
 : public QMainWindow
@@ -37,27 +38,30 @@ class MainWindow
 		MainWindow();
 		~MainWindow();
 
-		void resizeEvent(QResizeEvent *);
 		void changeEvent(QEvent*);
 
 	private slots:
 	  void updateMonitorsComboBox(int status);
+	  void updateMonitorsCheckBox(int status);
 	  void updateCameraResolutionsComboBox(int status);
-	  void updateCapturedImage();
 	  void activateTrayIcon(QSystemTrayIcon::ActivationReason);
+	  void renderImage();
 
 	private:
-	  void setupMonitors();
 	  void setupCameraResolutions();
+	  void setupMonitors();
 	  void setupTrayIcon();
+	  void setupCaptureThread();
 	  void saveCapture();
 
-	  cv::VideoCapture m_camera;
-		QStringList      m_cameraResolutionsNames;
-		ResolutionList   m_cameraResolutions;
-		Pomodoro         m_pomodoro;
-		QPixmap          m_desktopCapture;
-		QSystemTrayIcon *m_trayIcon;
+		QStringList           m_cameraResolutionsNames;
+		ResolutionList        m_cameraResolutions;
+		Pomodoro              m_pomodoro;
+		QPixmap               m_desktopCapture;
+		QSystemTrayIcon      *m_trayIcon;
+		CaptureDesktopThread *m_captureThread;
+		QMutex                m_mutex;
+		QPixmap              *m_cameraPixmap;
 
 };
 

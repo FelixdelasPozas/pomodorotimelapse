@@ -46,8 +46,6 @@ class ProbeThread
 		cv::VideoCapture m_camera;
 		bool             m_cancelled;
 		ResolutionList   m_availableResolutions;
-
-
 };
 
 class ProbeResolutionsDialog

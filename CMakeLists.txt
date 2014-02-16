@@ -54,6 +54,7 @@ qt4_wrap_cpp(CORE_MOC
   # .h para Qt
   MainWindow.h
   ProbeResolutionsDialog.h
+  CaptureDesktopThread.h
   Pomodoro.h
   
   #Camera/CameraConnectDialog.h
@@ -73,6 +74,7 @@ set (CORE_SOURCES
   Main.cpp
   MainWindow.cpp
   ProbeResolutionsDialog.cpp
+  CaptureDesktopThread.cpp
   Pomodoro.cpp
   
   #Camera/CameraConnectDialog.cpp

@@ -8,14 +8,20 @@
 // Project
 #include "MainWindow.h"
 #include "ProbeResolutionsDialog.h"
+#include "CaptureDesktopThread.h"
+
+// OpenCV
+#include <opencv2/highgui/highgui.hpp>
 
 // Qt
 #include <QtGui>
 #include <QDebug>
+#include <QPixmap>
 
 //-----------------------------------------------------------------
 MainWindow::MainWindow()
 : m_trayIcon{nullptr}
+, m_captureThread{nullptr}
 {
 	setupUi(this);
 
@@ -26,24 +32,19 @@ MainWindow::MainWindow()
 	setupMonitors();
 	setupTrayIcon();
 	setupCameraResolutions();
+	setupCaptureThread();
 
-	updateCapturedImage();
+	connect(m_enableCamera, SIGNAL(stateChanged(int)), this, SLOT(updateCameraResolutionsComboBox(int)), Qt::QueuedConnection);
 }
 
 //-----------------------------------------------------------------
 MainWindow::~MainWindow()
 {
-	if(m_camera.isOpened())
-		m_camera.release();
-}
-
-//-----------------------------------------------------------------
-void MainWindow::resizeEvent(QResizeEvent *unused)
-{
-	QSize scaledSize = m_desktopCapture.size();
-	scaledSize.scale(m_screenshotImage->size(), Qt::KeepAspectRatio);
-	if (!m_screenshotImage->pixmap() || scaledSize != m_screenshotImage->pixmap()->size())
-		updateCapturedImage();
+	if (m_captureThread)
+	{
+		m_captureThread->abort();
+		m_captureThread->wait();
+	}
 }
 
 //-----------------------------------------------------------------
@@ -62,24 +63,33 @@ void MainWindow::setupMonitors()
 	}
 	m_captureMonitorComboBox->insertItems(0, monitors);
 
-	connect(m_captureAllMonitors, SIGNAL(stateChanged(int)), this, SLOT(updateMonitorsComboBox(int)));
-	connect(m_captureMonitorComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(updateCapturedImage()));
+	connect(m_captureAllMonitors, SIGNAL(stateChanged(int)), this, SLOT(updateMonitorsCheckBox(int)));
+	connect(m_captureMonitorComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(updateMonitorsComboBox(int)));
 }
 
 //-----------------------------------------------------------------
 void MainWindow::setupCameraResolutions()
 {
-	if (!m_camera.open(0))
+	if (!m_cameraResolutions.empty())
+		return;
+
+	if (m_captureThread)
+		m_captureThread->pause();
+
+	cv::VideoCapture camera;
+
+	if (!camera.open(0))
 	{
+		m_enableCamera->blockSignals(true);
 		m_enableCamera->setChecked(false);
-		m_enableCamera->setEnabled(false);
+		m_enableCamera->blockSignals(false);
+		m_cameraResolutions.clear();
 		m_cameraResolutionComboBox->insertItem(0, QString("No cameras detected."));
 		m_cameraResolutionComboBox->setEnabled(false);
-		m_resolutionsScan->setEnabled(false);
 	}
 	else
 	{
-		m_camera.release();
+		camera.release();
 		ProbeResolutionsDialog *dialog = new ProbeResolutionsDialog(this);
 		dialog->setWindowIcon(QIcon(":/DesktopCapture/config.ico"));
 		dialog->setWindowTitle(QString("Probing camera resolutions..."));
@@ -87,58 +97,69 @@ void MainWindow::setupCameraResolutions()
 
 		if (dialog->result() == QDialog::Accepted)
 		{
-			auto resolutions = dialog->getResolutions();
+			m_cameraResolutions = dialog->getResolutions();
 			QStringList resolutionNames;
-			for (auto resolution: resolutions)
+			for (auto resolution: m_cameraResolutions)
 				resolutionNames << getResolutionAsString(resolution);
 
 			m_cameraResolutionComboBox->insertItems(0, resolutionNames);
 			m_cameraResolutionComboBox->setCurrentIndex(resolutionNames.size() / 2);
 
-			connect(m_enableCamera, SIGNAL(stateChanged(int)), this, SLOT(updateCameraResolutionsComboBox(int)));
+			if (m_captureThread)
+			{
+				m_captureThread->setResolution(m_cameraResolutions[0]);
+				m_captureThread->setCameraEnabled(true);
+			}
 		}
 		else
 		{
 			m_enableCamera->setChecked(false);
-			m_enableCamera->setEnabled(false);
+			m_cameraResolutions.clear();
 			m_cameraResolutionComboBox->insertItem(0, QString("No known resolutions."));
 			m_cameraResolutionComboBox->setEnabled(false);
-			m_resolutionsScan->setEnabled(false);
+
+			if (m_captureThread)
+				m_captureThread->setCameraEnabled(false);
 		}
 
 		delete dialog;
 	}
+
+	if (m_captureThread)
+		m_captureThread->resume();
 }
 
 //-----------------------------------------------------------------
-void MainWindow::updateMonitorsComboBox(int status)
+void MainWindow::updateMonitorsCheckBox(int status)
 {
-	m_captureMonitorComboBox->setEnabled(status == Qt::Unchecked);
-	updateCapturedImage();
+	bool checked = (status == Qt::Checked);
+	m_captureMonitorComboBox->setEnabled(!checked);
+
+	if (m_captureThread)
+	{
+		if (checked)
+			m_captureThread->setCaptureMonitor(-1);
+		else
+			m_captureThread->setCaptureMonitor(m_captureMonitorComboBox->currentIndex());
+	}
+}
+
+//-----------------------------------------------------------------
+void MainWindow::updateMonitorsComboBox(int index)
+{
+	if (m_captureThread)
+		m_captureThread->setCaptureMonitor(index);
 }
 
 //-----------------------------------------------------------------
 void MainWindow::updateCameraResolutionsComboBox(int status)
 {
 	bool enabled = (status == Qt::Checked);
+
+	if (m_cameraResolutions.isEmpty() && enabled)
+		setupCameraResolutions();
+
 	m_cameraResolutionComboBox->setEnabled(enabled);
-	m_resolutionsScan->setEnabled(enabled);
-}
-
-//-----------------------------------------------------------------
-void MainWindow::updateCapturedImage()
-{
-	QRect captureGeometry;
-	if (this->m_captureAllMonitors->isChecked())
-		captureGeometry = QApplication::desktop()->geometry();
-	else
-	{
-		int monitorIndex = this->m_captureMonitorComboBox->currentIndex();
-		captureGeometry = QApplication::desktop()->screenGeometry(monitorIndex);
-	}
-
-	m_desktopCapture = QPixmap::grabWindow(QApplication::desktop()->winId(), captureGeometry.x(), captureGeometry.y(), captureGeometry.width(), captureGeometry.height());
-	m_screenshotImage->setPixmap(m_desktopCapture.scaled(m_screenshotImage->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation));
 }
 
 //-----------------------------------------------------------------
@@ -155,8 +176,6 @@ void MainWindow::setupTrayIcon()
 {
 	if(!QSystemTrayIcon::isSystemTrayAvailable())
 		return;
-
-	qDebug() << QApplication::palette().color(QPalette::Window);
 
 	m_trayIcon = new QSystemTrayIcon(this);
 	m_trayIcon->setIcon(QIcon(":/DesktopCapture/application.ico"));
@@ -193,4 +212,30 @@ void MainWindow::activateTrayIcon(QSystemTrayIcon::ActivationReason reason)
 	m_trayIcon->hide();
 	show();
 	setWindowState(windowState() & (~Qt::WindowMinimized | Qt::WindowActive));
+}
+
+//-----------------------------------------------------------------
+void MainWindow::setupCaptureThread()
+{
+	int monitor = -1;
+	if (!m_captureAllMonitors->isChecked())
+		monitor = m_captureMonitorComboBox->currentIndex();
+
+	Resolution resolution{QString(), 0, 0};
+
+	if (m_enableCamera->isChecked())
+		resolution = m_cameraResolutions.at(m_cameraResolutionComboBox->currentIndex());
+
+	m_captureThread = new CaptureDesktopThread(monitor, resolution, this);
+
+	connect(m_captureThread, SIGNAL(render()), this, SLOT(renderImage()), Qt::QueuedConnection);
+	m_captureThread->start(QThread::Priority::NormalPriority);
+}
+
+//-----------------------------------------------------------------
+void MainWindow::renderImage()
+{
+	QImage *image = m_captureThread->getImage();
+	QPixmap pixmap = QPixmap::fromImage(*image);
+	m_screenshotImage->setPixmap(pixmap.scaled(m_screenshotImage->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation));
 }

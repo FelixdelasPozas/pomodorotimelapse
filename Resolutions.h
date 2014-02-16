@@ -17,6 +17,9 @@ struct Resolution
 	double width;
 	double height;
 
+	Resolution(QString rName, double rWidth, double rHeight): name{rName}, width{rWidth}, height{rHeight} {};
+	Resolution(): name{QString()}, width{0}, height{0} {};
+
 	bool operator==(const Resolution &lhs) const
 	{
 		return ((lhs.name == name) && (lhs.width == width) && (lhs.height == height));
