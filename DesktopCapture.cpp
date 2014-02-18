@@ -27,7 +27,8 @@ const QString DesktopCapture::CAMERA_ANIMATED_TRAY_ENABLED = QString("Camera Ani
 const QString DesktopCapture::CAMERA_RESOLUTIONS = QString("Available Camera Resolutions");
 const QString DesktopCapture::ACTIVE_RESOLUTION = QString("Active Resolution");
 const QString DesktopCapture::APPLICATION_GEOMETRY = QString("Application Geometry");
-
+const QString DesktopCapture::OVERLAY_POSITION = QString("Camera Overlay Position");
+const QString DesktopCapture::OVERLAY_COMPOSITION_MODE = QString("Camera Overlay Composition Mode");
 
 //-----------------------------------------------------------------
 DesktopCapture::DesktopCapture()
@@ -45,6 +46,21 @@ DesktopCapture::DesktopCapture()
 		restoreGeometry(settings.value(APPLICATION_GEOMETRY).toByteArray());
 	else
 		showMaximized();
+
+	QPoint position(0,0);
+	if (settings.contains(OVERLAY_POSITION))
+		position = settings.value(OVERLAY_POSITION, QPoint(0,0)).toPoint();
+	else
+		settings.setValue(OVERLAY_POSITION, position);
+
+	int modeIndex;
+	if (settings.contains(OVERLAY_COMPOSITION_MODE))
+		modeIndex = settings.value(OVERLAY_COMPOSITION_MODE, 0).toInt();
+	else
+		modeIndex = 0;
+	m_compositionMode = CaptureDesktopThread::COMPOSITION_MODES.at(modeIndex);
+	m_compositionComboBox->insertItems(0, CaptureDesktopThread::COMPOSITION_MODES_NAMES);
+	m_compositionComboBox->setCurrentIndex(modeIndex);
 
 	setupMonitors();
 	setupTrayIcon();
@@ -66,6 +82,8 @@ DesktopCapture::DesktopCapture()
 	connect(m_enableCamera, SIGNAL(stateChanged(int)), this, SLOT(updateCameraResolutionsComboBox(int)), Qt::QueuedConnection);
 	connect(m_dirButton, SIGNAL(pressed()), this, SLOT(updateOutputDir()));
 	connect(m_cameraResolutionComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(updateCameraResolution(int)));
+	connect(m_compositionComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(updateCameraCompositionMode(int)));
+	m_screenshotImage->installEventFilter(this);
 }
 
 //-----------------------------------------------------------------
@@ -98,6 +116,8 @@ void DesktopCapture::saveConfiguration()
 	settings.setValue(CAMERA_ANIMATED_TRAY_ENABLED, m_screenshotAnimateTray->isChecked());
 	settings.setValue(CAMERA_RESOLUTIONS, m_cameraResolutionsNames);
 	settings.setValue(ACTIVE_RESOLUTION, m_cameraResolutionComboBox->currentIndex());
+	settings.setValue(OVERLAY_POSITION, m_PIPposition);
+	settings.setValue(OVERLAY_COMPOSITION_MODE, m_compositionComboBox->currentIndex());
 
 	if (this->isVisible())
 		settings.setValue(APPLICATION_GEOMETRY, saveGeometry());
@@ -116,7 +136,9 @@ void DesktopCapture::setupMonitors()
 	else
 		capturedMonitor = -1;
 
-	m_captureAllMonitors->setChecked(capturedMonitor == -1);
+	bool checked = (capturedMonitor == -1);
+	m_captureAllMonitors->setChecked(checked);
+	m_captureMonitorComboBox->setEnabled(!checked);
 
 	QStringList monitors;
 	if (settings.contains(MONITORS_LIST))
@@ -366,7 +388,7 @@ void DesktopCapture::setupCaptureThread()
 	if (m_enableCamera->isChecked() && !m_cameraResolutions.empty())
 		resolution = m_cameraResolutions.at(m_cameraResolutionComboBox->currentIndex());
 
-	m_captureThread = new CaptureDesktopThread(monitor, resolution, this);
+	m_captureThread = new CaptureDesktopThread(monitor, resolution, m_PIPposition, m_compositionMode, this);
 
 	connect(m_captureThread, SIGNAL(render()), this, SLOT(renderImage()), Qt::QueuedConnection);
 	m_captureThread->start(QThread::Priority::NormalPriority);
@@ -397,4 +419,108 @@ void DesktopCapture::updateCameraResolution(int status)
 {
 	if (m_captureThread)
 		m_captureThread->setResolution(this->m_cameraResolutions.at(status));
+}
+
+void DesktopCapture::updateCameraCompositionMode(int status)
+{
+	m_compositionMode = CaptureDesktopThread::COMPOSITION_MODES.at(status);
+	if (m_captureThread)
+		m_captureThread->setOverlayCompositionMode(m_compositionMode);
+}
+
+//-----------------------------------------------------------------
+bool DesktopCapture::eventFilter(QObject *object, QEvent *event)
+{
+	if (!m_captureThread)
+		return object->eventFilter(object, event);
+
+	static bool drag = false;
+	bool valid = false;
+	static QPoint dragPoint = QPoint(0, 0);
+	QMouseEvent *me = static_cast<QMouseEvent *>(event);
+	Resolution cameraResolution = m_cameraResolutions.at(this->m_cameraResolutionComboBox->currentIndex());
+
+	QLabel *label = qobject_cast<QLabel *>(object);
+	Q_ASSERT(label);
+
+	switch (event->type())
+	{
+		case QEvent::Enter:
+			if (m_captureThread)
+				m_captureThread->setPaintFrame(true);
+			break;
+		case QEvent::Leave:
+			if (m_captureThread)
+				m_captureThread->setPaintFrame(false);
+			break;
+		case QEvent::MouseButtonPress:
+			if (me->button() == Qt::LeftButton)
+			{
+				drag = true;
+				dragPoint = me->pos();
+			}
+			break;
+		case QEvent::MouseButtonRelease:
+			if ((me->button() == Qt::LeftButton) && drag)
+			{
+				drag = false;
+				m_captureThread->setOverlayPosition(computeNewPosition(dragPoint, me->pos()));
+				dragPoint = me->pos();
+			}
+			break;
+		case QEvent::MouseMove:
+			if (drag)
+			{
+				m_captureThread->setOverlayPosition(computeNewPosition(dragPoint, me->pos()));
+				dragPoint = me->pos();
+			}
+			break;
+		default:
+			break;
+	}
+
+	return object->eventFilter(object, event);
+}
+
+//-----------------------------------------------------------------
+QPoint DesktopCapture::computeNewPosition(const QPoint &dragPoint, const QPoint &point)
+{
+	QRect geometry;
+	QSize imageGeometry = m_screenshotImage->pixmap()->size();
+
+//	qDebug() << "pulsado en" << me->pos().x() << me->pos().y();
+//	bool valid;
+//	valid  = (me->pos().x() > m_PIPposition.x()) && (me->pos().x() < (m_PIPposition.x() + cameraResolution.width));
+//	valid &= (me->pos().y() > m_PIPposition.y()) && (me->pos().y() < (m_PIPposition.y() + cameraResolution.height));
+
+	if (!m_captureAllMonitors->isChecked())
+		geometry = QApplication::desktop()->screenGeometry(m_captureMonitorComboBox->currentIndex());
+	else
+		geometry = QApplication::desktop()->geometry();
+
+	Resolution cameraResolution = m_cameraResolutions.at(this->m_cameraResolutionComboBox->currentIndex());
+	int dx = point.x() - dragPoint.x();
+	int dy = point.y() - dragPoint.y();
+	int xLimit = geometry.width() - cameraResolution.width;
+	int yLimit = geometry.height() - cameraResolution.height;
+
+	m_PIPposition.setX(m_PIPposition.x() + dx);
+	m_PIPposition.setY(m_PIPposition.y() + dy);
+
+	if (m_PIPposition.x() < 0)
+		m_PIPposition.setX(0);
+
+
+	if (m_PIPposition.x() > xLimit)
+		m_PIPposition.setX(xLimit);
+
+
+	if (m_PIPposition.y() < 0)
+		m_PIPposition.setY(0);
+
+	if (m_PIPposition.y() > yLimit)
+		m_PIPposition.setY(yLimit);
+
+	qDebug() << dragPoint << point << geometry << dx << dy << xLimit << yLimit << "(" << m_PIPposition.x() << m_PIPposition.y() << ")";
+	return m_PIPposition;
 }

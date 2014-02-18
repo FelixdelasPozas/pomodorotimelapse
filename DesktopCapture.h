@@ -16,6 +16,7 @@
 // Qt
 #include <QMainWindow>
 #include <QSystemTrayIcon>
+#include <QPainter>
 #include <QMutex>
 
 class QAction;
@@ -39,6 +40,7 @@ class DesktopCapture
 		~DesktopCapture();
 
 		void changeEvent(QEvent*);
+		bool eventFilter(QObject *object, QEvent *event);
 
 	private slots:
 	  void updateMonitorsComboBox(int status);
@@ -48,6 +50,7 @@ class DesktopCapture
 	  void activateTrayIcon(QSystemTrayIcon::ActivationReason);
 	  void renderImage();
 	  void updateCameraResolution(int status);
+	  void updateCameraCompositionMode(int status);
 
 	private:
 	  static const QString CAPTURED_MONITOR;
@@ -58,6 +61,8 @@ class DesktopCapture
 	  static const QString CAMERA_RESOLUTIONS;
 	  static const QString ACTIVE_RESOLUTION;
 	  static const QString APPLICATION_GEOMETRY;
+	  static const QString OVERLAY_POSITION;
+	  static const QString OVERLAY_COMPOSITION_MODE;
 
 	  void saveConfiguration();
 	  void setupCameraResolutions();
@@ -65,6 +70,7 @@ class DesktopCapture
 	  void setupTrayIcon();
 	  void setupCaptureThread();
 	  void saveCapture();
+	  QPoint computeNewPosition(const QPoint &dragPoint, const QPoint &point);
 
 		QStringList           m_cameraResolutionsNames;
 		ResolutionList        m_cameraResolutions;
@@ -74,6 +80,8 @@ class DesktopCapture
 		CaptureDesktopThread *m_captureThread;
 		QMutex                m_mutex;
 		QPixmap              *m_cameraPixmap;
+		QPoint                m_PIPposition;
+		QPainter::CompositionMode m_compositionMode;
 };
 
 #endif // DESKTOP_CAPTURE_H_

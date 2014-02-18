@@ -141,6 +141,23 @@
            </layout>
           </item>
           <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_8">
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <item>
+             <widget class="QLabel" name="label_5">
+              <property name="text">
+               <string>Composition Mode</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QComboBox" name="m_compositionComboBox"/>
+            </item>
+           </layout>
+          </item>
+          <item>
            <widget class="QCheckBox" name="m_screenshotAnimateTray">
             <property name="text">
              <string>Animated tray icon</string>

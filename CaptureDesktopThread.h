@@ -18,6 +18,7 @@
 #include <QThread>
 #include <QLabel>
 #include <QMutex>
+#include <QPainter>
 #include <QWaitCondition>
 
 class CaptureDesktopThread
@@ -25,8 +26,13 @@ class CaptureDesktopThread
 {
 	Q_OBJECT
 	public:
+  	static const QList<QPainter::CompositionMode> COMPOSITION_MODES;
+  	static const QStringList COMPOSITION_MODES_NAMES;
+
 		explicit CaptureDesktopThread(int capturedMonitor,
 				                          Resolution cameraResolution,
+				                          QPoint overlayPosition,
+				                          QPainter::CompositionMode compositionMode,
 				                          QObject *parent = nullptr);
 		virtual ~CaptureDesktopThread();
 
@@ -37,8 +43,11 @@ class CaptureDesktopThread
 		void resume();
 
 		void setCaptureMonitor(int monitor);
-		void setCameraEnabled(bool);
-		void setResolution(Resolution);
+		bool setCameraEnabled(bool);
+		bool setResolution(const Resolution &resolution);
+		void setOverlayPosition(const QPoint &point);
+		void setOverlayCompositionMode(const QPainter::CompositionMode mode);
+		void setPaintFrame(bool);
 
 		void run();
 
@@ -48,7 +57,7 @@ class CaptureDesktopThread
 		void render();
 
 	private:
-		void overlayCameraImage(QImage &baseImage, const QImage &overlayImage, const QPoint &position);
+		void overlayCameraImage(QImage &baseImage, const QImage &overlayImage);
 		QImage MatToQImage(const cv::Mat& mat);
 
 		bool             m_aborted;
@@ -64,6 +73,10 @@ class CaptureDesktopThread
 		QMutex           m_mutex;
 		QWaitCondition   m_pauseWaitCondition;
 		cv::Mat          m_frame;
+		QPoint           m_position;
+
+		QPainter::CompositionMode m_compositionMode;
+		bool m_paintFrame;
 };
 
 #endif // CAPTURE_DESKTOP_THREAD_H_
