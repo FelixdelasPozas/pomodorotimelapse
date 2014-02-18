@@ -27,6 +27,7 @@ const QString DesktopCapture::CAMERA_ANIMATED_TRAY_ENABLED = QString("Camera Ani
 const QString DesktopCapture::CAMERA_RESOLUTIONS = QString("Available Camera Resolutions");
 const QString DesktopCapture::ACTIVE_RESOLUTION = QString("Active Resolution");
 const QString DesktopCapture::APPLICATION_GEOMETRY = QString("Application Geometry");
+const QString DesktopCapture::APPLICATION_STATE = QString("Application State");
 const QString DesktopCapture::OVERLAY_POSITION = QString("Camera Overlay Position");
 const QString DesktopCapture::OVERLAY_COMPOSITION_MODE = QString("Camera Overlay Composition Mode");
 
@@ -46,6 +47,9 @@ DesktopCapture::DesktopCapture()
 		restoreGeometry(settings.value(APPLICATION_GEOMETRY).toByteArray());
 	else
 		showMaximized();
+
+	if (settings.contains(APPLICATION_STATE))
+		this->restoreState(settings.value(APPLICATION_STATE).toByteArray());
 
 	QPoint position(0,0);
 	if (settings.contains(OVERLAY_POSITION))
@@ -90,8 +94,6 @@ DesktopCapture::DesktopCapture()
 //-----------------------------------------------------------------
 DesktopCapture::~DesktopCapture()
 {
-	saveConfiguration();
-
 	if (m_captureThread)
 	{
 		m_captureThread->abort();
@@ -119,9 +121,8 @@ void DesktopCapture::saveConfiguration()
 	settings.setValue(ACTIVE_RESOLUTION, m_cameraResolutionComboBox->currentIndex());
 	settings.setValue(OVERLAY_POSITION, m_PIPposition);
 	settings.setValue(OVERLAY_COMPOSITION_MODE, m_compositionComboBox->currentIndex());
-
-	if (this->isVisible())
-		settings.setValue(APPLICATION_GEOMETRY, saveGeometry());
+  settings.setValue(APPLICATION_GEOMETRY, saveGeometry());
+  settings.setValue(APPLICATION_STATE, saveState());
 
 	settings.sync();
 }
@@ -539,4 +540,10 @@ QPoint DesktopCapture::computeNewPosition(const QPoint &dragPoint, const QPoint 
 		m_PIPposition.setY(yLimit);
 
 	return m_PIPposition;
+}
+
+void DesktopCapture::closeEvent(QCloseEvent *event)
+{
+	saveConfiguration();
+  QMainWindow::closeEvent(event);
 }

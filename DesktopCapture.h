@@ -41,6 +41,7 @@ class DesktopCapture
 
 		void changeEvent(QEvent*);
 		bool eventFilter(QObject *object, QEvent *event);
+		void closeEvent(QCloseEvent *e);
 
 	private slots:
 	  void updateMonitorsComboBox(int status);
@@ -61,6 +62,7 @@ class DesktopCapture
 	  static const QString CAMERA_RESOLUTIONS;
 	  static const QString ACTIVE_RESOLUTION;
 	  static const QString APPLICATION_GEOMETRY;
+	  static const QString APPLICATION_STATE;
 	  static const QString OVERLAY_POSITION;
 	  static const QString OVERLAY_COMPOSITION_MODE;
 
