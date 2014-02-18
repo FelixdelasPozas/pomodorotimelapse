@@ -52,6 +52,7 @@ DesktopCapture::DesktopCapture()
 		position = settings.value(OVERLAY_POSITION, QPoint(0,0)).toPoint();
 	else
 		settings.setValue(OVERLAY_POSITION, position);
+	m_PIPposition = position;
 
 	int modeIndex;
 	if (settings.contains(OVERLAY_COMPOSITION_MODE))
@@ -299,7 +300,11 @@ void DesktopCapture::updateMonitorsCheckBox(int status)
 		if (checked)
 			m_captureThread->setCaptureMonitor(-1);
 		else
+		{
+			computeNewPosition();
+			m_captureThread->setOverlayPosition(m_PIPposition);
 			m_captureThread->setCaptureMonitor(m_captureMonitorComboBox->currentIndex());
+		}
 	}
 }
 
@@ -435,7 +440,6 @@ bool DesktopCapture::eventFilter(QObject *object, QEvent *event)
 		return object->eventFilter(object, event);
 
 	static bool drag = false;
-	bool valid = false;
 	static QPoint dragPoint = QPoint(0, 0);
 	QMouseEvent *me = static_cast<QMouseEvent *>(event);
 	Resolution cameraResolution = m_cameraResolutions.at(this->m_cameraResolutionComboBox->currentIndex());
@@ -456,6 +460,22 @@ bool DesktopCapture::eventFilter(QObject *object, QEvent *event)
 		case QEvent::MouseButtonPress:
 			if (me->button() == Qt::LeftButton)
 			{
+				QRect geometry;
+				if (!m_captureAllMonitors->isChecked())
+					geometry = QApplication::desktop()->screenGeometry(m_captureMonitorComboBox->currentIndex());
+				else
+					geometry = QApplication::desktop()->geometry();
+
+				QSize unusedSpace = m_screenshotImage->size() - m_screenshotImage->pixmap()->size();
+				double ratio = geometry.width() / static_cast<double>(m_screenshotImage->pixmap()->size().width());
+				QPoint mappedPoint = QPoint((me->pos().x() - unusedSpace.width()/2) * ratio, (me->pos().y() - unusedSpace.height()/2) * ratio);
+
+				if ( (m_PIPposition.x() > mappedPoint.x()) ||
+		         (m_PIPposition.y() > mappedPoint.y()) ||
+		         (m_PIPposition.x()+cameraResolution.width < mappedPoint.x()) ||
+		         (m_PIPposition.y()+cameraResolution.height < mappedPoint.y()) )
+					break;
+
 				drag = true;
 				dragPoint = me->pos();
 			}
@@ -485,22 +505,20 @@ bool DesktopCapture::eventFilter(QObject *object, QEvent *event)
 //-----------------------------------------------------------------
 QPoint DesktopCapture::computeNewPosition(const QPoint &dragPoint, const QPoint &point)
 {
-	QRect geometry;
 	QSize imageGeometry = m_screenshotImage->pixmap()->size();
-
-//	qDebug() << "pulsado en" << me->pos().x() << me->pos().y();
-//	bool valid;
-//	valid  = (me->pos().x() > m_PIPposition.x()) && (me->pos().x() < (m_PIPposition.x() + cameraResolution.width));
-//	valid &= (me->pos().y() > m_PIPposition.y()) && (me->pos().y() < (m_PIPposition.y() + cameraResolution.height));
-
+	QRect geometry;
 	if (!m_captureAllMonitors->isChecked())
 		geometry = QApplication::desktop()->screenGeometry(m_captureMonitorComboBox->currentIndex());
 	else
 		geometry = QApplication::desktop()->geometry();
 
+	double ratioX = static_cast<double>(geometry.width()) / static_cast<double>(imageGeometry.width());
+	double ratioY = static_cast<double>(geometry.height()) / static_cast<double>(imageGeometry.height());
+
 	Resolution cameraResolution = m_cameraResolutions.at(this->m_cameraResolutionComboBox->currentIndex());
-	int dx = point.x() - dragPoint.x();
-	int dy = point.y() - dragPoint.y();
+
+	int dx = (point.x() - dragPoint.x())*ratioX;
+	int dy = (point.y() - dragPoint.y())*ratioY;
 	int xLimit = geometry.width() - cameraResolution.width;
 	int yLimit = geometry.height() - cameraResolution.height;
 
@@ -509,7 +527,6 @@ QPoint DesktopCapture::computeNewPosition(const QPoint &dragPoint, const QPoint 
 
 	if (m_PIPposition.x() < 0)
 		m_PIPposition.setX(0);
-
 
 	if (m_PIPposition.x() > xLimit)
 		m_PIPposition.setX(xLimit);
@@ -521,6 +538,5 @@ QPoint DesktopCapture::computeNewPosition(const QPoint &dragPoint, const QPoint 
 	if (m_PIPposition.y() > yLimit)
 		m_PIPposition.setY(yLimit);
 
-	qDebug() << dragPoint << point << geometry << dx << dy << xLimit << yLimit << "(" << m_PIPposition.x() << m_PIPposition.y() << ")";
 	return m_PIPposition;
 }

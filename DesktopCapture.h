@@ -70,7 +70,7 @@ class DesktopCapture
 	  void setupTrayIcon();
 	  void setupCaptureThread();
 	  void saveCapture();
-	  QPoint computeNewPosition(const QPoint &dragPoint, const QPoint &point);
+	  QPoint computeNewPosition(const QPoint &dragPoint = QPoint(0,0), const QPoint &point = QPoint(0,0));
 
 		QStringList           m_cameraResolutionsNames;
 		ResolutionList        m_cameraResolutions;
