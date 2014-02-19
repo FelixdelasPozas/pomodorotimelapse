@@ -424,7 +424,11 @@ void DesktopCapture::updateOutputDir()
 void DesktopCapture::updateCameraResolution(int status)
 {
 	if (m_captureThread)
+	{
 		m_captureThread->setResolution(this->m_cameraResolutions.at(status));
+		computeNewPosition();
+		m_captureThread->setOverlayPosition(m_PIPposition);
+	}
 }
 
 void DesktopCapture::updateCameraCompositionMode(int status)
@@ -437,7 +441,7 @@ void DesktopCapture::updateCameraCompositionMode(int status)
 //-----------------------------------------------------------------
 bool DesktopCapture::eventFilter(QObject *object, QEvent *event)
 {
-	if (!m_captureThread)
+	if (!m_captureThread || !m_enableCamera->isChecked())
 		return object->eventFilter(object, event);
 
 	static bool drag = false;

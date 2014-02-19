@@ -16,8 +16,12 @@
 #include <QMutexLocker>
 #include <QDebug>
 
-const QList<QPainter::CompositionMode> CaptureDesktopThread::COMPOSITION_MODES = { QPainter::CompositionMode_SourceOver, QPainter::CompositionMode_Plus };
-const QStringList CaptureDesktopThread::COMPOSITION_MODES_NAMES = { QString("Copy"), QString("Plus") };
+const QList<QPainter::CompositionMode> CaptureDesktopThread::COMPOSITION_MODES = { QPainter::CompositionMode_SourceOver,
+		                                                                               QPainter::CompositionMode_Plus,
+		                                                                               QPainter::CompositionMode_Multiply };
+const QStringList CaptureDesktopThread::COMPOSITION_MODES_NAMES = { QString("Copy"),
+		                                                                QString("Plus"),
+		                                                                QString("Multiply") };
 
 //-----------------------------------------------------------------
 CaptureDesktopThread::CaptureDesktopThread(int capturedMonitor,
@@ -252,16 +256,20 @@ void CaptureDesktopThread::overlayCameraImage(QImage &baseImage, const QImage &o
 
   if (m_paintFrame)
   {
+  	QPoint middle(m_cameraResolution.width/2, m_cameraResolution.height/2);
   	QPolygon poly(5);
-  	for (int i = 0; i < 5; ++i)
+    painter.setPen(QColor(Qt::blue));
+
+  	for (int i = 0; i < 3; ++i)
   	{
     	poly.setPoint(0, m_position.x()+i, m_position.y()+i);
     	poly.setPoint(1, m_position.x()+m_cameraResolution.width-i, m_position.y()+i);
     	poly.setPoint(2, m_position.x()+m_cameraResolution.width-i, m_position.y()+m_cameraResolution.height-i);
     	poly.setPoint(3, m_position.x()+i, m_position.y()+m_cameraResolution.height-i);
     	poly.setPoint(4, m_position.x()+i, m_position.y()+i);
-    	painter.setPen(QColor(Qt::blue));
     	painter.drawConvexPolygon(poly);
+  		painter.drawLine(QPoint(m_position.x() + middle.x() - 50, m_position.y() + middle.y() - 1+i), QPoint(m_position.x() + middle.x() + 50, m_position.y() + middle.y() - 1+i));
+    	painter.drawLine(QPoint(m_position.x() + middle.x() - 1+i, m_position.y() + middle.y() - 50), QPoint(m_position.x() + middle.x() - 1+i, m_position.y() + middle.y() +50));
   	}
   }
   painter.end();
