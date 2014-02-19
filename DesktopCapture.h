@@ -65,6 +65,12 @@ class DesktopCapture
 	  static const QString APPLICATION_STATE;
 	  static const QString OVERLAY_POSITION;
 	  static const QString OVERLAY_COMPOSITION_MODE;
+	  static const QString POMODORO_TIME;
+	  static const QString SHORT_BREAK_TIME;
+	  static const QString LONG_BREAK_TIME;
+	  static const QString POMODOROS_BEFORE_BREAK;
+	  static const QString POMODOROS_ANIMATED_TRAY_ENABLED;
+	  static const QString POMODOROS_USE_SOUNDS;
 
 	  void saveConfiguration();
 	  void setupCameraResolutions();

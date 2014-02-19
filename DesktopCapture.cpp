@@ -30,6 +30,14 @@ const QString DesktopCapture::APPLICATION_GEOMETRY = QString("Application Geomet
 const QString DesktopCapture::APPLICATION_STATE = QString("Application State");
 const QString DesktopCapture::OVERLAY_POSITION = QString("Camera Overlay Position");
 const QString DesktopCapture::OVERLAY_COMPOSITION_MODE = QString("Camera Overlay Composition Mode");
+const QString DesktopCapture::POMODORO_TIME = QString("Pomodoro Time");
+const QString DesktopCapture::SHORT_BREAK_TIME = QString("Short Break Time");
+const QString DesktopCapture::LONG_BREAK_TIME = QString("Long Break Time");
+const QString DesktopCapture::POMODOROS_BEFORE_BREAK = QString("Pomodoros Before A Long Break");
+const QString DesktopCapture::POMODOROS_ANIMATED_TRAY_ENABLED = QString("Pomodoro Animated Tray Icon");
+const QString DesktopCapture::POMODOROS_USE_SOUNDS = QString("Pomodoro Use Sounds");
+
+
 
 //-----------------------------------------------------------------
 DesktopCapture::DesktopCapture()
@@ -66,6 +74,66 @@ DesktopCapture::DesktopCapture()
 	m_compositionMode = CaptureDesktopThread::COMPOSITION_MODES.at(modeIndex);
 	m_compositionComboBox->insertItems(0, CaptureDesktopThread::COMPOSITION_MODES_NAMES);
 	m_compositionComboBox->setCurrentIndex(modeIndex);
+
+	QTime pomodoroTime;
+	if (settings.contains(POMODORO_TIME))
+		pomodoroTime = settings.value(POMODORO_TIME).toTime();
+	else
+	{
+		pomodoroTime = QTime(0,25,0);
+		settings.setValue(POMODORO_TIME, pomodoroTime);
+	}
+	m_pomodoroTime->setTime(pomodoroTime);
+
+	QTime shortBreak;
+	if (settings.contains(SHORT_BREAK_TIME))
+		shortBreak = settings.value(SHORT_BREAK_TIME, QTime(0,5,0)).toTime();
+	else
+	{
+		shortBreak = QTime(0,5,0);
+		settings.setValue(SHORT_BREAK_TIME, shortBreak);
+	}
+	m_shortBreakTime->setTime(shortBreak);
+
+	QTime longBreak;
+	if (settings.contains(LONG_BREAK_TIME))
+		longBreak = settings.value(LONG_BREAK_TIME, QTime(0,15,0)).toTime();
+	else
+	{
+		longBreak = QTime(0,15,0);
+		settings.setValue(LONG_BREAK_TIME, longBreak);
+	}
+	m_longBreakTime->setTime(longBreak);
+
+	int pomodorosBeforeBreak;
+	if (settings.contains(POMODOROS_BEFORE_BREAK))
+		pomodorosBeforeBreak = settings.value(POMODOROS_BEFORE_BREAK, 4).toInt();
+	else
+	{
+		pomodorosBeforeBreak = 4;
+		settings.setValue(POMODOROS_BEFORE_BREAK, pomodorosBeforeBreak);
+	}
+	m_pomodorosBreakNumber->setValue(pomodorosBeforeBreak);
+
+	bool animatePomodoro;
+	if (settings.contains(POMODOROS_ANIMATED_TRAY_ENABLED))
+		animatePomodoro = settings.value(POMODOROS_ANIMATED_TRAY_ENABLED, true).toBool();
+	else
+	{
+		animatePomodoro = true;
+		settings.setValue(POMODOROS_ANIMATED_TRAY_ENABLED, animatePomodoro);
+	}
+	m_pomodoroAnimateTray->setChecked(animatePomodoro);
+
+	bool pomodoroUseSounds;
+	if (settings.contains(POMODOROS_USE_SOUNDS))
+		pomodoroUseSounds = settings.value(POMODOROS_USE_SOUNDS, true).toBool();
+	else
+	{
+		pomodoroUseSounds = true;
+		settings.setValue(POMODOROS_USE_SOUNDS, pomodoroUseSounds);
+	}
+	m_pomodoroUseSounds->setChecked(pomodoroUseSounds);
 
 	setupMonitors();
 	setupTrayIcon();
@@ -123,6 +191,12 @@ void DesktopCapture::saveConfiguration()
 	settings.setValue(OVERLAY_COMPOSITION_MODE, m_compositionComboBox->currentIndex());
   settings.setValue(APPLICATION_GEOMETRY, saveGeometry());
   settings.setValue(APPLICATION_STATE, saveState());
+	settings.setValue(POMODORO_TIME, m_pomodoroTime->time());
+	settings.setValue(SHORT_BREAK_TIME, m_shortBreakTime->time());
+	settings.setValue(LONG_BREAK_TIME, m_longBreakTime->time());
+	settings.setValue(POMODOROS_BEFORE_BREAK, m_pomodorosBreakNumber->value());
+  settings.setValue(POMODOROS_ANIMATED_TRAY_ENABLED, m_pomodoroAnimateTray->isChecked());
+  settings.setValue(POMODOROS_USE_SOUNDS, m_pomodoroUseSounds->isChecked());
 
 	settings.sync();
 }
@@ -441,7 +515,7 @@ void DesktopCapture::updateCameraCompositionMode(int status)
 //-----------------------------------------------------------------
 bool DesktopCapture::eventFilter(QObject *object, QEvent *event)
 {
-	if (!m_captureThread || !m_enableCamera->isChecked())
+	if (!m_captureThread || !m_enableCamera->isChecked() || !m_screenshotImage->pixmap())
 		return object->eventFilter(object, event);
 
 	static bool drag = false;
