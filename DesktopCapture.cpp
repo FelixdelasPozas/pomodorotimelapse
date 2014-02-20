@@ -37,6 +37,8 @@ const QString DesktopCapture::POMODOROS_BEFORE_BREAK = QString("Pomodoros Before
 const QString DesktopCapture::POMODOROS_ANIMATED_TRAY_ENABLED = QString("Pomodoro Animated Tray Icon");
 const QString DesktopCapture::POMODOROS_USE_SOUNDS = QString("Pomodoro Use Sounds");
 const QString DesktopCapture::CAPTURE_TIME = QString("Time Between Captures");
+const QString DesktopCapture::CAPTURE_ENABLED = QString("Enable Desktop Capture");
+const QString DesktopCapture::POMODORO_ENABLED = QString("Enable Pomodoro");
 
 //-----------------------------------------------------------------
 DesktopCapture::DesktopCapture()
@@ -48,16 +50,20 @@ DesktopCapture::DesktopCapture()
 	setupUi(this);
 
 	loadConfiguration();
-	setupMonitors();
 	setupTrayIcon();
-	setupCameraResolutions();
-	setupCaptureThread();
-
+	if (m_captureGroupBox->isChecked())
+	{
+		setupMonitors();
+		setupCameraResolutions();
+		setupCaptureThread();
+	}
 	connect(m_enableCamera, SIGNAL(stateChanged(int)), this, SLOT(updateCameraResolutionsComboBox(int)), Qt::QueuedConnection);
 	connect(m_dirButton, SIGNAL(pressed()), this, SLOT(updateOutputDir()));
 	connect(m_cameraResolutionComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(updateCameraResolution(int)));
 	connect(m_compositionComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(updateCameraCompositionMode(int)));
 	connect(m_startButton, SIGNAL(pressed()), this, SLOT(startCapture()));
+	connect(m_captureGroupBox, SIGNAL(clicked(bool)), this, SLOT(updateCaptureDesktop(bool)));
+	connect(m_pomodoroGroupBox, SIGNAL(clicked(bool)), this, SLOT(updatePomodoro(bool)));
 	m_screenshotImage->installEventFilter(this);
 
 }
@@ -104,6 +110,16 @@ void DesktopCapture::loadConfiguration()
 	m_compositionMode = CaptureDesktopThread::COMPOSITION_MODES.at(modeIndex);
 	m_compositionComboBox->insertItems(0, CaptureDesktopThread::COMPOSITION_MODES_NAMES);
 	m_compositionComboBox->setCurrentIndex(modeIndex);
+
+	bool pomodoroEnabled;
+	if (settings.contains(POMODORO_ENABLED))
+		pomodoroEnabled = settings.value(POMODORO_ENABLED, true).toBool();
+	else
+	{
+		pomodoroEnabled = true;
+		settings.setValue(POMODORO_ENABLED, pomodoroEnabled);
+	}
+	m_pomodoroGroupBox->setChecked(pomodoroEnabled);
 
 	QTime pomodoroTime;
 	if (settings.contains(POMODORO_TIME))
@@ -185,6 +201,16 @@ void DesktopCapture::loadConfiguration()
 	}
 	m_dirEditLabel->setText(outputDir);
 
+	bool captureEnabled;
+	if (settings.contains(CAPTURE_ENABLED))
+		captureEnabled = settings.value(CAPTURE_ENABLED, true).toBool();
+	else
+	{
+		captureEnabled = true;
+		settings.setValue(CAPTURE_ENABLED, true);
+	}
+	m_captureGroupBox->setChecked(captureEnabled);
+
 	settings.sync();
 }
 
@@ -210,6 +236,7 @@ void DesktopCapture::saveConfiguration()
 	settings.setValue(OVERLAY_COMPOSITION_MODE, m_compositionComboBox->currentIndex());
   settings.setValue(APPLICATION_GEOMETRY, saveGeometry());
   settings.setValue(APPLICATION_STATE, saveState());
+  settings.setValue(POMODORO_ENABLED, m_pomodoroGroupBox->isChecked());
 	settings.setValue(POMODORO_TIME, m_pomodoroTime->time());
 	settings.setValue(SHORT_BREAK_TIME, m_shortBreakTime->time());
 	settings.setValue(LONG_BREAK_TIME, m_longBreakTime->time());
@@ -217,6 +244,7 @@ void DesktopCapture::saveConfiguration()
   settings.setValue(POMODOROS_ANIMATED_TRAY_ENABLED, m_pomodoroAnimateTray->isChecked());
   settings.setValue(POMODOROS_USE_SOUNDS, m_pomodoroUseSounds->isChecked());
   settings.setValue(CAPTURE_TIME, m_screeshotTime->time());
+  settings.setValue(CAPTURE_ENABLED, m_captureGroupBox->isChecked());
 
 	settings.sync();
 }
@@ -668,43 +696,94 @@ void DesktopCapture::closeEvent(QCloseEvent *event)
 //-----------------------------------------------------------------
 void DesktopCapture::startCapture()
 {
-	if (!m_captureThread->isPaused())
+	QString trayMessage;
+	if (m_captureGroupBox->isChecked() || m_pomodoroGroupBox->isChecked())
+		setWindowState(windowState() | Qt::WindowMinimized | Qt::WindowActive);
+	else
+		return;
+
+	if (m_captureGroupBox->isChecked())
+	{
+		if (m_captureThread && !m_captureThread->isPaused())
 		m_captureThread->pause();
 
-	auto time = m_screeshotTime->time();
-	int ms = time.second() * 1000 + time.minute() * 1000 * 60 + time.hour() * 60 * 60 * 1000 + time.msec();
+		auto time = m_screeshotTime->time();
+		int ms = time.second() * 1000 + time.minute() * 1000 * 60 + time.hour() * 60 * 60 * 1000 + time.msec();
 
-	m_timer.setInterval(ms);
-	m_timer.setSingleShot(false);
-	connect(&m_timer, SIGNAL(timeout()), this, SLOT(takeScreenshot()), Qt::QueuedConnection);
-	m_started = true;
+		m_timer.setInterval(ms);
+		m_timer.setSingleShot(false);
+		connect(&m_timer, SIGNAL(timeout()), this, SLOT(takeScreenshot()), Qt::QueuedConnection);
+		m_started = true;
 
-	QString message("Interval set to");
-	if (time.hour() != 0)
-	{
-		if (time.hour() > 1)
-			message += QString(" %1 hours").arg(time.hour());
-		else
-			message += QString(" %1 hour").arg(time.hour());
-	}
-	if (time.minute() != 0)
-	{
-		if (time.minute() > 1)
-			message += QString(" %1 minutes").arg(time.minute());
-		else
-			message += QString(" %1 minute").arg(time.minute());
-	}
-	if (time.second() != 0)
-	{
-		if (time.second() > 1)
-			message += QString(" %1 seconds.").arg(time.second());
-		else
-			message += QString(" %1 second.").arg(time.second());
+		QString message("Interval set to");
+		if (time.hour() != 0)
+		{
+			if (time.hour() > 1)
+				message += QString(" %1 hours").arg(time.hour());
+			else
+				message += QString(" %1 hour").arg(time.hour());
+		}
+		if (time.minute() != 0)
+		{
+			if (time.minute() > 1)
+				message += QString(" %1 minutes").arg(time.minute());
+			else
+				message += QString(" %1 minute").arg(time.minute());
+		}
+		if (time.second() != 0)
+		{
+			if (time.second() > 1)
+				message += QString(" %1 seconds.").arg(time.second());
+			else
+				message += QString(" %1 second.").arg(time.second());
+		}
+
+		trayMessage = message;
+		m_timer.start();
 	}
 
-	setWindowState(windowState() | Qt::WindowMinimized | Qt::WindowActive);
-	m_timer.start();
-	m_trayIcon->showMessage(QString("Started"), message, QSystemTrayIcon::MessageIcon::Information, 1000);
+	if (m_pomodoroGroupBox->isChecked())
+	{
+		QString message;
+		int i = 0;
+		QStringList list{ QString("Pomodoro set to"), QString("\nShort break set to"), QString("\nLong break set to")};
+		for (QTime time: { m_pomodoroTime->time(), m_shortBreakTime->time(), m_longBreakTime->time() } )
+		{
+			message += list[i++];
+
+			if (time.hour() != 0)
+			{
+				if (time.hour() > 1)
+					message += QString(" %1 hours").arg(time.hour());
+				else
+					message += QString(" %1 hour").arg(time.hour());
+			}
+			if (time.minute() != 0)
+			{
+				if (time.minute() > 1)
+					message += QString(" %1 minutes").arg(time.minute());
+				else
+					message += QString(" %1 minute").arg(time.minute());
+			}
+			if (time.second() != 0)
+			{
+				if (time.second() > 1)
+					message += QString(" %1 seconds.").arg(time.second());
+				else
+					message += QString(" %1 second.").arg(time.second());
+			}
+		}
+
+		if (this->m_captureGroupBox->isChecked())
+			trayMessage += QString("\n\n");
+
+		trayMessage += message;
+		m_trayIcon->setIcon(QIcon(":/DesktopCapture/0-red.ico"));
+
+		// TODO: start pomodoro
+	}
+
+	m_trayIcon->showMessage(QString("Started"), trayMessage, QSystemTrayIcon::MessageIcon::Information, 1000);
 }
 
 //-----------------------------------------------------------------
@@ -717,11 +796,50 @@ void DesktopCapture::takeScreenshot()
 		m_trayIcon->setIcon(QIcon(":/DesktopCapture/application-shot.ico"));
 	}
 
-	m_captureThread->takeScreenshot();
-	saveCapture(m_captureThread->getImage());
+	if (m_captureThread)
+	{
+		m_captureThread->takeScreenshot();
+		saveCapture(m_captureThread->getImage());
+	}
 	++m_secuentialNumber;
 
 	if (m_screenshotAnimateTray->isChecked())
 		m_trayIcon->setIcon(icon);
 }
 
+//-----------------------------------------------------------------
+void DesktopCapture::updateCaptureDesktop(bool status)
+{
+	switch(status)
+	{
+		case true:
+			if (m_captureThread && m_captureThread->isPaused())
+				m_captureThread->resume();
+
+			if (!m_captureThread)
+			{
+				setupMonitors();
+				setupCameraResolutions();
+				setupCaptureThread();
+			}
+
+			m_screenshotImage->setEnabled(true);
+			m_startButton->setEnabled(true);
+			break;
+		case false:
+			if (m_captureThread && !m_captureThread->isPaused())
+				m_captureThread->pause();
+			m_screenshotImage->setEnabled(false);
+			m_screenshotImage->clear();
+			m_startButton->setEnabled(m_pomodoroGroupBox->isChecked());
+			break;
+		default:
+			break;
+	}
+}
+
+//-----------------------------------------------------------------
+void DesktopCapture::updatePomodoro(bool status)
+{
+	m_startButton->setEnabled(m_captureGroupBox->isChecked() || status);
+}

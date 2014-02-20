@@ -48,14 +48,17 @@ class DesktopCapture
 	  void updateMonitorsCheckBox(int status);
 	  void updateCameraResolutionsComboBox(int status);
 	  void updateOutputDir();
+	  void updateCaptureDesktop(bool status);
 	  void activateTrayIcon(QSystemTrayIcon::ActivationReason);
 	  void renderImage();
 	  void updateCameraResolution(int status);
 	  void updateCameraCompositionMode(int status);
 	  void startCapture();
 	  void takeScreenshot();
+	  void updatePomodoro(bool status);
 
 	private:
+	  static const QString CAPTURE_ENABLED;
 	  static const QString CAPTURED_MONITOR;
 	  static const QString MONITORS_LIST;
 	  static const QString OUTPUT_DIR;
@@ -67,6 +70,7 @@ class DesktopCapture
 	  static const QString APPLICATION_STATE;
 	  static const QString OVERLAY_POSITION;
 	  static const QString OVERLAY_COMPOSITION_MODE;
+	  static const QString POMODORO_ENABLED;
 	  static const QString POMODORO_TIME;
 	  static const QString SHORT_BREAK_TIME;
 	  static const QString LONG_BREAK_TIME;

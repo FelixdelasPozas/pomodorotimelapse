@@ -15,27 +15,34 @@ Pomodoro::Pomodoro()
 , m_numPomodoros{0}
 , m_numShortBreaks{0}
 , m_numLongBreaks{0}
+, m_progress{0}
+, m_remainingTime{0}
 {
 }
 
 //-----------------------------------------------------------------
 Pomodoro::~Pomodoro()
 {
+	stop();
 }
 
 //-----------------------------------------------------------------
 void Pomodoro::start()
 {
-}
+	m_timer.setInterval(m_pomodoroTime);
+	m_timer.setSingleShot(true);
 
-//-----------------------------------------------------------------
-void Pomodoro::pause()
-{
+	m_progressTimer.setInterval(m_pomodoroTime / 8);
+	m_progressTimer.setSingleShot(false);
+
+	m_progress = 0;
 }
 
 //-----------------------------------------------------------------
 void Pomodoro::stop()
 {
+	m_timer.stop();
+	m_progressTimer.stop();
 }
 
 //-----------------------------------------------------------------
@@ -60,5 +67,25 @@ void Pomodoro::setLongBreakTime(unsigned long seconds)
 
 //-----------------------------------------------------------------
 void Pomodoro::setTaskTitle(QString qString)
+{
+}
+
+//-----------------------------------------------------------------
+void Pomodoro::stopPomodoro()
+{
+}
+
+//-----------------------------------------------------------------
+void Pomodoro::stopShortBreak()
+{
+}
+
+//-----------------------------------------------------------------
+void Pomodoro::stopLongBreak()
+{
+}
+
+//-----------------------------------------------------------------
+void Pomodoro::updateProgress()
 {
 }

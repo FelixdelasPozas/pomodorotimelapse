@@ -21,7 +21,6 @@ class Pomodoro
 		virtual ~Pomodoro();
 
 		void start();
-		void pause();
 		void stop();
 		void invalidate();
 
@@ -37,17 +36,27 @@ class Pomodoro
 		void endShortBreak();
 		void beginLongBreak();
 		void endLongBreak();
+		void progress(int);
+
+	public slots:
+	  void stopPomodoro();
+	  void stopShortBreak();
+	  void stopLongBreak();
+	  void updateProgress();
 
 	private:
-		unsigned int m_pomodoroTime;   // Duration of a pomodoro.
-		unsigned int m_shortBreakTime; // Duration of a short break.
-		unsigned int m_longBreakTime;  // Duration of a long break.
-		unsigned int m_numBeforeBreak; // Number of pomodoros before a long break.
-		unsigned int m_numPomodoros;   // Number of pomodoros completed in the session session.
-		unsigned int m_numShortBreaks; // Number of short breaks in the session.
-		unsigned int m_numLongBreaks;  // Number of long breaks in the session.
-		QString      m_title;          // Title of the task.
-		QTimer       m_timer;          // Timer.
+		unsigned long long m_pomodoroTime;   // Duration of a pomodoro.
+		unsigned long long m_shortBreakTime; // Duration of a short break.
+		unsigned long long m_longBreakTime;  // Duration of a long break.
+		unsigned long long m_numBeforeBreak; // Number of pomodoros before a long break.
+		unsigned long long m_numPomodoros;   // Number of pomodoros completed in the session session.
+		unsigned long long m_numShortBreaks; // Number of short breaks in the session.
+		unsigned int       m_numLongBreaks;  // Number of long breaks in the session.
+		QString            m_title;          // Title of the task.
+		QTimer             m_timer;          // Timer.
+		QTimer             m_progressTimer;  // Timer for progress.
+		unsigned int       m_progress;       // Progress counter.
+		unsigned long long m_remainingTime;  // Remaining time.
 };
 
 #endif /* POMODORO_H_ */
