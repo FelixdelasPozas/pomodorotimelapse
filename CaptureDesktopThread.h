@@ -41,6 +41,8 @@ class CaptureDesktopThread
 
 		void pause();
 		void resume();
+		bool isPaused()
+		{ return m_paused; }
 
 		void setCaptureMonitor(int monitor);
 		bool setCameraEnabled(bool);
@@ -52,6 +54,7 @@ class CaptureDesktopThread
 		void run();
 
 		QPixmap *getImage();
+		void takeScreenshot();
 
 	signals:
 		void render();

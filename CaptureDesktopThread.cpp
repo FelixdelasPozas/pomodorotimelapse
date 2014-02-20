@@ -135,9 +135,6 @@ void CaptureDesktopThread::pause()
 		return;
 
 	QMutexLocker lock(&m_mutex);
-	if (m_cameraEnabled && m_camera.isOpened())
-		m_camera.release();
-
 	m_paused = true;
 }
 
@@ -148,14 +145,13 @@ void CaptureDesktopThread::resume()
 		return;
 
 	m_mutex.lock();
-	if (m_cameraEnabled && !m_camera.isOpened())
-		m_camera.open(0);
-
 	m_paused = false;
 	m_mutex.unlock();
+
 	m_pauseWaitCondition.wakeAll();
 }
 
+//-----------------------------------------------------------------
 void CaptureDesktopThread::setOverlayPosition(const QPoint &point)
 {
 	QMutexLocker lock(&m_mutex);
@@ -190,21 +186,7 @@ void CaptureDesktopThread::run()
 			m_pauseWaitCondition.wait(&m_mutex);
 		m_mutex.unlock();
 
-		// capture desktop
-		QPixmap desktopImage = QPixmap::grabWindow(QApplication::desktop()->winId(), m_x, m_y, m_width, m_height);
-
-		// capture camera & composite
-		if (m_camera.isOpened() && m_camera.read(m_frame))
-		{
-			QImage image = desktopImage.toImage();
-			QImage cameraImage = MatToQImage(m_frame);
-			overlayCameraImage(image, cameraImage);
-			desktopImage = QPixmap::fromImage(image);
-		}
-
-		m_mutex.lock();
-		m_image = desktopImage;
-		m_mutex.unlock();
+		takeScreenshot();
 
 		emit render();
 	}
@@ -285,4 +267,27 @@ void CaptureDesktopThread::setOverlayCompositionMode(const QPainter::Composition
 void CaptureDesktopThread::setPaintFrame(bool status)
 {
 	m_paintFrame = status;
+}
+
+//-----------------------------------------------------------------
+void CaptureDesktopThread::takeScreenshot()
+{
+	// capture desktop
+	QPixmap desktopImage = QPixmap::grabWindow(QApplication::desktop()->winId(), m_x, m_y, m_width, m_height);
+
+	// capture camera & composite
+	if (m_camera.isOpened())
+	{
+		while (!m_camera.read(m_frame))
+			this->usleep(100);
+
+		QImage image = desktopImage.toImage();
+		QImage cameraImage = MatToQImage(m_frame);
+		overlayCameraImage(image, cameraImage);
+		desktopImage = QPixmap::fromImage(image);
+	}
+
+	m_mutex.lock();
+	m_image = desktopImage;
+	m_mutex.unlock();
 }

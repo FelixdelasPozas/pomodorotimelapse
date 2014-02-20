@@ -32,7 +32,7 @@ include_directories(
   ${CMAKE_CURRENT_BINARY_DIR}  # For wrap/ui files
   )
 
-set(CMAKE_CXX_FLAGS " -Wall -Wno-deprecated -std=c++11 -fpermissive")
+set(CMAKE_CXX_FLAGS " -Wall -Wno-deprecated -std=c++11 -fpermissive -mwindows")
 
 # Add Qt Resource files
 qt4_add_resources(RESOURCES

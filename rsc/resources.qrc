@@ -1,6 +1,7 @@
 <RCC>
   <qresource prefix="/DesktopCapture">
     <file>application.ico</file>
+	<file>application-shot.ico</file>
 	<file>0.ico</file>
 	<file>1.ico</file>
 	<file>2.ico</file>
@@ -10,6 +11,24 @@
 	<file>6.ico</file>
 	<file>7.ico</file>
 	<file>8.ico</file>
+	<file>0-red.ico</file>
+	<file>1-red.ico</file>
+	<file>2-red.ico</file>
+	<file>3-red.ico</file>
+	<file>4-red.ico</file>
+	<file>5-red.ico</file>
+	<file>6-red.ico</file>
+	<file>7-red.ico</file>
+	<file>8-red.ico</file>
+	<file>0-blue.ico</file>
+	<file>1-blue.ico</file>
+	<file>2-blue.ico</file>
+	<file>3-blue.ico</file>
+	<file>4-blue.ico</file>
+	<file>5-blue.ico</file>
+	<file>6-blue.ico</file>
+	<file>7-blue.ico</file>
+	<file>8-blue.ico</file>
 	<file>config.ico</file>
 	<file>alarm.ico</file>
 	<file>striped-background.png</file>

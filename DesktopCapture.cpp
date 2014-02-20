@@ -36,16 +36,46 @@ const QString DesktopCapture::LONG_BREAK_TIME = QString("Long Break Time");
 const QString DesktopCapture::POMODOROS_BEFORE_BREAK = QString("Pomodoros Before A Long Break");
 const QString DesktopCapture::POMODOROS_ANIMATED_TRAY_ENABLED = QString("Pomodoro Animated Tray Icon");
 const QString DesktopCapture::POMODOROS_USE_SOUNDS = QString("Pomodoro Use Sounds");
-
-
+const QString DesktopCapture::CAPTURE_TIME = QString("Time Between Captures");
 
 //-----------------------------------------------------------------
 DesktopCapture::DesktopCapture()
 : m_trayIcon{nullptr}
 , m_captureThread{nullptr}
+, m_secuentialNumber{0}
+, m_started{true}
 {
 	setupUi(this);
 
+	loadConfiguration();
+	setupMonitors();
+	setupTrayIcon();
+	setupCameraResolutions();
+	setupCaptureThread();
+
+	connect(m_enableCamera, SIGNAL(stateChanged(int)), this, SLOT(updateCameraResolutionsComboBox(int)), Qt::QueuedConnection);
+	connect(m_dirButton, SIGNAL(pressed()), this, SLOT(updateOutputDir()));
+	connect(m_cameraResolutionComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(updateCameraResolution(int)));
+	connect(m_compositionComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(updateCameraCompositionMode(int)));
+	connect(m_startButton, SIGNAL(pressed()), this, SLOT(startCapture()));
+	m_screenshotImage->installEventFilter(this);
+
+}
+
+//-----------------------------------------------------------------
+DesktopCapture::~DesktopCapture()
+{
+	if (m_captureThread)
+	{
+		m_captureThread->abort();
+		m_captureThread->wait();
+	}
+	delete m_captureThread;
+}
+
+//-----------------------------------------------------------------
+void DesktopCapture::loadConfiguration()
+{
 	QSettings settings("DesktopCapture.ini", QSettings::IniFormat);
 
 	setWindowTitle("Desktop Capture");
@@ -135,10 +165,15 @@ DesktopCapture::DesktopCapture()
 	}
 	m_pomodoroUseSounds->setChecked(pomodoroUseSounds);
 
-	setupMonitors();
-	setupTrayIcon();
-	setupCameraResolutions();
-	setupCaptureThread();
+	QTime timeBetweenCaptures;
+	if (settings.contains(CAPTURE_TIME))
+		timeBetweenCaptures = settings.value(CAPTURE_TIME, QTime(0,0,30)).toTime();
+	else
+	{
+		timeBetweenCaptures = QTime(0,0,30);
+		settings.setValue(CAPTURE_TIME, timeBetweenCaptures);
+	}
+	this->m_screeshotTime->setTime(timeBetweenCaptures);
 
 	QString outputDir;
 	if (settings.contains(OUTPUT_DIR))
@@ -151,22 +186,6 @@ DesktopCapture::DesktopCapture()
 	m_dirEditLabel->setText(outputDir);
 
 	settings.sync();
-
-	connect(m_enableCamera, SIGNAL(stateChanged(int)), this, SLOT(updateCameraResolutionsComboBox(int)), Qt::QueuedConnection);
-	connect(m_dirButton, SIGNAL(pressed()), this, SLOT(updateOutputDir()));
-	connect(m_cameraResolutionComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(updateCameraResolution(int)));
-	connect(m_compositionComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(updateCameraCompositionMode(int)));
-	m_screenshotImage->installEventFilter(this);
-}
-
-//-----------------------------------------------------------------
-DesktopCapture::~DesktopCapture()
-{
-	if (m_captureThread)
-	{
-		m_captureThread->abort();
-		m_captureThread->wait();
-	}
 }
 
 //-----------------------------------------------------------------
@@ -197,6 +216,7 @@ void DesktopCapture::saveConfiguration()
 	settings.setValue(POMODOROS_BEFORE_BREAK, m_pomodorosBreakNumber->value());
   settings.setValue(POMODOROS_ANIMATED_TRAY_ENABLED, m_pomodoroAnimateTray->isChecked());
   settings.setValue(POMODOROS_USE_SOUNDS, m_pomodoroUseSounds->isChecked());
+  settings.setValue(CAPTURE_TIME, m_screeshotTime->time());
 
 	settings.sync();
 }
@@ -405,12 +425,13 @@ void DesktopCapture::updateCameraResolutionsComboBox(int status)
 }
 
 //-----------------------------------------------------------------
-void DesktopCapture::saveCapture()
+void DesktopCapture::saveCapture(QPixmap *capture)
 {
-	QString format = "png";
-	QString fileName = QDir::currentPath() + tr("/DesktopCapture.") + format;
+	QString format("png");
 
-	m_desktopCapture.save(fileName, format.toAscii());
+	QString fileName = m_dirEditLabel->text() + tr("/DesktopCapture_") + QString("%1").arg(m_secuentialNumber,4,'d',0,'0') + QString(".") + format;
+
+	capture->save(fileName, format.toAscii(), 0);
 }
 
 //-----------------------------------------------------------------
@@ -452,7 +473,19 @@ void DesktopCapture::activateTrayIcon(QSystemTrayIcon::ActivationReason reason)
 		return;
 
 	m_trayIcon->hide();
+
+	if (m_captureThread)
+		m_captureThread->resume();
+
+	// TODO: mostrar otra cosa si ya ha sido activado.
 	show();
+
+	if (m_started)
+	{
+		disconnect(&m_timer, SIGNAL(timeout()), this, SLOT(takeScreenshot()));
+		m_started = false;
+	}
+
 	setWindowState(windowState() & (~Qt::WindowMinimized | Qt::WindowActive));
 }
 
@@ -486,12 +519,16 @@ void DesktopCapture::updateOutputDir()
 {
 	if (m_captureThread)
 		m_captureThread->pause();
-	QString dir = QFileDialog::getExistingDirectory(this, tr("Open Directory"), QDir::currentPath(), QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
+
+	QDir dir(m_dirEditLabel->text());
+	if (!dir.exists())
+		m_dirEditLabel->setText(QDir::currentPath());
+
+	QString dirText = QFileDialog::getExistingDirectory(this, tr("Open Directory"), m_dirEditLabel->text(), QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
+	m_dirEditLabel->setText(dirText);
 
 	if (m_captureThread)
 		m_captureThread->resume();
-
-	m_dirEditLabel->setText(dir);
 }
 
 //-----------------------------------------------------------------
@@ -505,6 +542,7 @@ void DesktopCapture::updateCameraResolution(int status)
 	}
 }
 
+//-----------------------------------------------------------------
 void DesktopCapture::updateCameraCompositionMode(int status)
 {
 	m_compositionMode = CaptureDesktopThread::COMPOSITION_MODES.at(status);
@@ -620,8 +658,70 @@ QPoint DesktopCapture::computeNewPosition(const QPoint &dragPoint, const QPoint 
 	return m_PIPposition;
 }
 
+//-----------------------------------------------------------------
 void DesktopCapture::closeEvent(QCloseEvent *event)
 {
 	saveConfiguration();
   QMainWindow::closeEvent(event);
 }
+
+//-----------------------------------------------------------------
+void DesktopCapture::startCapture()
+{
+	if (!m_captureThread->isPaused())
+		m_captureThread->pause();
+
+	auto time = m_screeshotTime->time();
+	int ms = time.second() * 1000 + time.minute() * 1000 * 60 + time.hour() * 60 * 60 * 1000 + time.msec();
+
+	m_timer.setInterval(ms);
+	m_timer.setSingleShot(false);
+	connect(&m_timer, SIGNAL(timeout()), this, SLOT(takeScreenshot()), Qt::QueuedConnection);
+	m_started = true;
+
+	QString message("Interval set to");
+	if (time.hour() != 0)
+	{
+		if (time.hour() > 1)
+			message += QString(" %1 hours").arg(time.hour());
+		else
+			message += QString(" %1 hour").arg(time.hour());
+	}
+	if (time.minute() != 0)
+	{
+		if (time.minute() > 1)
+			message += QString(" %1 minutes").arg(time.minute());
+		else
+			message += QString(" %1 minute").arg(time.minute());
+	}
+	if (time.second() != 0)
+	{
+		if (time.second() > 1)
+			message += QString(" %1 seconds.").arg(time.second());
+		else
+			message += QString(" %1 second.").arg(time.second());
+	}
+
+	setWindowState(windowState() | Qt::WindowMinimized | Qt::WindowActive);
+	m_timer.start();
+	m_trayIcon->showMessage(QString("Started"), message, QSystemTrayIcon::MessageIcon::Information, 1000);
+}
+
+//-----------------------------------------------------------------
+void DesktopCapture::takeScreenshot()
+{
+	QIcon icon;
+	if (m_screenshotAnimateTray->isChecked())
+	{
+		icon = m_trayIcon->icon();
+		m_trayIcon->setIcon(QIcon(":/DesktopCapture/application-shot.ico"));
+	}
+
+	m_captureThread->takeScreenshot();
+	saveCapture(m_captureThread->getImage());
+	++m_secuentialNumber;
+
+	if (m_screenshotAnimateTray->isChecked())
+		m_trayIcon->setIcon(icon);
+}
+

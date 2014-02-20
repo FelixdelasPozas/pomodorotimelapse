@@ -52,6 +52,8 @@ class DesktopCapture
 	  void renderImage();
 	  void updateCameraResolution(int status);
 	  void updateCameraCompositionMode(int status);
+	  void startCapture();
+	  void takeScreenshot();
 
 	private:
 	  static const QString CAPTURED_MONITOR;
@@ -71,13 +73,15 @@ class DesktopCapture
 	  static const QString POMODOROS_BEFORE_BREAK;
 	  static const QString POMODOROS_ANIMATED_TRAY_ENABLED;
 	  static const QString POMODOROS_USE_SOUNDS;
+	  static const QString CAPTURE_TIME;
 
+	  void loadConfiguration();
 	  void saveConfiguration();
 	  void setupCameraResolutions();
 	  void setupMonitors();
 	  void setupTrayIcon();
 	  void setupCaptureThread();
-	  void saveCapture();
+	  void saveCapture(QPixmap *);
 	  QPoint computeNewPosition(const QPoint &dragPoint = QPoint(0,0), const QPoint &point = QPoint(0,0));
 
 		QStringList           m_cameraResolutionsNames;
@@ -90,6 +94,9 @@ class DesktopCapture
 		QPixmap              *m_cameraPixmap;
 		QPoint                m_PIPposition;
 		QPainter::CompositionMode m_compositionMode;
+		QTimer                m_timer;
+		int                   m_secuentialNumber;
+		bool                  m_started;
 };
 
 #endif // DESKTOP_CAPTURE_H_
