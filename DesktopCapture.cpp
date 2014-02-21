@@ -778,9 +778,11 @@ void DesktopCapture::startCapture()
 			trayMessage += QString("\n\n");
 
 		trayMessage += message;
-		m_trayIcon->setIcon(QIcon(":/DesktopCapture/0-red.ico"));
 
-		// TODO: start pomodoro
+		if (m_pomodoroAnimateTray->isChecked())
+			m_trayIcon->setIcon(QIcon(":/DesktopCapture/0-red.ico"));
+
+		// TODO: start pomodoro, connect signals, all the rest
 	}
 
 	m_trayIcon->showMessage(QString("Started"), trayMessage, QSystemTrayIcon::MessageIcon::Information, 1000);
@@ -822,20 +824,23 @@ void DesktopCapture::updateCaptureDesktop(bool status)
 				setupCameraResolutions();
 				setupCaptureThread();
 			}
-
-			m_screenshotImage->setEnabled(true);
 			m_startButton->setEnabled(true);
 			break;
 		case false:
 			if (m_captureThread && !m_captureThread->isPaused())
 				m_captureThread->pause();
-			m_screenshotImage->setEnabled(false);
+
 			m_screenshotImage->clear();
 			m_startButton->setEnabled(m_pomodoroGroupBox->isChecked());
 			break;
 		default:
 			break;
 	}
+
+	m_screenshotImage->setEnabled(status);
+	m_screeshotTime->setEnabled(status);
+	m_dirButton->setEnabled(status);
+	m_dirEditLabel->setEnabled(status);
 }
 
 //-----------------------------------------------------------------
