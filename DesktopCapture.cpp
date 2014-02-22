@@ -628,11 +628,11 @@ bool DesktopCapture::eventFilter(QObject *object, QEvent *event)
 	switch (event->type())
 	{
 		case QEvent::Enter:
-			if (m_captureThread && (m_cameraPositionComboBox->currentIndex() == 0))
+			if (m_captureThread)
 				m_captureThread->setPaintFrame(true);
 			break;
 		case QEvent::Leave:
-			if (m_captureThread && (m_cameraPositionComboBox->currentIndex() == 0))
+			if (m_captureThread)
 				m_captureThread->setPaintFrame(false);
 			break;
 		case QEvent::MouseButtonPress:
@@ -655,7 +655,6 @@ bool DesktopCapture::eventFilter(QObject *object, QEvent *event)
 					break;
 
 				m_cameraPositionComboBox->setCurrentIndex(0);
-				m_captureThread->setPaintFrame(true);
 				drag = true;
 				dragPoint = me->pos();
 			}

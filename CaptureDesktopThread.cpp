@@ -305,6 +305,8 @@ void CaptureDesktopThread::overlayCameraImage(QImage &baseImage, const QImage &o
   	QPolygon poly(5);
     painter.setPen(QColor(Qt::blue));
 
+    int minimum = (middle.x()/4 < middle.y()/4 ? middle.x()/4 : middle.y()/4);
+
   	for (int i = 0; i < 3; ++i)
   	{
     	poly.setPoint(0, m_position.x()+i, m_position.y()+i);
@@ -313,8 +315,8 @@ void CaptureDesktopThread::overlayCameraImage(QImage &baseImage, const QImage &o
     	poly.setPoint(3, m_position.x()+i, m_position.y()+m_cameraResolution.height-i);
     	poly.setPoint(4, m_position.x()+i, m_position.y()+i);
     	painter.drawConvexPolygon(poly);
-  		painter.drawLine(QPoint(m_position.x() + middle.x() - 50, m_position.y() + middle.y() - 1+i), QPoint(m_position.x() + middle.x() + 50, m_position.y() + middle.y() - 1+i));
-    	painter.drawLine(QPoint(m_position.x() + middle.x() - 1+i, m_position.y() + middle.y() - 50), QPoint(m_position.x() + middle.x() - 1+i, m_position.y() + middle.y() +50));
+  		painter.drawLine(QPoint(m_position.x() + middle.x() - minimum, m_position.y() + middle.y() - 1+i), QPoint(m_position.x() + middle.x() + minimum, m_position.y() + middle.y() - 1+i));
+    	painter.drawLine(QPoint(m_position.x() + middle.x() - 1+i, m_position.y() + middle.y() - minimum), QPoint(m_position.x() + middle.x() - 1+i, m_position.y() + middle.y() + minimum));
   	}
   }
   painter.end();
