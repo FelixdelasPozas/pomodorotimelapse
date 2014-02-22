@@ -47,6 +47,7 @@ class DesktopCapture
 	  void updateMonitorsComboBox(int status);
 	  void updateMonitorsCheckBox(int status);
 	  void updateCameraResolutionsComboBox(int status);
+	  void updateCameraPositionComboBox(int status);
 	  void updateOutputDir();
 	  void updateCaptureDesktop(bool status);
 	  void activateTrayIcon(QSystemTrayIcon::ActivationReason);
@@ -56,28 +57,30 @@ class DesktopCapture
 	  void startCapture();
 	  void takeScreenshot();
 	  void updatePomodoro(bool status);
+	  void updateTrayProgress(unsigned int status);
 
 	private:
 	  static const QString CAPTURE_ENABLED;
+	  static const QString CAPTURE_TIME;
 	  static const QString CAPTURED_MONITOR;
 	  static const QString MONITORS_LIST;
 	  static const QString OUTPUT_DIR;
+	  static const QString APPLICATION_GEOMETRY;
+	  static const QString APPLICATION_STATE;
 	  static const QString CAMERA_ENABLED;
 	  static const QString CAMERA_ANIMATED_TRAY_ENABLED;
 	  static const QString CAMERA_RESOLUTIONS;
-	  static const QString ACTIVE_RESOLUTION;
-	  static const QString APPLICATION_GEOMETRY;
-	  static const QString APPLICATION_STATE;
-	  static const QString OVERLAY_POSITION;
-	  static const QString OVERLAY_COMPOSITION_MODE;
+	  static const QString CAMERA_ACTIVE_RESOLUTION;
+	  static const QString CAMERA_OVERLAY_POSITION;
+	  static const QString CAMERA_OVERLAY_COMPOSITION_MODE;
+	  static const QString CAMERA_OVERLAY_FIXED_POSITION;
 	  static const QString POMODORO_ENABLED;
 	  static const QString POMODORO_TIME;
-	  static const QString SHORT_BREAK_TIME;
-	  static const QString LONG_BREAK_TIME;
+	  static const QString POMODORO_SHORT_BREAK_TIME;
+	  static const QString POMODORO_LONG_BREAK_TIME;
 	  static const QString POMODOROS_BEFORE_BREAK;
 	  static const QString POMODOROS_ANIMATED_TRAY_ENABLED;
 	  static const QString POMODOROS_USE_SOUNDS;
-	  static const QString CAPTURE_TIME;
 
 	  void loadConfiguration();
 	  void saveConfiguration();

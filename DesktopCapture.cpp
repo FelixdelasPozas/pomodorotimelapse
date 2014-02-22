@@ -19,25 +19,26 @@
 #include <QPixmap>
 #include <QSettings>
 
+const QString DesktopCapture::CAPTURE_TIME = QString("Time Between Captures");
+const QString DesktopCapture::CAPTURE_ENABLED = QString("Enable Desktop Capture");
 const QString DesktopCapture::CAPTURED_MONITOR = QString("Captured Desktop Monitor");
 const QString DesktopCapture::MONITORS_LIST = QString("Monitor Resolutions");
 const QString DesktopCapture::OUTPUT_DIR = QString("Output Directory");
+const QString DesktopCapture::APPLICATION_GEOMETRY = QString("Application Geometry");
+const QString DesktopCapture::APPLICATION_STATE = QString("Application State");
 const QString DesktopCapture::CAMERA_ENABLED = QString("Camera Enabled");
 const QString DesktopCapture::CAMERA_ANIMATED_TRAY_ENABLED = QString("Camera Animated Tray Icon");
 const QString DesktopCapture::CAMERA_RESOLUTIONS = QString("Available Camera Resolutions");
-const QString DesktopCapture::ACTIVE_RESOLUTION = QString("Active Resolution");
-const QString DesktopCapture::APPLICATION_GEOMETRY = QString("Application Geometry");
-const QString DesktopCapture::APPLICATION_STATE = QString("Application State");
-const QString DesktopCapture::OVERLAY_POSITION = QString("Camera Overlay Position");
-const QString DesktopCapture::OVERLAY_COMPOSITION_MODE = QString("Camera Overlay Composition Mode");
+const QString DesktopCapture::CAMERA_ACTIVE_RESOLUTION = QString("Active Resolution");
+const QString DesktopCapture::CAMERA_OVERLAY_POSITION = QString("Camera Overlay Position");
+const QString DesktopCapture::CAMERA_OVERLAY_COMPOSITION_MODE = QString("Camera Overlay Composition Mode");
+const QString DesktopCapture::CAMERA_OVERLAY_FIXED_POSITION = QString("Camera Overlay Fixed Position");
 const QString DesktopCapture::POMODORO_TIME = QString("Pomodoro Time");
-const QString DesktopCapture::SHORT_BREAK_TIME = QString("Short Break Time");
-const QString DesktopCapture::LONG_BREAK_TIME = QString("Long Break Time");
+const QString DesktopCapture::POMODORO_SHORT_BREAK_TIME = QString("Short Break Time");
+const QString DesktopCapture::POMODORO_LONG_BREAK_TIME = QString("Long Break Time");
 const QString DesktopCapture::POMODOROS_BEFORE_BREAK = QString("Pomodoros Before A Long Break");
 const QString DesktopCapture::POMODOROS_ANIMATED_TRAY_ENABLED = QString("Pomodoro Animated Tray Icon");
 const QString DesktopCapture::POMODOROS_USE_SOUNDS = QString("Pomodoro Use Sounds");
-const QString DesktopCapture::CAPTURE_TIME = QString("Time Between Captures");
-const QString DesktopCapture::CAPTURE_ENABLED = QString("Enable Desktop Capture");
 const QString DesktopCapture::POMODORO_ENABLED = QString("Enable Pomodoro");
 
 //-----------------------------------------------------------------
@@ -57,15 +58,18 @@ DesktopCapture::DesktopCapture()
 		setupCameraResolutions();
 		setupCaptureThread();
 	}
-	connect(m_enableCamera, SIGNAL(stateChanged(int)), this, SLOT(updateCameraResolutionsComboBox(int)), Qt::QueuedConnection);
+	connect(m_cameraEnabled, SIGNAL(stateChanged(int)), this, SLOT(updateCameraResolutionsComboBox(int)));
 	connect(m_dirButton, SIGNAL(pressed()), this, SLOT(updateOutputDir()));
 	connect(m_cameraResolutionComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(updateCameraResolution(int)));
 	connect(m_compositionComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(updateCameraCompositionMode(int)));
 	connect(m_startButton, SIGNAL(pressed()), this, SLOT(startCapture()));
 	connect(m_captureGroupBox, SIGNAL(clicked(bool)), this, SLOT(updateCaptureDesktop(bool)));
 	connect(m_pomodoroGroupBox, SIGNAL(clicked(bool)), this, SLOT(updatePomodoro(bool)));
+	connect(m_cameraPositionComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(updateCameraPositionComboBox(int)));
 	m_screenshotImage->installEventFilter(this);
 
+	if (m_screenshotImage->underMouse() && m_captureThread)
+		m_captureThread->setPaintFrame(true);
 }
 
 //-----------------------------------------------------------------
@@ -93,18 +97,18 @@ void DesktopCapture::loadConfiguration()
 		showMaximized();
 
 	if (settings.contains(APPLICATION_STATE))
-		this->restoreState(settings.value(APPLICATION_STATE).toByteArray());
+		restoreState(settings.value(APPLICATION_STATE).toByteArray());
 
 	QPoint position(0,0);
-	if (settings.contains(OVERLAY_POSITION))
-		position = settings.value(OVERLAY_POSITION, QPoint(0,0)).toPoint();
+	if (settings.contains(CAMERA_OVERLAY_POSITION))
+		position = settings.value(CAMERA_OVERLAY_POSITION, QPoint(0,0)).toPoint();
 	else
-		settings.setValue(OVERLAY_POSITION, position);
+		settings.setValue(CAMERA_OVERLAY_POSITION, position);
 	m_PIPposition = position;
 
 	int modeIndex;
-	if (settings.contains(OVERLAY_COMPOSITION_MODE))
-		modeIndex = settings.value(OVERLAY_COMPOSITION_MODE, 0).toInt();
+	if (settings.contains(CAMERA_OVERLAY_COMPOSITION_MODE))
+		modeIndex = settings.value(CAMERA_OVERLAY_COMPOSITION_MODE, 0).toInt();
 	else
 		modeIndex = 0;
 	m_compositionMode = CaptureDesktopThread::COMPOSITION_MODES.at(modeIndex);
@@ -132,22 +136,22 @@ void DesktopCapture::loadConfiguration()
 	m_pomodoroTime->setTime(pomodoroTime);
 
 	QTime shortBreak;
-	if (settings.contains(SHORT_BREAK_TIME))
-		shortBreak = settings.value(SHORT_BREAK_TIME, QTime(0,5,0)).toTime();
+	if (settings.contains(POMODORO_SHORT_BREAK_TIME))
+		shortBreak = settings.value(POMODORO_SHORT_BREAK_TIME, QTime(0,5,0)).toTime();
 	else
 	{
 		shortBreak = QTime(0,5,0);
-		settings.setValue(SHORT_BREAK_TIME, shortBreak);
+		settings.setValue(POMODORO_SHORT_BREAK_TIME, shortBreak);
 	}
 	m_shortBreakTime->setTime(shortBreak);
 
 	QTime longBreak;
-	if (settings.contains(LONG_BREAK_TIME))
-		longBreak = settings.value(LONG_BREAK_TIME, QTime(0,15,0)).toTime();
+	if (settings.contains(POMODORO_LONG_BREAK_TIME))
+		longBreak = settings.value(POMODORO_LONG_BREAK_TIME, QTime(0,15,0)).toTime();
 	else
 	{
 		longBreak = QTime(0,15,0);
-		settings.setValue(LONG_BREAK_TIME, longBreak);
+		settings.setValue(POMODORO_LONG_BREAK_TIME, longBreak);
 	}
 	m_longBreakTime->setTime(longBreak);
 
@@ -189,7 +193,7 @@ void DesktopCapture::loadConfiguration()
 		timeBetweenCaptures = QTime(0,0,30);
 		settings.setValue(CAPTURE_TIME, timeBetweenCaptures);
 	}
-	this->m_screeshotTime->setTime(timeBetweenCaptures);
+	m_screeshotTime->setTime(timeBetweenCaptures);
 
 	QString outputDir;
 	if (settings.contains(OUTPUT_DIR))
@@ -211,6 +215,17 @@ void DesktopCapture::loadConfiguration()
 	}
 	m_captureGroupBox->setChecked(captureEnabled);
 
+	int cameraPosition;
+	if (settings.contains(CAMERA_OVERLAY_FIXED_POSITION))
+		cameraPosition = settings.value(CAMERA_OVERLAY_FIXED_POSITION, 0).toInt();
+	else
+	{
+		cameraPosition = 0;
+		settings.setValue(CAMERA_OVERLAY_FIXED_POSITION, cameraPosition);
+	}
+	m_cameraPositionComboBox->insertItems(0, CaptureDesktopThread::POSITION_NAMES);
+	m_cameraPositionComboBox->setCurrentIndex(cameraPosition);
+
 	settings.sync();
 }
 
@@ -228,23 +243,24 @@ void DesktopCapture::saveConfiguration()
 
 	settings.setValue(MONITORS_LIST, monitors);
 	settings.setValue(OUTPUT_DIR, m_dirEditLabel->text());
-	settings.setValue(CAMERA_ENABLED, m_enableCamera->isChecked());
+	settings.setValue(CAMERA_ENABLED, m_cameraEnabled->isChecked());
 	settings.setValue(CAMERA_ANIMATED_TRAY_ENABLED, m_screenshotAnimateTray->isChecked());
 	settings.setValue(CAMERA_RESOLUTIONS, m_cameraResolutionsNames);
-	settings.setValue(ACTIVE_RESOLUTION, m_cameraResolutionComboBox->currentIndex());
-	settings.setValue(OVERLAY_POSITION, m_PIPposition);
-	settings.setValue(OVERLAY_COMPOSITION_MODE, m_compositionComboBox->currentIndex());
+	settings.setValue(CAMERA_ACTIVE_RESOLUTION, m_cameraResolutionComboBox->currentIndex());
+	settings.setValue(CAMERA_OVERLAY_POSITION, m_PIPposition);
+	settings.setValue(CAMERA_OVERLAY_COMPOSITION_MODE, m_compositionComboBox->currentIndex());
   settings.setValue(APPLICATION_GEOMETRY, saveGeometry());
   settings.setValue(APPLICATION_STATE, saveState());
   settings.setValue(POMODORO_ENABLED, m_pomodoroGroupBox->isChecked());
 	settings.setValue(POMODORO_TIME, m_pomodoroTime->time());
-	settings.setValue(SHORT_BREAK_TIME, m_shortBreakTime->time());
-	settings.setValue(LONG_BREAK_TIME, m_longBreakTime->time());
+	settings.setValue(POMODORO_SHORT_BREAK_TIME, m_shortBreakTime->time());
+	settings.setValue(POMODORO_LONG_BREAK_TIME, m_longBreakTime->time());
 	settings.setValue(POMODOROS_BEFORE_BREAK, m_pomodorosBreakNumber->value());
   settings.setValue(POMODOROS_ANIMATED_TRAY_ENABLED, m_pomodoroAnimateTray->isChecked());
   settings.setValue(POMODOROS_USE_SOUNDS, m_pomodoroUseSounds->isChecked());
   settings.setValue(CAPTURE_TIME, m_screeshotTime->time());
   settings.setValue(CAPTURE_ENABLED, m_captureGroupBox->isChecked());
+  settings.setValue(CAMERA_OVERLAY_FIXED_POSITION, m_cameraPositionComboBox->currentIndex());
 
 	settings.sync();
 }
@@ -303,7 +319,7 @@ void DesktopCapture::setupCameraResolutions()
 		enableCamera = true;
 		settings.setValue(CAMERA_ENABLED, true);
 	}
-	m_enableCamera->setChecked(enableCamera);
+	m_cameraEnabled->setChecked(enableCamera);
 
 	bool animateScreenshot;
 	if (settings.contains(CAMERA_ANIMATED_TRAY_ENABLED))
@@ -316,12 +332,12 @@ void DesktopCapture::setupCameraResolutions()
 	m_screenshotAnimateTray->setEnabled(animateScreenshot);
 
 	int selectedResolution;
-	if (settings.contains(ACTIVE_RESOLUTION))
-		selectedResolution = settings.value(ACTIVE_RESOLUTION, 0).toInt();
+	if (settings.contains(CAMERA_ACTIVE_RESOLUTION))
+		selectedResolution = settings.value(CAMERA_ACTIVE_RESOLUTION, 0).toInt();
 	else
 	{
 		selectedResolution = 0;
-		settings.setValue(ACTIVE_RESOLUTION, selectedResolution);
+		settings.setValue(CAMERA_ACTIVE_RESOLUTION, selectedResolution);
 	}
 
 	if (m_captureThread)
@@ -330,9 +346,9 @@ void DesktopCapture::setupCameraResolutions()
 	cv::VideoCapture camera;
 	if (!camera.open(0))
 	{
-		m_enableCamera->blockSignals(true);
-		m_enableCamera->setChecked(false);
-		m_enableCamera->blockSignals(false);
+		m_cameraEnabled->blockSignals(true);
+		m_cameraEnabled->setChecked(false);
+		m_cameraEnabled->blockSignals(false);
 		m_cameraResolutions.clear();
 		m_cameraResolutionComboBox->insertItem(0, QString("No cameras detected."));
 		m_cameraResolutionComboBox->setEnabled(false);
@@ -390,7 +406,7 @@ void DesktopCapture::setupCameraResolutions()
 			}
 			else
 			{
-				m_enableCamera->setChecked(false);
+				m_cameraEnabled->setChecked(false);
 				m_cameraResolutions.clear();
 				m_cameraResolutionComboBox->insertItem(0, QString("No known resolutions."));
 				m_cameraResolutionComboBox->setEnabled(false);
@@ -418,14 +434,20 @@ void DesktopCapture::updateMonitorsCheckBox(int status)
 	bool checked = (status == Qt::Checked);
 	m_captureMonitorComboBox->setEnabled(!checked);
 
+	if (m_cameraEnabled)
+		m_cameraPositionComboBox->setCurrentIndex(0);
+
 	if (m_captureThread)
 	{
 		if (checked)
 			m_captureThread->setCaptureMonitor(-1);
 		else
 		{
-			computeNewPosition();
-			m_captureThread->setOverlayPosition(m_PIPposition);
+			if (m_cameraEnabled)
+			{
+				computeNewPosition();
+				m_captureThread->setOverlayPosition(m_PIPposition);
+			}
 			m_captureThread->setCaptureMonitor(m_captureMonitorComboBox->currentIndex());
 		}
 	}
@@ -435,7 +457,17 @@ void DesktopCapture::updateMonitorsCheckBox(int status)
 void DesktopCapture::updateMonitorsComboBox(int index)
 {
 	if (m_captureThread)
+	{
 		m_captureThread->setCaptureMonitor(index);
+
+		if (m_cameraEnabled)
+		{
+			computeNewPosition();
+			m_captureThread->setOverlayPosition(m_PIPposition);
+			m_cameraPositionComboBox->setCurrentIndex(0);
+		}
+	}
+
 }
 
 //-----------------------------------------------------------------
@@ -447,6 +479,7 @@ void DesktopCapture::updateCameraResolutionsComboBox(int status)
 		setupCameraResolutions();
 
 	m_cameraResolutionComboBox->setEnabled(enabled);
+	m_cameraPositionComboBox->setEnabled(enabled);
 
 	if (m_captureThread)
 		m_captureThread->setCameraEnabled(enabled);
@@ -526,7 +559,7 @@ void DesktopCapture::setupCaptureThread()
 
 	Resolution resolution{QString(), 0, 0};
 
-	if (m_enableCamera->isChecked() && !m_cameraResolutions.empty())
+	if (m_cameraEnabled->isChecked() && !m_cameraResolutions.empty())
 		resolution = m_cameraResolutions.at(m_cameraResolutionComboBox->currentIndex());
 
 	m_captureThread = new CaptureDesktopThread(monitor, resolution, m_PIPposition, m_compositionMode, this);
@@ -564,7 +597,7 @@ void DesktopCapture::updateCameraResolution(int status)
 {
 	if (m_captureThread)
 	{
-		m_captureThread->setResolution(this->m_cameraResolutions.at(status));
+		m_captureThread->setResolution(m_cameraResolutions.at(status));
 		computeNewPosition();
 		m_captureThread->setOverlayPosition(m_PIPposition);
 	}
@@ -581,13 +614,13 @@ void DesktopCapture::updateCameraCompositionMode(int status)
 //-----------------------------------------------------------------
 bool DesktopCapture::eventFilter(QObject *object, QEvent *event)
 {
-	if (!m_captureThread || !m_enableCamera->isChecked() || !m_screenshotImage->pixmap())
+	if (!m_captureThread || !m_cameraEnabled->isChecked() || !m_screenshotImage->pixmap())
 		return object->eventFilter(object, event);
 
 	static bool drag = false;
 	static QPoint dragPoint = QPoint(0, 0);
 	QMouseEvent *me = static_cast<QMouseEvent *>(event);
-	Resolution cameraResolution = m_cameraResolutions.at(this->m_cameraResolutionComboBox->currentIndex());
+	Resolution cameraResolution = m_cameraResolutions.at(m_cameraResolutionComboBox->currentIndex());
 
 	QLabel *label = qobject_cast<QLabel *>(object);
 	Q_ASSERT(label);
@@ -595,11 +628,11 @@ bool DesktopCapture::eventFilter(QObject *object, QEvent *event)
 	switch (event->type())
 	{
 		case QEvent::Enter:
-			if (m_captureThread)
+			if (m_captureThread && (m_cameraPositionComboBox->currentIndex() == 0))
 				m_captureThread->setPaintFrame(true);
 			break;
 		case QEvent::Leave:
-			if (m_captureThread)
+			if (m_captureThread && (m_cameraPositionComboBox->currentIndex() == 0))
 				m_captureThread->setPaintFrame(false);
 			break;
 		case QEvent::MouseButtonPress:
@@ -621,6 +654,8 @@ bool DesktopCapture::eventFilter(QObject *object, QEvent *event)
 		         (m_PIPposition.y()+cameraResolution.height < mappedPoint.y()) )
 					break;
 
+				m_cameraPositionComboBox->setCurrentIndex(0);
+				m_captureThread->setPaintFrame(true);
 				drag = true;
 				dragPoint = me->pos();
 			}
@@ -660,7 +695,7 @@ QPoint DesktopCapture::computeNewPosition(const QPoint &dragPoint, const QPoint 
 	double ratioX = static_cast<double>(geometry.width()) / static_cast<double>(imageGeometry.width());
 	double ratioY = static_cast<double>(geometry.height()) / static_cast<double>(imageGeometry.height());
 
-	Resolution cameraResolution = m_cameraResolutions.at(this->m_cameraResolutionComboBox->currentIndex());
+	Resolution cameraResolution = m_cameraResolutions.at(m_cameraResolutionComboBox->currentIndex());
 
 	int dx = (point.x() - dragPoint.x())*ratioX;
 	int dy = (point.y() - dragPoint.y())*ratioY;
@@ -715,7 +750,7 @@ void DesktopCapture::startCapture()
 		connect(&m_timer, SIGNAL(timeout()), this, SLOT(takeScreenshot()), Qt::QueuedConnection);
 		m_started = true;
 
-		QString message("Interval set to");
+		QString message("Capture interval set to");
 		if (time.hour() != 0)
 		{
 			if (time.hour() > 1)
@@ -774,15 +809,19 @@ void DesktopCapture::startCapture()
 			}
 		}
 
-		if (this->m_captureGroupBox->isChecked())
-			trayMessage += QString("\n\n");
+		if (m_captureGroupBox->isChecked())
+			trayMessage += QString("\n");
 
 		trayMessage += message;
 
 		if (m_pomodoroAnimateTray->isChecked())
 			m_trayIcon->setIcon(QIcon(":/DesktopCapture/0-red.ico"));
 
-		// TODO: start pomodoro, connect signals, all the rest
+		m_pomodoro.setPomodoroTime(m_pomodoroTime->time());
+		m_pomodoro.setShortBreakTime(m_shortBreakTime->time());
+		m_pomodoro.setLongBreakTime(m_longBreakTime->time());
+		connect(&m_pomodoro, SIGNAL(progress(unsigned int)), this, SLOT(updateTrayProgress(unsigned int)), Qt::QueuedConnection);
+		m_pomodoro.start();
 	}
 
 	m_trayIcon->showMessage(QString("Started"), trayMessage, QSystemTrayIcon::MessageIcon::Information, 1000);
@@ -847,4 +886,22 @@ void DesktopCapture::updateCaptureDesktop(bool status)
 void DesktopCapture::updatePomodoro(bool status)
 {
 	m_startButton->setEnabled(m_captureGroupBox->isChecked() || status);
+}
+
+//-----------------------------------------------------------------
+void DesktopCapture::updateCameraPositionComboBox(int status)
+{
+	if (m_captureThread)
+	{
+		m_captureThread->setOverlayPosition(m_cameraPositionComboBox->currentText());
+		m_PIPposition = m_captureThread->getOverlayPosition();
+	}
+}
+
+//-----------------------------------------------------------------
+void DesktopCapture::updateTrayProgress(unsigned int progress)
+{
+	QString iconName = QString(":/DesktopCapture/%1-red.ico").arg(progress);
+	m_trayIcon->setIcon(QIcon(iconName));
+	qDebug() << iconName;
 }

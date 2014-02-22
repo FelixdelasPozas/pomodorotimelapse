@@ -9,6 +9,8 @@
 #define POMODORO_H_
 
 #include <QTimer>
+#include <QTime>
+#include <QStringList>
 #include <QObject>
 #include <QString>
 
@@ -24,39 +26,41 @@ class Pomodoro
 		void stop();
 		void invalidate();
 
-		void setPomodoroTime(unsigned long seconds);
-		void setShortBreakTime(unsigned long seconds);
-		void setLongBreakTime(unsigned long seconds);
-		void setTaskTitle(QString);
+		void setPomodoroTime(QTime time);
+		void setShortBreakTime(QTime time);
+		void setLongBreakTime(QTime time);
+		void setTask(QString title);
 
 	signals:
 		void beginPomodoro();
-		void endPomodoro();
+		void pomodoroEnded();
 		void beginShortBreak();
-		void endShortBreak();
+		void shortBreakEnded();
 		void beginLongBreak();
-		void endLongBreak();
-		void progress(int);
+		void longBreakEnded();
+		void progress(unsigned int);
 
 	public slots:
-	  void stopPomodoro();
-	  void stopShortBreak();
-	  void stopLongBreak();
 	  void updateProgress();
+	  void endPomodoro();
+	  void endShortBreak();
+	  void endLongBreak();
 
 	private:
-		unsigned long long m_pomodoroTime;   // Duration of a pomodoro.
-		unsigned long long m_shortBreakTime; // Duration of a short break.
-		unsigned long long m_longBreakTime;  // Duration of a long break.
-		unsigned long long m_numBeforeBreak; // Number of pomodoros before a long break.
-		unsigned long long m_numPomodoros;   // Number of pomodoros completed in the session session.
-		unsigned long long m_numShortBreaks; // Number of short breaks in the session.
-		unsigned int       m_numLongBreaks;  // Number of long breaks in the session.
-		QString            m_title;          // Title of the task.
-		QTimer             m_timer;          // Timer.
-		QTimer             m_progressTimer;  // Timer for progress.
-		unsigned int       m_progress;       // Progress counter.
-		unsigned long long m_remainingTime;  // Remaining time.
+		unsigned long m_pomodoroTime;   // Duration of a pomodoro.
+		unsigned long m_shortBreakTime; // Duration of a short break.
+		unsigned long m_longBreakTime;  // Duration of a long break.
+		unsigned long m_numBeforeBreak; // Number of pomodoros before a long break.
+		unsigned long m_numPomodoros;   // Number of pomodoros completed in the session session.
+		unsigned long m_numShortBreaks; // Number of short breaks in the session.
+		unsigned int  m_numLongBreaks;  // Number of long breaks in the session.
+		QString       m_title;          // Title of the task.
+		QTimer        m_timer;          // Timer.
+		QTimer        m_progressTimer;  // Timer used for progress notifications in 1/8 of the time.
+		unsigned int  m_progress;       // Progress counter.
+		QStringList   m_completedTasks; // List of tasks completed.
 };
+
+unsigned long toNanoseconds(QTime time);
 
 #endif /* POMODORO_H_ */

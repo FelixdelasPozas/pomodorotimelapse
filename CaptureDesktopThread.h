@@ -27,6 +27,7 @@ class CaptureDesktopThread
 	Q_OBJECT
 	public:
   	static const QList<QPainter::CompositionMode> COMPOSITION_MODES;
+  	static const QStringList POSITION_NAMES;
   	static const QStringList COMPOSITION_MODES_NAMES;
 
 		explicit CaptureDesktopThread(int capturedMonitor,
@@ -48,8 +49,11 @@ class CaptureDesktopThread
 		bool setCameraEnabled(bool);
 		bool setResolution(const Resolution &resolution);
 		void setOverlayPosition(const QPoint &point);
+		void setOverlayPosition(QString positionName);
 		void setOverlayCompositionMode(const QPainter::CompositionMode mode);
 		void setPaintFrame(bool);
+		QPoint getOverlayPosition()
+		{ return m_position; };
 
 		void run();
 

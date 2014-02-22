@@ -22,6 +22,16 @@ const QList<QPainter::CompositionMode> CaptureDesktopThread::COMPOSITION_MODES =
 const QStringList CaptureDesktopThread::COMPOSITION_MODES_NAMES = { QString("Copy"),
 		                                                                QString("Plus"),
 		                                                                QString("Multiply") };
+const QStringList CaptureDesktopThread::POSITION_NAMES = { QString("Free"),
+																													 QString("Top Left"),
+																													 QString("Top Center"),
+																													 QString("Top Right"),
+																													 QString("Center Left"),
+																													 QString("Center"),
+																													 QString("Center Right"),
+																													 QString("Bottom Left"),
+																													 QString("Bottom Center"),
+																													 QString("Bottom Right") };
 
 //-----------------------------------------------------------------
 CaptureDesktopThread::CaptureDesktopThread(int capturedMonitor,
@@ -104,19 +114,19 @@ bool CaptureDesktopThread::setCameraEnabled(bool enabled)
 		case true:
 			if (!m_camera.isOpened())
 			{
-				result &= m_camera.open(0);
-				result  = m_camera.set(CV_CAP_PROP_FRAME_WIDTH, m_cameraResolution.width);
+				result  = m_camera.open(0);
+				result &= m_camera.set(CV_CAP_PROP_FRAME_WIDTH, m_cameraResolution.width);
 				result &= m_camera.set(CV_CAP_PROP_FRAME_HEIGHT, m_cameraResolution.height);
 			}
 			break;
 		case false:
 			if (m_camera.isOpened())
 				m_camera.release();
+			result = true;
 			break;
 		default:
 			break;
 	}
-
 	return result;
 }
 
@@ -172,6 +182,59 @@ void CaptureDesktopThread::setOverlayPosition(const QPoint &point)
   int yLimit = m_height - m_cameraResolution.height;
 	if (m_position.y() > yLimit)
 		m_position.setY(yLimit);
+}
+
+//-----------------------------------------------------------------
+void CaptureDesktopThread::setOverlayPosition(QString positionName)
+{
+	int position = POSITION_NAMES.indexOf(positionName);
+	if (position == -1)
+		return;
+
+	QMutexLocker lock(&m_mutex);
+
+	switch (position)
+	{
+		case 1:
+			m_position.setX(0);
+			m_position.setY(0);
+			break;
+		case 2:
+			m_position.setX(m_width/2 - m_cameraResolution.width/2);
+			m_position.setY(0);
+			break;
+		case 3:
+			m_position.setX(m_width - m_cameraResolution.width);
+			m_position.setY(0);
+			break;
+		case 4:
+			m_position.setX(0);
+			m_position.setY(m_height/2-m_cameraResolution.height/2);
+			break;
+		case 5:
+			m_position.setX(m_width/2 - m_cameraResolution.width/2);
+			m_position.setY(m_height/2-m_cameraResolution.height/2);
+			break;
+		case 6:
+			m_position.setX(m_width - m_cameraResolution.width);
+			m_position.setY(m_height/2-m_cameraResolution.height/2);
+			break;
+		case 7:
+			m_position.setX(0);
+			m_position.setY(m_height - m_cameraResolution.height);
+			break;
+		case 8:
+			m_position.setX(m_width/2 - m_cameraResolution.width/2);
+			m_position.setY(m_height - m_cameraResolution.height);
+			break;
+		case 9:
+			m_position.setX(m_width - m_cameraResolution.width);
+			m_position.setY(m_height - m_cameraResolution.height);
+			break;
+		case 0: // Free, nothing to be done
+		default:
+			break;
+	}
 }
 
 //-----------------------------------------------------------------
@@ -275,17 +338,21 @@ void CaptureDesktopThread::takeScreenshot()
 	// capture desktop
 	QPixmap desktopImage = QPixmap::grabWindow(QApplication::desktop()->winId(), m_x, m_y, m_width, m_height);
 
+	m_mutex.lock();
 	// capture camera & composite
-	if (m_camera.isOpened())
+	if (m_cameraEnabled && m_camera.isOpened())
 	{
 		while (!m_camera.read(m_frame))
-			this->usleep(100);
+			usleep(100);
 
+		m_mutex.unlock();
 		QImage image = desktopImage.toImage();
 		QImage cameraImage = MatToQImage(m_frame);
 		overlayCameraImage(image, cameraImage);
 		desktopImage = QPixmap::fromImage(image);
 	}
+	else
+		m_mutex.unlock();
 
 	m_mutex.lock();
 	m_image = desktopImage;
