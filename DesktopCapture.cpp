@@ -9,6 +9,7 @@
 #include "DesktopCapture.h"
 #include "ProbeResolutionsDialog.h"
 #include "CaptureDesktopThread.h"
+#include "PomodoroStatistics.h"
 
 // OpenCV
 #include <opencv2/highgui/highgui.hpp>
@@ -40,6 +41,8 @@ const QString DesktopCapture::POMODOROS_BEFORE_BREAK = QString("Pomodoros Before
 const QString DesktopCapture::POMODOROS_ANIMATED_TRAY_ENABLED = QString("Pomodoro Animated Tray Icon");
 const QString DesktopCapture::POMODOROS_USE_SOUNDS = QString("Pomodoro Use Sounds");
 const QString DesktopCapture::POMODORO_ENABLED = QString("Enable Pomodoro");
+const QString DesktopCapture::POMODOROS_CONTINUOUS_TICTAC = QString("Continuous Tic-Tac");
+const QString DesktopCapture::POMODOROS_SESSION_NUMBER = QString("Pomodoros In Session");
 
 //-----------------------------------------------------------------
 DesktopCapture::DesktopCapture()
@@ -47,6 +50,7 @@ DesktopCapture::DesktopCapture()
 , m_captureThread{nullptr}
 , m_secuentialNumber{0}
 , m_started{true}
+, m_statisticsDialog{nullptr}
 {
 	setupUi(this);
 
@@ -66,6 +70,9 @@ DesktopCapture::DesktopCapture()
 	connect(m_captureGroupBox, SIGNAL(clicked(bool)), this, SLOT(updateCaptureDesktop(bool)));
 	connect(m_pomodoroGroupBox, SIGNAL(clicked(bool)), this, SLOT(updatePomodoro(bool)));
 	connect(m_cameraPositionComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(updateCameraPositionComboBox(int)));
+	connect(m_continuousTicTac, SIGNAL(stateChanged(int)), this, SLOT(updateContinuousTicTac(int)));
+	connect(m_pomodoroUseSounds, SIGNAL(stateChanged(int)), this, SLOT(updateUseSounds(int)));
+
 	m_screenshotImage->installEventFilter(this);
 
 	if (m_screenshotImage->underMouse() && m_captureThread)
@@ -184,6 +191,29 @@ void DesktopCapture::loadConfiguration()
 		settings.setValue(POMODOROS_USE_SOUNDS, pomodoroUseSounds);
 	}
 	m_pomodoroUseSounds->setChecked(pomodoroUseSounds);
+	m_pomodoro.setUseSounds(pomodoroUseSounds);
+
+	bool pomodoroContinuousTicTac;
+	if (settings.contains(POMODOROS_CONTINUOUS_TICTAC))
+		pomodoroContinuousTicTac = settings.value(POMODOROS_CONTINUOUS_TICTAC, false).toBool();
+	else
+	{
+		pomodoroContinuousTicTac = false;
+		settings.setValue(POMODOROS_CONTINUOUS_TICTAC, pomodoroContinuousTicTac);
+	}
+	m_continuousTicTac->setChecked(pomodoroContinuousTicTac);
+	m_continuousTicTac->setEnabled(pomodoroUseSounds);
+	m_pomodoro.setContinuousTicTac(pomodoroContinuousTicTac);
+
+	unsigned int pomodorosInSession;
+	if (settings.contains(POMODOROS_SESSION_NUMBER))
+		pomodorosInSession = settings.value(POMODOROS_SESSION_NUMBER, 12).toUInt();
+	else
+	{
+		pomodorosInSession = 12;
+		settings.setValue(POMODOROS_SESSION_NUMBER, pomodorosInSession);
+	}
+	m_pomodorosNumber->setValue(pomodorosInSession);
 
 	QTime timeBetweenCaptures;
 	if (settings.contains(CAPTURE_TIME))
@@ -258,6 +288,8 @@ void DesktopCapture::saveConfiguration()
 	settings.setValue(POMODOROS_BEFORE_BREAK, m_pomodorosBreakNumber->value());
   settings.setValue(POMODOROS_ANIMATED_TRAY_ENABLED, m_pomodoroAnimateTray->isChecked());
   settings.setValue(POMODOROS_USE_SOUNDS, m_pomodoroUseSounds->isChecked());
+  settings.setValue(POMODOROS_CONTINUOUS_TICTAC, m_continuousTicTac->isChecked());
+	settings.setValue(POMODOROS_SESSION_NUMBER, m_pomodorosNumber->value());
   settings.setValue(CAPTURE_TIME, m_screeshotTime->time());
   settings.setValue(CAPTURE_ENABLED, m_captureGroupBox->isChecked());
   settings.setValue(CAMERA_OVERLAY_FIXED_POSITION, m_cameraPositionComboBox->currentIndex());
@@ -533,18 +565,42 @@ void DesktopCapture::activateTrayIcon(QSystemTrayIcon::ActivationReason reason)
 	if ((reason) && (reason != QSystemTrayIcon::DoubleClick))
 		return;
 
+	if(m_pomodoroGroupBox->isChecked())
+	{
+		if (m_statisticsDialog != nullptr)
+			return;
+
+		m_statisticsDialog = new PomodoroStatistics(&m_pomodoro, this);
+		m_statisticsDialog->exec();
+
+		delete m_statisticsDialog;
+		m_statisticsDialog = nullptr;
+		return;
+	}
+
 	m_trayIcon->hide();
+	m_trayIcon->setIcon(QIcon(":/DesktopCapture/application.ico"));
 
 	if (m_captureThread)
 		m_captureThread->resume();
 
-	// TODO: mostrar otra cosa si ya ha sido activado.
 	show();
 
 	if (m_started)
 	{
-		disconnect(&m_timer, SIGNAL(timeout()), this, SLOT(takeScreenshot()));
 		m_started = false;
+
+		if (m_captureGroupBox->isChecked())
+			disconnect(&m_timer, SIGNAL(timeout()), this, SLOT(takeScreenshot()));
+
+		if (m_pomodoroGroupBox->isChecked())
+		{
+			m_pomodoro.stop();
+			disconnect(&m_pomodoro, SIGNAL(pomodoroEnded()), this, SLOT(trayMessage()));
+			disconnect(&m_pomodoro, SIGNAL(shortBreakEnded()), this, SLOT(trayMessage()));
+			disconnect(&m_pomodoro, SIGNAL(longBreakEnded()), this, SLOT(trayMessage()));
+			disconnect(&m_pomodoro, SIGNAL(sessionEnded()), this, SLOT(trayMessage()));
+		}
 	}
 
 	setWindowState(windowState() & (~Qt::WindowMinimized | Qt::WindowActive));
@@ -813,24 +869,32 @@ void DesktopCapture::startCapture()
 
 		trayMessage += message;
 
-		if (m_pomodoroAnimateTray->isChecked())
+		if (m_pomodoroAnimateTray->isChecked() && (m_trayIcon != nullptr))
 			m_trayIcon->setIcon(QIcon(":/DesktopCapture/0-red.ico"));
 
 		m_pomodoro.setPomodoroTime(m_pomodoroTime->time());
 		m_pomodoro.setShortBreakTime(m_shortBreakTime->time());
 		m_pomodoro.setLongBreakTime(m_longBreakTime->time());
-		connect(&m_pomodoro, SIGNAL(progress(unsigned int)), this, SLOT(updateTrayProgress(unsigned int)), Qt::QueuedConnection);
+		connect(&m_pomodoro, SIGNAL(progress(unsigned int)), this, SLOT(updateTrayProgress(unsigned int)), Qt::DirectConnection);
+		connect(&m_pomodoro, SIGNAL(pomodoroEnded()), this, SLOT(trayMessage()), Qt::DirectConnection);
+		connect(&m_pomodoro, SIGNAL(shortBreakEnded()), this, SLOT(trayMessage()), Qt::DirectConnection);
+		connect(&m_pomodoro, SIGNAL(longBreakEnded()), this, SLOT(trayMessage()), Qt::DirectConnection);
+		connect(&m_pomodoro, SIGNAL(sessionEnded()), this, SLOT(trayMessage()), Qt::DirectConnection);
 		m_pomodoro.start();
 	}
 
-	m_trayIcon->showMessage(QString("Started"), trayMessage, QSystemTrayIcon::MessageIcon::Information, 1000);
+	if (m_trayIcon != nullptr)
+	{
+		m_trayIcon->setToolTip(QString("In a pomodoro."));
+		m_trayIcon->showMessage(QString("Started"), trayMessage, QSystemTrayIcon::MessageIcon::Information, 1000);
+	}
 }
 
 //-----------------------------------------------------------------
 void DesktopCapture::takeScreenshot()
 {
 	QIcon icon;
-	if (m_screenshotAnimateTray->isChecked())
+	if (m_screenshotAnimateTray->isChecked() && (m_trayIcon != nullptr))
 	{
 		icon = m_trayIcon->icon();
 		m_trayIcon->setIcon(QIcon(":/DesktopCapture/application-shot.ico"));
@@ -843,7 +907,7 @@ void DesktopCapture::takeScreenshot()
 	}
 	++m_secuentialNumber;
 
-	if (m_screenshotAnimateTray->isChecked())
+	if (m_screenshotAnimateTray->isChecked() && (m_trayIcon != nullptr))
 		m_trayIcon->setIcon(icon);
 }
 
@@ -900,7 +964,79 @@ void DesktopCapture::updateCameraPositionComboBox(int status)
 //-----------------------------------------------------------------
 void DesktopCapture::updateTrayProgress(unsigned int progress)
 {
-	QString iconName = QString(":/DesktopCapture/%1-red.ico").arg(progress);
-	m_trayIcon->setIcon(QIcon(iconName));
-	qDebug() << iconName;
+	if (m_trayIcon != nullptr)
+		m_trayIcon->setIcon(m_pomodoro.icon());
+}
+
+//-----------------------------------------------------------------
+void DesktopCapture::trayMessage()
+{
+	QString message;
+	QString tooltip;
+
+	if (m_statisticsDialog != nullptr)
+		m_statisticsDialog->updateGUI();
+
+	if (m_pomodoro.status() == Pomodoro::Status::Stopped)
+	{
+		disconnect(&m_pomodoro, SIGNAL(pomodoroEnded()), this, SLOT(trayMessage()));
+		disconnect(&m_pomodoro, SIGNAL(shortBreakEnded()), this, SLOT(trayMessage()));
+		disconnect(&m_pomodoro, SIGNAL(longBreakEnded()), this, SLOT(trayMessage()));
+		disconnect(&m_pomodoro, SIGNAL(sessionEnded()), this, SLOT(trayMessage()));
+		message = QString("Session pomodoros completed!");
+	}
+
+	if (m_pomodoro.status() == Pomodoro::Status::Pomodoro)
+	{
+		message = QString("Completed a pomodoro.\nStarting a short break.");
+		tooltip = QString("In a short break.\nCompleted %1 pomodoros.").arg(m_pomodoro.completedPomodoros());
+	}
+
+	if (m_pomodoro.status() == Pomodoro::Status::ShortBreak)
+	{
+		message = QString("Competed a short break.\nStarting a ");
+		if ((m_pomodoro.completedPomodoros() % m_pomodorosBreakNumber->value()) == 0)
+		{
+			message += QString("long break.");
+			tooltip = QString("In a long break.\nCompleted %1 pomodoros.").arg(m_pomodoro.completedPomodoros());
+		}
+		else
+		{
+			message += QString("pomodoro.");
+			tooltip = QString("In a pomodoro.\nCompleted %1 pomodoros.").arg(m_pomodoro.completedPomodoros());
+		}
+	}
+
+	if (m_pomodoro.status() == Pomodoro::Status::LongBreak)
+	{
+		message = QString("Competed a long break.");
+		tooltip = QString("Completed %1 pomodoros.").arg(m_pomodoro.completedPomodoros());
+		if (m_pomodoro.completedPomodoros() != static_cast<unsigned int>(m_pomodorosNumber->value()))
+		{
+			message += QString("\nStarting a pomodoro.");
+			tooltip = QString("In a pomodoro.\nCompleted %1 pomodoros.").arg(m_pomodoro.completedPomodoros());
+		}
+	}
+
+	if (m_trayIcon != nullptr)
+	{
+		m_trayIcon->showMessage(QString("Pomodoro Timer"), message, QSystemTrayIcon::MessageIcon::NoIcon, 1000);
+		m_trayIcon->setToolTip(tooltip);
+	}
+
+}
+
+//-----------------------------------------------------------------
+void DesktopCapture::updateContinuousTicTac(int status)
+{
+	bool value = (status == Qt::Checked);
+	m_pomodoro.setContinuousTicTac(value);
+}
+
+//-----------------------------------------------------------------
+void DesktopCapture::updateUseSounds(int status)
+{
+	bool value = (status == Qt::Checked);
+	m_pomodoro.setUseSounds(value);
+	m_continuousTicTac->setEnabled(value);
 }

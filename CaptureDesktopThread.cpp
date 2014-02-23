@@ -302,10 +302,10 @@ void CaptureDesktopThread::overlayCameraImage(QImage &baseImage, const QImage &o
   if (m_paintFrame)
   {
   	QPoint middle(m_cameraResolution.width/2, m_cameraResolution.height/2);
+    int minimum = ((middle.x() < middle.y()) ? middle.x()/4 : middle.y()/4);
+
   	QPolygon poly(5);
     painter.setPen(QColor(Qt::blue));
-
-    int minimum = (middle.x()/4 < middle.y()/4 ? middle.x()/4 : middle.y()/4);
 
   	for (int i = 0; i < 3; ++i)
   	{

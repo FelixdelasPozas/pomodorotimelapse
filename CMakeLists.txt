@@ -43,11 +43,7 @@ qt4_wrap_ui(CORE_UI
   # .ui para Qt
   MainWindow.ui
   ProbeResolutionsDialog.ui
-  
-  #Camera/CameraConnectDialog.ui
-  #Camera/CameraView.ui
-  #Camera/ImageProcessingSettingsDialog.ui
-  #Camera/MainWindow.ui
+  PomodoroStatistics.ui
   )
 	
 qt4_wrap_cpp(CORE_MOC
@@ -56,14 +52,7 @@ qt4_wrap_cpp(CORE_MOC
   ProbeResolutionsDialog.h
   CaptureDesktopThread.h
   Pomodoro.h
-  
-  #Camera/CameraConnectDialog.h
-  #Camera/CameraView.h
-  #Camera/CaptureThread.h
-  #Camera/FrameLabel.h
-  #Camera/ImageProcessingSettingsDialog.h
-  #Camera/MainWindow.h
-  #Camera/ProcessingThread.h
+  PomodoroStatistics.h
   )
 
 set (CORE_SOURCES
@@ -76,17 +65,7 @@ set (CORE_SOURCES
   ProbeResolutionsDialog.cpp
   CaptureDesktopThread.cpp
   Pomodoro.cpp
-  
-  #Camera/CameraConnectDialog.cpp
-  #Camera/CameraView.cpp
-  #Camera/CaptureThread.cpp
-  #Camera/FrameLabel.cpp
-  #Camera/ImageProcessingSettingsDialog.cpp
-  #Camera/main.cpp
-  #Camera/MainWindow.cpp
-  #Camera/MatToQImage.cpp
-  #Camera/ProcessingThread.cpp
-  #Camera/SharedImageBuffer.cpp
+  PomodoroStatistics.cpp
   ${CMAKE_CURRENT_BINARY_DIR}/DesktopCapture.rc
   )
 

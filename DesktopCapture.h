@@ -11,6 +11,7 @@
 // Application
 #include "Resolutions.h"
 #include "Pomodoro.h"
+#include "PomodoroStatistics.h"
 #include "ui_MainWindow.h"
 
 // Qt
@@ -58,6 +59,9 @@ class DesktopCapture
 	  void takeScreenshot();
 	  void updatePomodoro(bool status);
 	  void updateTrayProgress(unsigned int status);
+	  void trayMessage();
+	  void updateContinuousTicTac(int status);
+	  void updateUseSounds(int status);
 
 	private:
 	  static const QString CAPTURE_ENABLED;
@@ -81,6 +85,8 @@ class DesktopCapture
 	  static const QString POMODOROS_BEFORE_BREAK;
 	  static const QString POMODOROS_ANIMATED_TRAY_ENABLED;
 	  static const QString POMODOROS_USE_SOUNDS;
+	  static const QString POMODOROS_CONTINUOUS_TICTAC;
+	  static const QString POMODOROS_SESSION_NUMBER;
 
 	  void loadConfiguration();
 	  void saveConfiguration();
@@ -104,6 +110,7 @@ class DesktopCapture
 		QTimer                m_timer;
 		int                   m_secuentialNumber;
 		bool                  m_started;
+		PomodoroStatistics   *m_statisticsDialog;
 };
 
 #endif // DESKTOP_CAPTURE_H_
