@@ -115,7 +115,7 @@ class Pomodoro
 		QStringList   m_completedTasks;   // List of tasks completed.
 		QIcon         m_icon;             // Icon of actual situation.
 		Status        m_status;           // Actual status of the pomodoro.
-		bool          m_continuous;       // Continuous tic-tac sound.
+		bool          m_continuousTicTac; // Continuous tic-tac sound.
 		unsigned int  m_sessionPomodoros; // Number of pomodoros in a session.
 		bool          m_useSounds;        // Use sounds.
 		QTime         m_startTime;        // Start time of the last interval, used for pausing.

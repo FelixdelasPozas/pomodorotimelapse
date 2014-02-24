@@ -10,6 +10,11 @@
 #include <QDir>
 #include <QFile>
 
+// Length of sounds
+static const int LENGTH_CRANK  = 530;
+static const int LENGTH_TICTAC = 450;
+static const int LENGTH_RING   = 1300;
+
 //-----------------------------------------------------------------
 Pomodoro::Pomodoro()
 : m_pomodoroTime{25 * 60 * 1000}
@@ -21,7 +26,7 @@ Pomodoro::Pomodoro()
 , m_numLongBreaks{0}
 , m_progress{0}
 , m_status{Status::Stopped}
-, m_continuous{false}
+, m_continuousTicTac{false}
 , m_sessionPomodoros{12}
 , m_useSounds{true}
 , m_elapsedMSeconds{0}
@@ -83,9 +88,8 @@ void Pomodoro::startTimers()
 
 	if (m_useSounds)
 	{
-		Sleeper::msleep(1300);
 		m_crank->play();
-		Sleeper::msleep(600);
+		Sleeper::msleep(LENGTH_CRANK);
 		m_tictac->play();
 	}
 }
@@ -117,15 +121,20 @@ QTime Pomodoro::getLongBreakTime()
 //-----------------------------------------------------------------
 void Pomodoro::stopTimers()
 {
-	if (m_useSounds)
-	{
-		m_tictac->stop();
-		m_ring->play();
-	}
-
 	m_timer.stop();
 	m_progressTimer.stop();
 	// disconnect respective signals in the caller.
+
+	if (m_useSounds)
+	{
+		if (m_continuousTicTac)
+		{
+			m_tictac->stop();
+			Sleeper::msleep(LENGTH_TICTAC);
+		}
+		m_ring->play();
+		Sleeper::msleep(LENGTH_RING);
+	}
 }
 
 //-----------------------------------------------------------------
@@ -193,6 +202,11 @@ void Pomodoro::pause(bool value)
 		m_status = Status::Paused;
 		m_timer.stop();
 		m_progressTimer.stop();
+		if (m_continuousTicTac)
+		{
+			m_tictac->stop();
+			Sleeper::msleep(100);
+		}
 	}
 	else
 		if (Status::Paused == m_status)
@@ -232,6 +246,9 @@ void Pomodoro::pause(bool value)
 			progressMSeconds = progressMSeconds % progressInterval;
 			m_progressTimer.setInterval(progressMSeconds);
 			m_progressTimer.start();
+
+			if (m_continuousTicTac)
+				m_tictac->play();
 		}
 }
 
@@ -386,7 +403,7 @@ void Pomodoro::setContinuousTicTac(bool value)
 {
 	if (m_status == Status::Stopped)
 	{
-		m_continuous = value;
+		m_continuousTicTac = value;
 		m_tictac->setLoops(((value == true) ? -1 : 1));
 	}
 }

@@ -22,6 +22,8 @@
 
 const QString DesktopCapture::CAPTURE_TIME = QString("Time Between Captures");
 const QString DesktopCapture::CAPTURE_ENABLED = QString("Enable Desktop Capture");
+const QString DesktopCapture::CAPTURE_VIDEO = QString("Capture Video");
+const QString DesktopCapture::CAPTURE_VIDEO_CODEC = QString("Capture Video Codec");
 const QString DesktopCapture::CAPTURED_MONITOR = QString("Captured Desktop Monitor");
 const QString DesktopCapture::MONITORS_LIST = QString("Monitor Resolutions");
 const QString DesktopCapture::OUTPUT_DIR = QString("Output Directory");
@@ -44,12 +46,14 @@ const QString DesktopCapture::POMODORO_ENABLED = QString("Enable Pomodoro");
 const QString DesktopCapture::POMODOROS_CONTINUOUS_TICTAC = QString("Continuous Tic-Tac");
 const QString DesktopCapture::POMODOROS_SESSION_NUMBER = QString("Pomodoros In Session");
 
+const QStringList DesktopCapture::VIDEO_CODECS = { QString("VP8"), QString("VP9") };
+
 //-----------------------------------------------------------------
 DesktopCapture::DesktopCapture()
 : m_trayIcon{nullptr}
 , m_captureThread{nullptr}
 , m_secuentialNumber{0}
-, m_started{true}
+, m_started{false}
 , m_statisticsDialog{nullptr}
 {
 	setupUi(this);
@@ -72,6 +76,7 @@ DesktopCapture::DesktopCapture()
 	connect(m_cameraPositionComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(updateCameraPositionComboBox(int)));
 	connect(m_continuousTicTac, SIGNAL(stateChanged(int)), this, SLOT(updateContinuousTicTac(int)));
 	connect(m_pomodoroUseSounds, SIGNAL(stateChanged(int)), this, SLOT(updateUseSounds(int)));
+	connect(m_captureVideo, SIGNAL(stateChanged(int)), this, SLOT(updateCaptureVideo(int)));
 
 	m_screenshotImage->installEventFilter(this);
 
@@ -225,6 +230,28 @@ void DesktopCapture::loadConfiguration()
 	}
 	m_screeshotTime->setTime(timeBetweenCaptures);
 
+	bool captureVideo;
+	if (settings.contains(CAPTURE_VIDEO))
+		captureVideo = settings.value(CAPTURE_VIDEO, true).toBool();
+	else
+	{
+		captureVideo = true;
+		settings.setValue(CAPTURE_VIDEO, captureVideo);
+	}
+	m_captureVideo->setChecked(captureVideo);
+	m_videoCodecComboBox->setEnabled(captureVideo);
+
+	int videoCodecIndex;
+	if (settings.contains(CAPTURE_VIDEO_CODEC))
+		videoCodecIndex = settings.value(CAPTURE_VIDEO_CODEC, 0).toInt();
+	else
+	{
+		videoCodecIndex = 0;
+		settings.setValue(CAPTURE_VIDEO_CODEC, videoCodecIndex);
+	}
+	m_videoCodecComboBox->insertItems(0, VIDEO_CODECS);
+	m_videoCodecComboBox->setCurrentIndex(videoCodecIndex);
+
 	QString outputDir;
 	if (settings.contains(OUTPUT_DIR))
 		outputDir = settings.value(OUTPUT_DIR, QString()).toString();
@@ -292,6 +319,8 @@ void DesktopCapture::saveConfiguration()
 	settings.setValue(POMODOROS_SESSION_NUMBER, m_pomodorosNumber->value());
   settings.setValue(CAPTURE_TIME, m_screeshotTime->time());
   settings.setValue(CAPTURE_ENABLED, m_captureGroupBox->isChecked());
+  settings.setValue(CAPTURE_VIDEO, m_captureVideo->isChecked());
+  settings.setValue(CAPTURE_VIDEO_CODEC, m_videoCodecComboBox->currentIndex());
   settings.setValue(CAMERA_OVERLAY_FIXED_POSITION, m_cameraPositionComboBox->currentIndex());
 
 	settings.sync();
@@ -549,7 +578,9 @@ void DesktopCapture::changeEvent(QEvent* e)
 				QMetaObject::invokeMethod(this, "hide", Qt::QueuedConnection);
 				m_trayIcon->show();
 				e->ignore();
-				return;
+
+				if (m_captureThread != nullptr)
+					m_captureThread->pause();
 			}
 			break;
 		default:
@@ -574,19 +605,11 @@ void DesktopCapture::activateTrayIcon(QSystemTrayIcon::ActivationReason reason)
 		}
 
 		m_statisticsDialog = new PomodoroStatistics(&m_pomodoro, this);
-		connect(m_statisticsDialog, SIGNAL(finished(int)), this, SLOT(statisticsDialogClosed(int)));
+		connect(m_statisticsDialog, SIGNAL(finished(int)), this, SLOT(statisticsDialogClosed(int)), Qt::QueuedConnection);
 		m_statisticsDialog->show();
 	}
 	else
 	{
-		m_trayIcon->hide();
-		m_trayIcon->setIcon(QIcon(":/DesktopCapture/application.ico"));
-
-		if (m_captureThread)
-			m_captureThread->resume();
-
-		show();
-
 		if (m_started)
 		{
 			m_started = false;
@@ -596,7 +619,6 @@ void DesktopCapture::activateTrayIcon(QSystemTrayIcon::ActivationReason reason)
 
 			if (m_pomodoroGroupBox->isChecked())
 			{
-				m_pomodoro.stop();
 				disconnect(&m_pomodoro, SIGNAL(pomodoroEnded()), this, SLOT(trayMessage()));
 				disconnect(&m_pomodoro, SIGNAL(shortBreakEnded()), this, SLOT(trayMessage()));
 				disconnect(&m_pomodoro, SIGNAL(longBreakEnded()), this, SLOT(trayMessage()));
@@ -604,6 +626,13 @@ void DesktopCapture::activateTrayIcon(QSystemTrayIcon::ActivationReason reason)
 			}
 		}
 
+		if (m_captureThread)
+			m_captureThread->resume();
+
+		m_trayIcon->hide();
+		m_trayIcon->setIcon(QIcon(":/DesktopCapture/application.ico"));
+
+		show();
 		setWindowState(windowState() & (~Qt::WindowMinimized | Qt::WindowActive));
 	}
 }
@@ -740,6 +769,13 @@ bool DesktopCapture::eventFilter(QObject *object, QEvent *event)
 }
 
 //-----------------------------------------------------------------
+void DesktopCapture::updateCaptureVideo(int status)
+{
+	bool value = (status == Qt::Checked);
+	m_videoCodecComboBox->setEnabled(value);
+}
+
+//-----------------------------------------------------------------
 QPoint DesktopCapture::computeNewPosition(const QPoint &dragPoint, const QPoint &point)
 {
 	QSize imageGeometry = m_screenshotImage->pixmap()->size();
@@ -790,10 +826,11 @@ void DesktopCapture::closeEvent(QCloseEvent *event)
 void DesktopCapture::startCapture()
 {
 	QString trayMessage;
-	if (m_captureGroupBox->isChecked() || m_pomodoroGroupBox->isChecked())
-		setWindowState(windowState() | Qt::WindowMinimized | Qt::WindowActive);
-	else
+	if (!m_captureGroupBox->isChecked() && !m_pomodoroGroupBox->isChecked())
 		return;
+
+	m_started = true;
+	setWindowState(windowState() | Qt::WindowMinimized | Qt::WindowActive);
 
 	if (m_captureGroupBox->isChecked())
 	{
@@ -806,7 +843,6 @@ void DesktopCapture::startCapture()
 		m_timer.setInterval(ms);
 		m_timer.setSingleShot(false);
 		connect(&m_timer, SIGNAL(timeout()), this, SLOT(takeScreenshot()), Qt::QueuedConnection);
-		m_started = true;
 
 		QString message("Capture interval set to");
 		if (time.hour() != 0)
@@ -1065,21 +1101,14 @@ void DesktopCapture::statisticsDialogClosed(int unused)
 		m_trayIcon->hide();
 		m_trayIcon->setIcon(QIcon(":/DesktopCapture/application.ico"));
 
-		if (m_captureThread)
-			m_captureThread->resume();
-
-		show();
-
 		if (m_started)
 		{
 			m_started = false;
-
 			if (m_captureGroupBox->isChecked())
 				disconnect(&m_timer, SIGNAL(timeout()), this, SLOT(takeScreenshot()));
 
 			if (m_pomodoroGroupBox->isChecked())
 			{
-				m_pomodoro.stop();
 				disconnect(&m_pomodoro, SIGNAL(pomodoroEnded()), this, SLOT(trayMessage()));
 				disconnect(&m_pomodoro, SIGNAL(shortBreakEnded()), this, SLOT(trayMessage()));
 				disconnect(&m_pomodoro, SIGNAL(longBreakEnded()), this, SLOT(trayMessage()));
@@ -1087,6 +1116,10 @@ void DesktopCapture::statisticsDialogClosed(int unused)
 			}
 		}
 
+		if (m_captureThread)
+			m_captureThread->resume();
+
+		show();
 		setWindowState(windowState() & (~Qt::WindowMinimized | Qt::WindowActive));
 	}
 }

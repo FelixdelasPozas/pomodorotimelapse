@@ -63,10 +63,13 @@ class DesktopCapture
 	  void updateContinuousTicTac(int status);
 	  void updateUseSounds(int status);
 	  void statisticsDialogClosed(int unused);
+	  void updateCaptureVideo(int status);
 
 	private:
 	  static const QString CAPTURE_ENABLED;
 	  static const QString CAPTURE_TIME;
+	  static const QString CAPTURE_VIDEO;
+	  static const QString CAPTURE_VIDEO_CODEC;
 	  static const QString CAPTURED_MONITOR;
 	  static const QString MONITORS_LIST;
 	  static const QString OUTPUT_DIR;
@@ -88,6 +91,8 @@ class DesktopCapture
 	  static const QString POMODOROS_USE_SOUNDS;
 	  static const QString POMODOROS_CONTINUOUS_TICTAC;
 	  static const QString POMODOROS_SESSION_NUMBER;
+
+	  static const QStringList VIDEO_CODECS;
 
 	  void loadConfiguration();
 	  void saveConfiguration();

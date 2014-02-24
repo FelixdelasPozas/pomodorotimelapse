@@ -230,6 +230,23 @@
            </layout>
           </item>
           <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_14">
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <item>
+             <widget class="QCheckBox" name="m_captureVideo">
+              <property name="text">
+               <string>Capture Video</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QComboBox" name="m_videoCodecComboBox"/>
+            </item>
+           </layout>
+          </item>
+          <item>
            <layout class="QHBoxLayout" name="horizontalLayout_13">
             <property name="topMargin">
              <number>0</number>
@@ -512,49 +529,27 @@
      </widget>
     </item>
     <item>
-     <widget class="QGroupBox" name="m_optionsGroupBox">
-      <property name="styleSheet">
-       <string notr="true"> QGroupBox {
-     border: 1px solid gray;
-     border-radius: 5px;
-     margin-top: 1ex; /* leave space at the top for the title */
- }
-
- QGroupBox::title {
-     subcontrol-origin: margin;
-     subcontrol-position: top center; /* position at the top center */
-     padding: 0 3px;
- }</string>
+     <layout class="QHBoxLayout" name="horizontalLayout_10">
+      <property name="topMargin">
+       <number>0</number>
       </property>
-      <property name="title">
-       <string>Options</string>
-      </property>
-      <layout class="QVBoxLayout" name="verticalLayout_3">
-       <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_10">
-         <property name="topMargin">
-          <number>0</number>
-         </property>
-         <item>
-          <widget class="QPushButton" name="m_startButton">
-           <property name="maximumSize">
-            <size>
-             <width>100</width>
-             <height>100</height>
-            </size>
-           </property>
-           <property name="text">
-            <string>Start!</string>
-           </property>
-           <property name="flat">
-            <bool>false</bool>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </item>
-      </layout>
-     </widget>
+      <item>
+       <widget class="QPushButton" name="m_startButton">
+        <property name="maximumSize">
+         <size>
+          <width>100</width>
+          <height>100</height>
+         </size>
+        </property>
+        <property name="text">
+         <string>Start!</string>
+        </property>
+        <property name="flat">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+     </layout>
     </item>
    </layout>
   </widget>
