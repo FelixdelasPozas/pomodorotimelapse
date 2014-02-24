@@ -62,6 +62,7 @@ class DesktopCapture
 	  void trayMessage();
 	  void updateContinuousTicTac(int status);
 	  void updateUseSounds(int status);
+	  void statisticsDialogClosed(int unused);
 
 	private:
 	  static const QString CAPTURE_ENABLED;

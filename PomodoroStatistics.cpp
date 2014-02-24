@@ -6,23 +6,24 @@
  */
 
 #include <PomodoroStatistics.h>
-#include <QDebug>
 
 //-----------------------------------------------------------------
 PomodoroStatistics::PomodoroStatistics(Pomodoro* pomodoro, QWidget* parent)
 : QDialog(parent)
 , m_pomodoro{pomodoro}
 , m_paused{false}
+, m_result{Result::None}
 {
 	setupUi(this);
 	setWindowTitle("Pomodoro Statistics");
 	setWindowIcon(QIcon(":/DesktopCapture/2.ico"));
 
-	updateGUI();
+	m_status->setTextFormat(Qt::RichText);
+	updateGUI(m_pomodoro->status());
 
 	connect(m_invalidate, SIGNAL(pressed()), this, SLOT(invalidate()));
 	connect(m_stop, SIGNAL(pressed()), this, SLOT(stop()));
-	connect(m_continue, SIGNAL(pressed()), this, SLOT(continuePomodoro()));
+	connect(m_continue, SIGNAL(pressed()), this, SLOT(resume()));
 	connect(m_pause, SIGNAL(pressed()), this, SLOT(pause()));
 
 	m_timer.setInterval(1000);
@@ -34,26 +35,29 @@ PomodoroStatistics::PomodoroStatistics(Pomodoro* pomodoro, QWidget* parent)
 //-----------------------------------------------------------------
 PomodoroStatistics::~PomodoroStatistics()
 {
+	disconnect(&m_timer, SIGNAL(timeout()), this, SLOT(updateElapsedTime()));
 	m_timer.stop();
 }
 
 //-----------------------------------------------------------------
 void PomodoroStatistics::invalidate()
 {
-	emit invalidated();
+	m_pomodoro->invalidate();
 }
 
 //-----------------------------------------------------------------
 void PomodoroStatistics::stop()
 {
-	emit stop();
-	done(QDialog::Accepted);
+	m_pomodoro->stop();
+	m_result = Result::Stop;
+	accept();
 }
 
 //-----------------------------------------------------------------
-void PomodoroStatistics::continuePomodoro()
+void PomodoroStatistics::resume()
 {
-	done(QDialog::Accepted);
+	m_result = Result::Continue;
+	accept();
 }
 
 //-----------------------------------------------------------------
@@ -62,19 +66,23 @@ void PomodoroStatistics::pause()
 	if (!m_paused)
 	{
 		m_paused = true;
-		emit paused();
+		m_pomodoro->pause(true);
 		m_pause->setText("Resume");
-		m_elapsedTime->setDisabled(false);
+		m_invalidate->setEnabled(false);
+		m_continue->setEnabled(false);
+		m_stop->setEnabled(false);
 	}
 	else
 	{
 		m_paused = false;
-		emit resumed();
+		m_pomodoro->pause(false);
 		m_pause->setText("Pause");
-		m_elapsedTime->setDisabled(true);
+		m_invalidate->setEnabled(true);
+		m_continue->setEnabled(true);
+		m_stop->setEnabled(true);
 	}
 
-	updateGUI();
+	updateGUI(m_pomodoro->status());
 }
 
 //-----------------------------------------------------------------
@@ -86,7 +94,7 @@ void PomodoroStatistics::updateElapsedTime()
 }
 
 //-----------------------------------------------------------------
-void PomodoroStatistics::updateGUI()
+void PomodoroStatistics::updateGUI(Pomodoro::Status status)
 {
 	unsigned long totalMs = 0;
 	QTime pomodoroTime = QTime(0, 0, 0, 0);
@@ -122,23 +130,20 @@ void PomodoroStatistics::updateGUI()
 	QTime elapsedTime = m_pomodoro->elapsedTime();
 	m_elapsedTime->setText(elapsedTime.toString(Qt::TextDate));
 
-	m_paused = false;
-	if (m_pomodoro->status() == Pomodoro::Status::LongBreak)
-		m_status->setText("In a long break");
+	if (status == Pomodoro::Status::LongBreak)
+		m_status->setText("<span style=\" color:#00ff00;\">In a long break</span>");
 	else
-		if (m_pomodoro->status() == Pomodoro::Status::ShortBreak)
-			m_status->setText("In a short break");
+		if (status == Pomodoro::Status::ShortBreak)
+			m_status->setText("<span style=\" color:#0000ff;\">In a short break</span>");
 		else
-			if (m_pomodoro->status() == Pomodoro::Status::Pomodoro)
-				m_status->setText("In a pomodoro");
+			if (status == Pomodoro::Status::Pomodoro)
+				m_status->setText("<span style=\" color:#ff0000;\">In a pomodoro</span>");
 			else
-				if (m_pomodoro->status() == Pomodoro::Status::Paused)
-				{
-					m_status->setText("Paused");
-					m_paused = true;
-				}
+				if (status == Pomodoro::Status::Paused)
+					m_status->setText("<span style=\" color:#000000;\">Paused</span>");
 				else
-					if (m_pomodoro->status() == Pomodoro::Status::Stopped)
-						m_status->setText("Stopped");
+					if (status == Pomodoro::Status::Stopped)
+						accept();
 
+	repaint();
 }

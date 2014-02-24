@@ -6,7 +6,6 @@
  */
 
 #include <Pomodoro.h>
-#include <QDebug>
 #include <QString>
 #include <QDir>
 #include <QFile>
@@ -25,6 +24,7 @@ Pomodoro::Pomodoro()
 , m_continuous{false}
 , m_sessionPomodoros{12}
 , m_useSounds{true}
+, m_elapsedMSeconds{0}
 {
 	m_timer.setSingleShot(true);
 	m_progressTimer.setSingleShot(false);
@@ -131,8 +131,6 @@ void Pomodoro::stopTimers()
 //-----------------------------------------------------------------
 void Pomodoro::startPomodoro()
 {
-	qDebug() << "start pomodoro:" << m_pomodoroTime / 1000 << m_pomodoroTime / 8000;
-
 	m_timer.setInterval(m_pomodoroTime);
 	connect(&m_timer, SIGNAL(timeout()), this, SLOT(endPomodoro()), Qt::QueuedConnection);
 	m_progressTimer.setInterval(m_pomodoroTime / 8);
@@ -144,8 +142,6 @@ void Pomodoro::startPomodoro()
 //-----------------------------------------------------------------
 void Pomodoro::startShortBreak()
 {
-	qDebug() << "start short break:" << m_shortBreakTime / 1000 << m_shortBreakTime / 8000;
-
 	m_timer.setInterval(m_shortBreakTime);
 	connect(&m_timer, SIGNAL(timeout()), this, SLOT(endShortBreak()), Qt::QueuedConnection);
 	m_progressTimer.setInterval(m_shortBreakTime / 8);
@@ -157,8 +153,6 @@ void Pomodoro::startShortBreak()
 //-----------------------------------------------------------------
 void Pomodoro::startLongBreak()
 {
-	qDebug() << "start long break:" << m_longBreakTime / 1000 << m_longBreakTime / 8000;
-
 	m_timer.setInterval(m_longBreakTime);
 	connect(&m_timer, SIGNAL(timeout()), this, SLOT(endLongBreak()), Qt::QueuedConnection);
 	m_progressTimer.setInterval(m_longBreakTime / 8);
@@ -193,7 +187,6 @@ void Pomodoro::pause(bool value)
 
 	if (Status::Paused != m_status)
 	{
-		qDebug() << "paused";
 		// pause timers
 		m_elapsedMSeconds += m_startTime.elapsed();
 		oldStatus = m_status;
@@ -204,27 +197,29 @@ void Pomodoro::pause(bool value)
 	else
 		if (Status::Paused == m_status)
 		{
-			qDebug() << "resume";
 			// resume
 			QTime time = QTime(0,0,0,0);
 			time = time.addMSecs(m_elapsedMSeconds);
-			int mSeconds, progressInterval;
+			unsigned long mSeconds, progressInterval, progressMSeconds;
 			if (Status::Pomodoro == oldStatus)
 			{
 				mSeconds = time.msecsTo(getPomodoroTime());
 				progressInterval = m_pomodoroTime / 8;
+				progressMSeconds = m_pomodoroTime - m_elapsedMSeconds;
 			}
 			else
 				if(Status::ShortBreak == oldStatus)
 				{
 					mSeconds = time.msecsTo(getShortBreakTime());
 					progressInterval = m_shortBreakTime / 8;
+					progressMSeconds = m_shortBreakTime - m_elapsedMSeconds;
 				}
 				else
 					if(Status::LongBreak == oldStatus)
 					{
 						mSeconds = time.msecsTo(getLongBreakTime());
 						progressInterval = m_longBreakTime / 8;
+						progressMSeconds = m_longBreakTime - m_elapsedMSeconds;
 					}
 
 			m_status = oldStatus;
@@ -233,37 +228,11 @@ void Pomodoro::pause(bool value)
 			m_startTime.start();
 			m_timer.setInterval(mSeconds);
 			m_timer.start();
-			m_startTime = time;
 
-			while(mSeconds > progressInterval)
-				mSeconds -= progressInterval;
-
-			disconnect(&m_progressTimer, SIGNAL(timeout()), this, SLOT(updateProgress()));
-			connect(&m_progressTimer, SIGNAL(timeout()), this, SLOT(restoreOldProgressTimer()), Qt::QueuedConnection);
-			m_progressTimer.setInterval(mSeconds);
+			progressMSeconds = progressMSeconds % progressInterval;
+			m_progressTimer.setInterval(progressMSeconds);
 			m_progressTimer.start();
 		}
-}
-
-//-----------------------------------------------------------------
-void Pomodoro::restoreOldProgressInterval()
-{
-	qDebug() << "restore old progress interval";
-	unsigned long interval;
-	if (Status::Pomodoro == m_status)
-		interval = m_pomodoroTime / 8;
-	else
-		if(Status::LongBreak == m_status)
-			interval = m_longBreakTime / 8;
-		else
-			if (Status::ShortBreak == m_status)
-				interval = m_shortBreakTime / 8;
-
-	m_progressTimer.stop();
-	disconnect(&m_progressTimer, SIGNAL(timeout()), this, SLOT(restoreOldProgressTimer()));
-	connect(&m_progressTimer, SIGNAL(timeout()), this, SLOT(updateProgress()), Qt::QueuedConnection);
-	m_progressTimer.setInterval(interval);
-	m_progressTimer.start();
 }
 
 //-----------------------------------------------------------------
@@ -292,12 +261,16 @@ void Pomodoro::stop()
 //-----------------------------------------------------------------
 void Pomodoro::invalidate()
 {
+	if (Status::Stopped == m_status)
+		return;
+
 	stopTimers();
 	m_timer.disconnect(&m_timer, SIGNAL(timeout()), this, SLOT(endPomodoro()));
 	m_timer.disconnect(&m_timer, SIGNAL(timeout()), this, SLOT(endLongBreak()));
 	m_timer.disconnect(&m_timer, SIGNAL(timeout()), this, SLOT(endShortBreak()));
 	m_progress = 0;
 	m_status = Status::Stopped;
+	start();
 }
 
 //-----------------------------------------------------------------
@@ -330,24 +303,34 @@ void Pomodoro::setTask(QString taskTitle)
 //-----------------------------------------------------------------
 void Pomodoro::updateProgress()
 {
+	unsigned long interval;
 	switch(m_status)
 	{
 		case Status::Pomodoro:
 			m_icon = QIcon(QString(":/DesktopCapture/%1-red.ico").arg(m_progress));
+			interval = m_pomodoroTime / 8;
 			break;
 		case Status::ShortBreak:
 			m_icon = QIcon(QString(":/DesktopCapture/%1-blue.ico").arg(m_progress));
+			interval = m_shortBreakTime / 8;
 			break;
 		case Status::LongBreak:
 			m_icon = QIcon(QString(":/DesktopCapture/%1-green.ico").arg(m_progress));
+			interval = m_longBreakTime / 8;
 			break;
 		default:
 			Q_ASSERT(false);
 			break;
 	}
 
+	if (m_progressTimer.interval() < static_cast<int>(interval))
+	{
+		m_progressTimer.stop();
+		m_progressTimer.setInterval(interval);
+		m_progressTimer.start();
+	}
+
 	emit progress(m_progress);
-	qDebug() << "progress" << m_progress;
 	++m_progress;
 }
 
@@ -355,7 +338,6 @@ void Pomodoro::updateProgress()
 void Pomodoro::endPomodoro()
 {
 	++m_numPomodoros;
-	qDebug() << "end pomodoro, num" << m_numPomodoros;
 
 	if (m_numPomodoros == m_sessionPomodoros)
 	{
@@ -375,7 +357,6 @@ void Pomodoro::endPomodoro()
 void Pomodoro::endShortBreak()
 {
 	++m_numShortBreaks;
-	qDebug() << "end short break, num" << m_numShortBreaks;
 
 	stopTimers();
 	disconnect(&m_timer, SIGNAL(timeout()), this, SLOT(endShortBreak()));
@@ -392,7 +373,6 @@ void Pomodoro::endShortBreak()
 void Pomodoro::endLongBreak()
 {
 	++m_numLongBreaks;
-	qDebug() << "end long break, num" << m_numLongBreaks;
 
 	stopTimers();
 	disconnect(&m_timer, SIGNAL(timeout()), this, SLOT(endLongBreak()));

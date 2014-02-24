@@ -63,6 +63,10 @@ class Pomodoro
 		QTime getPomodoroTime();
 		QTime getShortBreakTime();
 		QTime getLongBreakTime();
+		unsigned long getPomodorosBeforeBreak()
+		{ return m_numBeforeBreak; }
+		unsigned int getPomodorosInSession()
+		{ return m_sessionPomodoros; };
 
 		unsigned int completedPomodoros()
 		{ return m_numPomodoros; };
@@ -92,7 +96,6 @@ class Pomodoro
 	  void endPomodoro();
 	  void endShortBreak();
 	  void endLongBreak();
-	  void restoreOldProgressInterval();
 
 	private:
 	  void startTimers();

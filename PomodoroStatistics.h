@@ -26,17 +26,16 @@ class PomodoroStatistics
 		explicit PomodoroStatistics(Pomodoro *pomodoro, QWidget *parent = nullptr);
 		virtual ~PomodoroStatistics();
 
-		void updateGUI();
-	signals:
-		void invalidated();
-		void stopped();
-		void paused();
-		void resumed();
+		void updateGUI(Pomodoro::Status status);
+
+		enum class Result : std::int8_t { None = 1, Stop = 2, Continue = 3};
+		Result getResult()
+		{ return m_result; }
 
 	public slots:
 		void invalidate();
 		void stop();
-		void continuePomodoro();
+		void resume();
 		void pause();
 		void updateElapsedTime();
 
@@ -45,6 +44,7 @@ class PomodoroStatistics
 		QTimeLine m_timeLine;
 		QTimer    m_timer;
 		bool      m_paused;
+		Result    m_result;
 };
 
 #endif // POMODORO_STATISTICS_H_
