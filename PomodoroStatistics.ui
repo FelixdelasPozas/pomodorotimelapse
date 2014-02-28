@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>325</width>
-    <height>198</height>
+    <width>338</width>
+    <height>241</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -18,14 +18,14 @@
   </property>
   <property name="minimumSize">
    <size>
-    <width>325</width>
-    <height>198</height>
+    <width>338</width>
+    <height>241</height>
    </size>
   </property>
   <property name="maximumSize">
    <size>
     <width>338</width>
-    <height>198</height>
+    <height>241</height>
    </size>
   </property>
   <property name="windowTitle">
@@ -34,7 +34,7 @@
   <property name="modal">
    <bool>false</bool>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout_2" stretch="0,0,0,0,0,0,0,0">
+  <layout class="QVBoxLayout" name="verticalLayout_2" stretch="0,0,0,0,0,0,0,0,0">
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout_7">
      <property name="topMargin">
@@ -78,6 +78,47 @@
        </property>
        <property name="alignment">
         <set>Qt::AlignCenter</set>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_8" stretch="0,0,0">
+     <item>
+      <widget class="QLabel" name="label_6">
+       <property name="text">
+        <string>Current Task</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="m_taskName">
+       <property name="text">
+        <string/>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QToolButton" name="m_taskButton">
+       <property name="minimumSize">
+        <size>
+         <width>20</width>
+         <height>20</height>
+        </size>
+       </property>
+       <property name="toolTip">
+        <string>Modify current task</string>
+       </property>
+       <property name="text">
+        <string>...</string>
+       </property>
+       <property name="icon">
+        <iconset resource="rsc/resources.qrc">
+         <normaloff>:/DesktopCapture/pen.png</normaloff>:/DesktopCapture/pen.png</iconset>
        </property>
       </widget>
      </item>
@@ -214,6 +255,8 @@
    </item>
   </layout>
  </widget>
- <resources/>
+ <resources>
+  <include location="rsc/resources.qrc"/>
+ </resources>
  <connections/>
 </ui>

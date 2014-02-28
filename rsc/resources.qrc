@@ -2,6 +2,7 @@
   <qresource prefix="/DesktopCapture">
     <file>application.ico</file>
 	<file>application-shot.ico</file>
+	<file>pen.png</file>
 	<file>0.ico</file>
 	<file>1.ico</file>
 	<file>2.ico</file>

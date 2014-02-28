@@ -24,6 +24,7 @@ Pomodoro::Pomodoro()
 , m_numPomodoros{0}
 , m_numShortBreaks{0}
 , m_numLongBreaks{0}
+, m_task{QString("Undefined task")}
 , m_progress{0}
 , m_status{Status::Stopped}
 , m_continuousTicTac{false}
@@ -314,7 +315,7 @@ void Pomodoro::setLongBreakTime(QTime duration)
 //-----------------------------------------------------------------
 void Pomodoro::setTask(QString taskTitle)
 {
-	m_title = taskTitle;
+	m_task = taskTitle;
 }
 
 //-----------------------------------------------------------------
@@ -354,6 +355,7 @@ void Pomodoro::updateProgress()
 //-----------------------------------------------------------------
 void Pomodoro::endPomodoro()
 {
+	m_completedTasks << QPair<QString, int>(m_task, m_numPomodoros);
 	++m_numPomodoros;
 
 	if (m_numPomodoros == m_sessionPomodoros)

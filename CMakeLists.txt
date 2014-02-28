@@ -30,6 +30,7 @@ include_directories(
   ${CMAKE_CURRENT_SOURCE_DIR}
   ${CMAKE_BINARY_DIR}          # Generated .h files
   ${CMAKE_CURRENT_BINARY_DIR}  # For wrap/ui files
+  D:/Desarrollo/Libs/libvpx-v1.3.0
   )
 
 set(CMAKE_CXX_FLAGS " -Wall -Wno-deprecated -std=c++11 -fpermissive -mwindows")
@@ -69,10 +70,14 @@ set (CORE_SOURCES
   ${CMAKE_CURRENT_BINARY_DIR}/DesktopCapture.rc
   )
 
+set(VPX_LIBS
+  D:/Desarrollo/Libs/libvpx-v1.3.0/libvpx.a
+)
  
 set(CORE_EXTERNAL_LIBS
   ${QT_LIBRARIES}
   ${OpenCV_LIBS}
+  ${VPX_LIBS}
 )
 
 add_executable(DesktopCapture ${CORE_SOURCES})

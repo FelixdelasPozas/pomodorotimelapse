@@ -17,6 +17,9 @@
 #include "Pomodoro.h"
 #include "ui_PomodoroStatistics.h"
 
+class QObject;
+class QEvent;
+
 class PomodoroStatistics
 : public QDialog
 , public Ui_PomodoroStatistics
@@ -38,6 +41,7 @@ class PomodoroStatistics
 		void resume();
 		void pause();
 		void updateElapsedTime();
+		void updateTask();
 
 	private:
 		Pomodoro *m_pomodoro;

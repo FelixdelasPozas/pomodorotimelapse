@@ -20,6 +20,10 @@
 #include <QPainter>
 #include <QMutex>
 
+#include "vpx/vpx_encoder.h"
+
+#include "vpx/vpx_codec.h"
+
 class QAction;
 class QMenu;
 class QPlainTextEdit;
@@ -64,6 +68,7 @@ class DesktopCapture
 	  void updateUseSounds(int status);
 	  void statisticsDialogClosed(int unused);
 	  void updateCaptureVideo(int status);
+	  void updateTaskName();
 
 	private:
 	  static const QString CAPTURE_ENABLED;
@@ -91,13 +96,13 @@ class DesktopCapture
 	  static const QString POMODOROS_USE_SOUNDS;
 	  static const QString POMODOROS_CONTINUOUS_TICTAC;
 	  static const QString POMODOROS_SESSION_NUMBER;
+	  static const QString POMODOROS_LAST_TASK;
 
 	  static const QStringList VIDEO_CODECS;
 
 	  void loadConfiguration();
 	  void saveConfiguration();
 	  void setupCameraResolutions();
-	  void setupMonitors();
 	  void setupTrayIcon();
 	  void setupCaptureThread();
 	  void saveCapture(QPixmap *);
@@ -117,6 +122,18 @@ class DesktopCapture
 		int                   m_secuentialNumber;
 		bool                  m_started;
 		PomodoroStatistics   *m_statisticsDialog;
+
+		vpx_image_t           m_vp8_rawImage;
+		vpx_codec_enc_cfg_t   m_vp8_cfg;
+		vpx_codec_ctx_t       m_vp8_codec;
+		QString               m_vp8_filename;
 };
+
+void mem_put_le32(char *mem, unsigned int val);
+void mem_put_le16(char *mem, unsigned int val);
+void write_ivf_file_header(FILE *outfile,
+                                  const vpx_codec_enc_cfg_t *cfg,
+                                  int frame_cnt);
+void write_ivf_frame_header(FILE *outfile, const vpx_codec_cx_pkt_t *pkt);
 
 #endif // DESKTOP_CAPTURE_H_

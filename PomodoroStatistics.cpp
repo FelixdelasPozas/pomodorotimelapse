@@ -6,6 +6,12 @@
  */
 
 #include <PomodoroStatistics.h>
+#include <QKeyEvent>
+#include <QObject>
+#include <QEvent>
+#include <QLineEdit>
+#include <QInputDialog>
+#include <QDebug>
 
 //-----------------------------------------------------------------
 PomodoroStatistics::PomodoroStatistics(Pomodoro* pomodoro, QWidget* parent)
@@ -29,6 +35,7 @@ PomodoroStatistics::PomodoroStatistics(Pomodoro* pomodoro, QWidget* parent)
 	m_timer.setInterval(1000);
 	m_timer.setSingleShot(false);
 	connect(&m_timer, SIGNAL(timeout()), this, SLOT(updateElapsedTime()), Qt::DirectConnection);
+	connect(m_taskButton, SIGNAL(pressed()), this, SLOT(updateTask()), Qt::QueuedConnection);
 	m_timer.start();
 }
 
@@ -145,5 +152,22 @@ void PomodoroStatistics::updateGUI(Pomodoro::Status status)
 					if (status == Pomodoro::Status::Stopped)
 						accept();
 
+	m_taskName->setText(m_pomodoro->getTask());
 	repaint();
+}
+
+//-----------------------------------------------------------------
+void PomodoroStatistics::updateTask()
+{
+	 bool ok;
+	 QString text = QInputDialog::getText(this,
+			                                  tr("Enter task name"),
+			                                  tr("Task name:"),
+			                                  QLineEdit::Normal,
+			                                  m_taskName->text(), &ok);
+	 if (ok && !text.isEmpty())
+	 {
+		 m_taskName->setText(text);
+		 m_pomodoro->setTask(m_taskName->text());
+	 }
 }

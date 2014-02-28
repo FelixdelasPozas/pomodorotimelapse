@@ -10,6 +10,18 @@
 #include "ProbeResolutionsDialog.h"
 #include "CaptureDesktopThread.h"
 #include "PomodoroStatistics.h"
+#include "RGB2YUV.h"
+
+// VPX
+#define VPX_CODEC_DISABLE_COMPAT 1
+#include "vpx/vpx_encoder.h"
+#include "vpx/vp8cx.h"
+#include "vpx/vpx_codec.h"
+#include "vpx/vpx_image.h"
+#define interface (vpx_codec_vp8_cx())
+#define fourcc    0x30385056
+#define IVF_FILE_HDR_SZ  (32)
+#define IVF_FRAME_HDR_SZ (12)
 
 // OpenCV
 #include <opencv2/highgui/highgui.hpp>
@@ -18,6 +30,7 @@
 #include <QtGui>
 #include <QString>
 #include <QPixmap>
+#include <QDebug>
 #include <QSettings>
 
 const QString DesktopCapture::CAPTURE_TIME = QString("Time Between Captures");
@@ -45,6 +58,7 @@ const QString DesktopCapture::POMODOROS_USE_SOUNDS = QString("Pomodoro Use Sound
 const QString DesktopCapture::POMODORO_ENABLED = QString("Enable Pomodoro");
 const QString DesktopCapture::POMODOROS_CONTINUOUS_TICTAC = QString("Continuous Tic-Tac");
 const QString DesktopCapture::POMODOROS_SESSION_NUMBER = QString("Pomodoros In Session");
+const QString DesktopCapture::POMODOROS_LAST_TASK = QString("Last task");
 
 const QStringList DesktopCapture::VIDEO_CODECS = { QString("VP8"), QString("VP9") };
 
@@ -58,14 +72,17 @@ DesktopCapture::DesktopCapture()
 {
 	setupUi(this);
 
+	qDebug() << QString(vpx_codec_iface_name(interface));
+	setWindowTitle("Desktop Capture");
+	setWindowIcon(QIcon(":/DesktopCapture/application.ico"));
+
 	loadConfiguration();
 	setupTrayIcon();
+	setupCameraResolutions();
+
 	if (m_captureGroupBox->isChecked())
-	{
-		setupMonitors();
-		setupCameraResolutions();
 		setupCaptureThread();
-	}
+
 	connect(m_cameraEnabled, SIGNAL(stateChanged(int)), this, SLOT(updateCameraResolutionsComboBox(int)));
 	connect(m_dirButton, SIGNAL(pressed()), this, SLOT(updateOutputDir()));
 	connect(m_cameraResolutionComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(updateCameraResolution(int)));
@@ -77,6 +94,9 @@ DesktopCapture::DesktopCapture()
 	connect(m_continuousTicTac, SIGNAL(stateChanged(int)), this, SLOT(updateContinuousTicTac(int)));
 	connect(m_pomodoroUseSounds, SIGNAL(stateChanged(int)), this, SLOT(updateUseSounds(int)));
 	connect(m_captureVideo, SIGNAL(stateChanged(int)), this, SLOT(updateCaptureVideo(int)));
+	connect(m_captureAllMonitors, SIGNAL(stateChanged(int)), this, SLOT(updateMonitorsCheckBox(int)));
+	connect(m_captureMonitorComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(updateMonitorsComboBox(int)));
+	connect(m_taskEditButton, SIGNAL(pressed()), this, SLOT(updateTaskName()), Qt::QueuedConnection);
 
 	m_screenshotImage->installEventFilter(this);
 
@@ -90,6 +110,7 @@ DesktopCapture::~DesktopCapture()
 	if (m_captureThread)
 	{
 		m_captureThread->abort();
+		m_captureThread->resume();
 		m_captureThread->wait();
 	}
 	delete m_captureThread;
@@ -100,9 +121,6 @@ void DesktopCapture::loadConfiguration()
 {
 	QSettings settings("DesktopCapture.ini", QSettings::IniFormat);
 
-	setWindowTitle("Desktop Capture");
-	setWindowIcon(QIcon(":/DesktopCapture/application.ico"));
-
 	if (settings.contains(APPLICATION_GEOMETRY))
 		restoreGeometry(settings.value(APPLICATION_GEOMETRY).toByteArray());
 	else
@@ -110,6 +128,35 @@ void DesktopCapture::loadConfiguration()
 
 	if (settings.contains(APPLICATION_STATE))
 		restoreState(settings.value(APPLICATION_STATE).toByteArray());
+
+	int capturedMonitor;
+	if (settings.contains(CAPTURED_MONITOR))
+		capturedMonitor = settings.value(CAPTURED_MONITOR, -1).toInt();
+	else
+	{
+		capturedMonitor = -1;
+		settings.setValue(CAPTURED_MONITOR, capturedMonitor);
+	}
+	m_captureAllMonitors->setChecked(capturedMonitor == -1);
+	m_captureMonitorComboBox->setEnabled(!this->m_captureAllMonitors->isChecked());
+
+	QStringList monitors;
+	if (settings.contains(MONITORS_LIST))
+		monitors = settings.value(MONITORS_LIST, QStringList()).toStringList();
+	else
+	{
+		QDesktopWidget *desktop = QApplication::desktop();
+		for (int i = 0; i < desktop->numScreens(); ++i)
+		{
+			auto geometry = desktop->screenGeometry(i);
+			if (desktop->primaryScreen() == i)
+				monitors << QString("Primary Screen (Size: %1x%2 - Position: %3x%4)").arg(geometry.width()).arg(geometry.height()).arg(geometry.x()).arg(geometry.y());
+			else
+				monitors << QString("Additional Screen %1 (Size: %2x%3 - Position: %4x%5)").arg(i).arg(geometry.width()).arg(geometry.height()).arg(geometry.x()).arg(geometry.y());
+		}
+		settings.setValue(MONITORS_LIST, monitors);
+	}
+	m_captureMonitorComboBox->insertItems(0, monitors);
 
 	QPoint position(0,0);
 	if (settings.contains(CAMERA_OVERLAY_POSITION))
@@ -207,7 +254,7 @@ void DesktopCapture::loadConfiguration()
 		settings.setValue(POMODOROS_CONTINUOUS_TICTAC, pomodoroContinuousTicTac);
 	}
 	m_continuousTicTac->setChecked(pomodoroContinuousTicTac);
-	m_continuousTicTac->setEnabled(pomodoroUseSounds);
+	m_continuousTicTac->setEnabled(pomodoroUseSounds && this->m_pomodoroGroupBox->isChecked());
 	m_pomodoro.setContinuousTicTac(pomodoroContinuousTicTac);
 
 	unsigned int pomodorosInSession;
@@ -219,6 +266,17 @@ void DesktopCapture::loadConfiguration()
 		settings.setValue(POMODOROS_SESSION_NUMBER, pomodorosInSession);
 	}
 	m_pomodorosNumber->setValue(pomodorosInSession);
+
+	QString task;
+	if (settings.contains(POMODOROS_LAST_TASK))
+		task = settings.value(POMODOROS_LAST_TASK, QString("Undefined task")).toString();
+	else
+	{
+		task = QString("Undefined task");
+		settings.setValue(POMODOROS_LAST_TASK, task);
+	}
+	m_pomodoroTask->setText(task);
+	m_pomodoro.setTask(task);
 
 	QTime timeBetweenCaptures;
 	if (settings.contains(CAPTURE_TIME))
@@ -239,7 +297,7 @@ void DesktopCapture::loadConfiguration()
 		settings.setValue(CAPTURE_VIDEO, captureVideo);
 	}
 	m_captureVideo->setChecked(captureVideo);
-	m_videoCodecComboBox->setEnabled(captureVideo);
+	m_videoCodecComboBox->setEnabled(captureVideo && this->m_captureGroupBox->isChecked());
 
 	int videoCodecIndex;
 	if (settings.contains(CAPTURE_VIDEO_CODEC))
@@ -322,45 +380,8 @@ void DesktopCapture::saveConfiguration()
   settings.setValue(CAPTURE_VIDEO, m_captureVideo->isChecked());
   settings.setValue(CAPTURE_VIDEO_CODEC, m_videoCodecComboBox->currentIndex());
   settings.setValue(CAMERA_OVERLAY_FIXED_POSITION, m_cameraPositionComboBox->currentIndex());
+  settings.setValue(POMODOROS_LAST_TASK, m_pomodoroTask->text());
 
-	settings.sync();
-}
-
-//-----------------------------------------------------------------
-void DesktopCapture::setupMonitors()
-{
-	QSettings settings("DesktopCapture.ini", QSettings::IniFormat);
-
-	int capturedMonitor;
-	if (settings.contains(CAPTURED_MONITOR))
-		capturedMonitor = settings.value(CAPTURED_MONITOR, -1).toInt();
-	else
-		capturedMonitor = -1;
-
-	bool checked = (capturedMonitor == -1);
-	m_captureAllMonitors->setChecked(checked);
-	m_captureMonitorComboBox->setEnabled(!checked);
-
-	QStringList monitors;
-	if (settings.contains(MONITORS_LIST))
-		monitors = settings.value(MONITORS_LIST, QStringList()).toStringList();
-	else
-	{
-		QDesktopWidget *desktop = QApplication::desktop();
-		for (int i = 0; i < desktop->numScreens(); ++i)
-		{
-			auto geometry = desktop->screenGeometry(i);
-			if (desktop->primaryScreen() == i)
-				monitors << QString("Primary Screen (Size: %1x%2 - Position: %3x%4)").arg(geometry.width()).arg(geometry.height()).arg(geometry.x()).arg(geometry.y());
-			else
-				monitors << QString("Additional Screen %1 (Size: %2x%3 - Position: %4x%5)").arg(i).arg(geometry.width()).arg(geometry.height()).arg(geometry.x()).arg(geometry.y());
-		}
-		settings.setValue(MONITORS_LIST, monitors);
-	}
-	m_captureMonitorComboBox->insertItems(0, monitors);
-
-	connect(m_captureAllMonitors, SIGNAL(stateChanged(int)), this, SLOT(updateMonitorsCheckBox(int)));
-	connect(m_captureMonitorComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(updateMonitorsComboBox(int)));
 	settings.sync();
 }
 
@@ -390,7 +411,7 @@ void DesktopCapture::setupCameraResolutions()
 		animateScreenshot = true;
 		settings.setValue(CAMERA_ANIMATED_TRAY_ENABLED, true);
 	}
-	m_screenshotAnimateTray->setEnabled(animateScreenshot);
+	m_screenshotAnimateTray->setEnabled(animateScreenshot && m_captureGroupBox->isChecked());
 
 	int selectedResolution;
 	if (settings.contains(CAMERA_ACTIVE_RESOLUTION))
@@ -486,6 +507,7 @@ void DesktopCapture::setupCameraResolutions()
 
 	if (m_captureThread)
 		m_captureThread->resume();
+
 	settings.sync();
 }
 
@@ -607,6 +629,7 @@ void DesktopCapture::activateTrayIcon(QSystemTrayIcon::ActivationReason reason)
 		m_statisticsDialog = new PomodoroStatistics(&m_pomodoro, this);
 		connect(m_statisticsDialog, SIGNAL(finished(int)), this, SLOT(statisticsDialogClosed(int)), Qt::QueuedConnection);
 		m_statisticsDialog->show();
+		m_statisticsDialog->raise();
 	}
 	else
 	{
@@ -623,11 +646,35 @@ void DesktopCapture::activateTrayIcon(QSystemTrayIcon::ActivationReason reason)
 				disconnect(&m_pomodoro, SIGNAL(shortBreakEnded()), this, SLOT(trayMessage()));
 				disconnect(&m_pomodoro, SIGNAL(longBreakEnded()), this, SLOT(trayMessage()));
 				disconnect(&m_pomodoro, SIGNAL(sessionEnded()), this, SLOT(trayMessage()));
+				m_pomodoroTask->setText(m_pomodoro.getTask());
 			}
 		}
 
 		if (m_captureThread)
+		{
+			if (this->m_secuentialNumber != 0)
+			{
+				qDebug() << "Processed" << m_secuentialNumber - 1 << "frames.";
+				vpx_img_free (&m_vp8_rawImage);
+				if (vpx_codec_destroy(&m_vp8_codec))
+				{
+					qDebug() << "Failed to destroy codec";
+				}
+
+				FILE *outfile;
+				if (!(outfile = fopen(this->m_vp8_filename.toStdString().c_str(), "r+")))
+				{
+					qDebug() << "error opening output file.";
+				}
+				// Try to rewrite the file header with the actual frame count
+				if (!fseek(outfile, 0, SEEK_SET))
+					write_ivf_file_header(outfile, &m_vp8_cfg, this->m_secuentialNumber + 1);
+				fclose(outfile);
+
+				this->m_secuentialNumber = 0;
+			}
 			m_captureThread->resume();
+		}
 
 		m_trayIcon->hide();
 		m_trayIcon->setIcon(QIcon(":/DesktopCapture/application.ico"));
@@ -914,6 +961,7 @@ void DesktopCapture::startCapture()
 		m_pomodoro.setPomodoroTime(m_pomodoroTime->time());
 		m_pomodoro.setShortBreakTime(m_shortBreakTime->time());
 		m_pomodoro.setLongBreakTime(m_longBreakTime->time());
+		m_pomodoro.setTask(m_pomodoroTask->text());
 		connect(&m_pomodoro, SIGNAL(progress(unsigned int)), this, SLOT(updateTrayProgress(unsigned int)), Qt::DirectConnection);
 		connect(&m_pomodoro, SIGNAL(pomodoroEnded()), this, SLOT(trayMessage()), Qt::DirectConnection);
 		connect(&m_pomodoro, SIGNAL(shortBreakEnded()), this, SLOT(trayMessage()), Qt::DirectConnection);
@@ -938,12 +986,111 @@ void DesktopCapture::takeScreenshot()
 		icon = m_trayIcon->icon();
 		m_trayIcon->setIcon(QIcon(":/DesktopCapture/application-shot.ico"));
 	}
+	static int sWidth, sHeight;
 
 	if (m_captureThread)
 	{
+		m_vp8_filename = this->m_dirEditLabel->text() + QString("\\DesktopCapture_") + QDateTime::currentDateTime().toString("dd_MM_yyyy") + QString(".vp8");
+
+		if (m_secuentialNumber == 0)
+		{
+			FILE *outfile;
+			if(!(outfile = fopen(m_vp8_filename.toStdString().c_str(), "w")))
+			{
+				qDebug() << "failed to open file a";
+				return;
+			}
+
+			QRect desktopGeometry;
+			if (this->m_captureAllMonitors->isChecked())
+				desktopGeometry = QApplication::desktop()->geometry();
+			else
+				desktopGeometry = QApplication::desktop()->screenGeometry(this->m_captureMonitorComboBox->currentIndex());
+
+			// VP8 codec limits the captured image size
+			sWidth = desktopGeometry.width() - desktopGeometry.width() % 16;
+			sHeight = desktopGeometry.height() - desktopGeometry.height() % 16;
+
+			// soportados por el encoder son: VPX_IMG_FMT_YV12 y VPX_IMG_FMT_I420
+			if (!vpx_img_alloc(&m_vp8_rawImage, VPX_IMG_FMT_I420, sWidth, sHeight, 1))
+			{
+				qDebug() << "cannot allocate memory for image";
+				return;
+			}
+
+			// Populate encoder configuration
+			auto res = vpx_codec_enc_config_default(interface, &m_vp8_cfg, 0);
+			if (VPX_CODEC_OK != res)
+			{
+				qDebug() << QString("Failed to get config: %1").arg(vpx_codec_err_to_string(res));
+				return;
+			}
+			qDebug() << "q_w" << m_vp8_cfg.g_w << "g_h" << m_vp8_cfg.g_h << "bitrate" << m_vp8_cfg.rc_target_bitrate;
+			m_vp8_cfg.rc_target_bitrate = sWidth * sHeight * m_vp8_cfg.rc_target_bitrate / m_vp8_cfg.g_w / m_vp8_cfg.g_h;
+			m_vp8_cfg.g_w = sWidth;
+			m_vp8_cfg.g_h = sHeight;
+			m_vp8_cfg.g_timebase.num = 1001;
+			m_vp8_cfg.g_timebase.den = 30000;
+			qDebug() << "q_w" << m_vp8_cfg.g_w << "g_h" << m_vp8_cfg.g_h << "bitrate" << m_vp8_cfg.rc_target_bitrate;
+
+			write_ivf_file_header(outfile, &m_vp8_cfg, 0);
+			fclose(outfile);
+
+			// Initialize codec
+			if (vpx_codec_enc_init(&m_vp8_codec, interface, &m_vp8_cfg, 0))
+			{
+				qDebug() << "Failed to initialize encoder";
+				return;
+			}
+		}
+
+		FILE *outfile;
+		if(!(outfile = fopen(m_vp8_filename.toStdString().c_str(), "r+")))
+		{
+			qDebug() << "failed to open file b";
+			return;
+		}
+		fseek(outfile, 0, SEEK_END);
+
 		m_captureThread->takeScreenshot();
-		saveCapture(m_captureThread->getImage());
+		auto image = m_captureThread->getImage()->toImage().convertToFormat(QImage::Format_RGB32);
+		//RGBtoYUV420PSameSize(image.bits(), m_vp8_rawImage.img_data, 4, 0, sWidth, sHeight);
+		rgb32_to_i420(sWidth, sHeight, image.bits(), m_vp8_rawImage.img_data);
+
+		vpx_codec_iter_t iter = NULL;
+		const vpx_codec_cx_pkt_t *pkt;
+
+		int result = vpx_codec_encode(&m_vp8_codec, &m_vp8_rawImage, m_secuentialNumber, 1, 0, VPX_DL_BEST_QUALITY);
+		if (VPX_CODEC_OK != result)
+		{
+			qDebug() << "Failed to encode frame" << m_secuentialNumber;
+			switch(result)
+			{
+				case VPX_CODEC_OK: qDebug() << "??"; break;
+				case VPX_CODEC_INCAPABLE: qDebug() << "codec incapable"; break;
+				case VPX_CODEC_INVALID_PARAM: qDebug() << "invalid param" << QString(vpx_codec_error_detail(&m_vp8_codec));
+
+				break;
+			}
+		}
+
+		while ((pkt = vpx_codec_get_cx_data(&m_vp8_codec, &iter)))
+		{
+			switch (pkt->kind)
+			{
+				case VPX_CODEC_CX_FRAME_PKT:
+					write_ivf_frame_header(outfile, pkt);
+					(void) fwrite(pkt->data.frame.buf, 1, pkt->data.frame.sz, outfile);
+					qDebug() << "escribe frame" << m_secuentialNumber << (pkt->kind == VPX_CODEC_CX_FRAME_PKT && (pkt->data.frame.flags & VPX_FRAME_IS_KEY) ? "K" : ".");
+					break;
+				default:
+					break;
+			}
+		}
+		fclose(outfile);
 	}
+
+	// saveCapture(m_captureThread->getImage());
 	++m_secuentialNumber;
 
 	if (m_screenshotAnimateTray->isChecked() && (m_trayIcon != nullptr))
@@ -961,7 +1108,6 @@ void DesktopCapture::updateCaptureDesktop(bool status)
 
 			if (!m_captureThread)
 			{
-				setupMonitors();
 				setupCameraResolutions();
 				setupCaptureThread();
 			}
@@ -1113,6 +1259,7 @@ void DesktopCapture::statisticsDialogClosed(int unused)
 				disconnect(&m_pomodoro, SIGNAL(shortBreakEnded()), this, SLOT(trayMessage()));
 				disconnect(&m_pomodoro, SIGNAL(longBreakEnded()), this, SLOT(trayMessage()));
 				disconnect(&m_pomodoro, SIGNAL(sessionEnded()), this, SLOT(trayMessage()));
+				m_pomodoroTask->setText(m_pomodoro.getTask());
 			}
 		}
 
@@ -1122,4 +1269,77 @@ void DesktopCapture::statisticsDialogClosed(int unused)
 		show();
 		setWindowState(windowState() & (~Qt::WindowMinimized | Qt::WindowActive));
 	}
+}
+
+//-----------------------------------------------------------------
+void DesktopCapture::updateTaskName()
+{
+	 bool ok;
+	 QString text = QInputDialog::getText(this,
+			                                  tr("Enter task name"),
+			                                  tr("Task name:"),
+			                                  QLineEdit::Normal,
+			                                  m_pomodoroTask->text(), &ok);
+	 if (ok && !text.isEmpty())
+	 {
+		 m_pomodoroTask->setText(text);
+		 m_pomodoro.setTask(m_pomodoroTask->text());
+	 }
+}
+
+//-----------------------------------------------------------------
+void mem_put_le16(char *mem, unsigned int val)
+{
+    mem[0] = val;
+    mem[1] = val>>8;
+}
+
+//-----------------------------------------------------------------
+void mem_put_le32(char *mem, unsigned int val)
+{
+    mem[0] = val;
+    mem[1] = val>>8;
+    mem[2] = val>>16;
+    mem[3] = val>>24;
+}
+
+//-----------------------------------------------------------------
+void write_ivf_file_header(FILE *outfile,
+                                  const vpx_codec_enc_cfg_t *cfg,
+                                  int frame_cnt) {
+    char header[32];
+
+    if(cfg->g_pass != VPX_RC_ONE_PASS && cfg->g_pass != VPX_RC_LAST_PASS)
+        return;
+    header[0] = 'D';
+    header[1] = 'K';
+    header[2] = 'I';
+    header[3] = 'F';
+    mem_put_le16(header+4,  0);                   /* version */
+    mem_put_le16(header+6,  32);                  /* headersize */
+    mem_put_le32(header+8,  fourcc);              /* headersize */
+    mem_put_le16(header+12, cfg->g_w);            /* width */
+    mem_put_le16(header+14, cfg->g_h);            /* height */
+    mem_put_le32(header+16, cfg->g_timebase.den); /* rate */
+    mem_put_le32(header+20, cfg->g_timebase.num); /* scale */
+    mem_put_le32(header+24, frame_cnt);           /* length */
+    mem_put_le32(header+28, 0);                   /* unused */
+
+    (void) fwrite(header, 1, 32, outfile);
+}
+
+void write_ivf_frame_header(FILE *outfile, const vpx_codec_cx_pkt_t *pkt)
+{
+    char             header[12];
+    vpx_codec_pts_t  pts;
+
+    if(pkt->kind != VPX_CODEC_CX_FRAME_PKT)
+        return;
+
+    pts = pkt->data.frame.pts;
+    mem_put_le32(header, pkt->data.frame.sz);
+    mem_put_le32(header+4, pts&0xFFFFFFFF);
+    mem_put_le32(header+8, pts >> 32);
+
+    (void) fwrite(header, 1, 12, outfile);
 }
