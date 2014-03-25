@@ -114,11 +114,17 @@
         <string>Modify current task</string>
        </property>
        <property name="text">
-        <string>...</string>
+        <string/>
        </property>
        <property name="icon">
         <iconset resource="rsc/resources.qrc">
          <normaloff>:/DesktopCapture/pen.png</normaloff>:/DesktopCapture/pen.png</iconset>
+       </property>
+       <property name="popupMode">
+        <enum>QToolButton::InstantPopup</enum>
+       </property>
+       <property name="autoRaise">
+        <bool>true</bool>
        </property>
       </widget>
      </item>

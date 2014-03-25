@@ -170,4 +170,5 @@ void PomodoroStatistics::updateTask()
 		 m_taskName->setText(text);
 		 m_pomodoro->setTask(m_taskName->text());
 	 }
+	 m_taskButton->setDown(false);
 }

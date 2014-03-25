@@ -12,6 +12,7 @@
 #include "Resolutions.h"
 #include "Pomodoro.h"
 #include "PomodoroStatistics.h"
+#include "VP8Interface.h"
 #include "ui_MainWindow.h"
 
 // Qt
@@ -19,10 +20,6 @@
 #include <QSystemTrayIcon>
 #include <QPainter>
 #include <QMutex>
-
-#include "vpx/vpx_encoder.h"
-
-#include "vpx/vpx_codec.h"
 
 class QAction;
 class QMenu;
@@ -60,21 +57,21 @@ class DesktopCapture
 	  void updateCameraResolution(int status);
 	  void updateCameraCompositionMode(int status);
 	  void startCapture();
-	  void takeScreenshot();
+	  void capture();
 	  void updatePomodoro(bool status);
 	  void updateTrayProgress(unsigned int status);
 	  void trayMessage();
 	  void updateContinuousTicTac(int status);
 	  void updateUseSounds(int status);
 	  void statisticsDialogClosed(int unused);
-	  void updateCaptureVideo(int status);
+	  void updateVideoQuality(int status);
 	  void updateTaskName();
 
 	private:
 	  static const QString CAPTURE_ENABLED;
 	  static const QString CAPTURE_TIME;
 	  static const QString CAPTURE_VIDEO;
-	  static const QString CAPTURE_VIDEO_CODEC;
+	  static const QString CAPTURE_VIDEO_QUALITY;
 	  static const QString CAPTURED_MONITOR;
 	  static const QString MONITORS_LIST;
 	  static const QString OUTPUT_DIR;
@@ -98,7 +95,7 @@ class DesktopCapture
 	  static const QString POMODOROS_SESSION_NUMBER;
 	  static const QString POMODOROS_LAST_TASK;
 
-	  static const QStringList VIDEO_CODECS;
+	  static const QStringList CAPTURE_VIDEO_QUALITY_STRINGS;
 
 	  void loadConfiguration();
 	  void saveConfiguration();
@@ -119,21 +116,10 @@ class DesktopCapture
 		QPoint                m_PIPposition;
 		QPainter::CompositionMode m_compositionMode;
 		QTimer                m_timer;
-		int                   m_secuentialNumber;
+		unsigned long         m_secuentialNumber;
 		bool                  m_started;
 		PomodoroStatistics   *m_statisticsDialog;
-
-		vpx_image_t           m_vp8_rawImage;
-		vpx_codec_enc_cfg_t   m_vp8_cfg;
-		vpx_codec_ctx_t       m_vp8_codec;
-		QString               m_vp8_filename;
+		VP8_Interface        *m_vp8_interface;
 };
-
-void mem_put_le32(char *mem, unsigned int val);
-void mem_put_le16(char *mem, unsigned int val);
-void write_ivf_file_header(FILE *outfile,
-                                  const vpx_codec_enc_cfg_t *cfg,
-                                  int frame_cnt);
-void write_ivf_frame_header(FILE *outfile, const vpx_codec_cx_pkt_t *pkt);
 
 #endif // DESKTOP_CAPTURE_H_

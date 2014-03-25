@@ -191,6 +191,30 @@
            </widget>
           </item>
           <item>
+           <widget class="QCheckBox" name="m_captureVideo">
+            <property name="text">
+             <string>Capture Video</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_14">
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <item>
+             <widget class="QLabel" name="label_11">
+              <property name="text">
+               <string>Video Quality</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QComboBox" name="m_captureVideoQuality"/>
+            </item>
+           </layout>
+          </item>
+          <item>
            <layout class="QHBoxLayout" name="horizontalLayout_12" stretch="1,0">
             <property name="topMargin">
              <number>0</number>
@@ -229,23 +253,6 @@
                <string>mm:ss</string>
               </property>
              </widget>
-            </item>
-           </layout>
-          </item>
-          <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_14">
-            <property name="topMargin">
-             <number>0</number>
-            </property>
-            <item>
-             <widget class="QCheckBox" name="m_captureVideo">
-              <property name="text">
-               <string>Capture Video</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QComboBox" name="m_videoCodecComboBox"/>
             </item>
            </layout>
           </item>
@@ -567,6 +574,12 @@
               <property name="icon">
                <iconset resource="rsc/resources.qrc">
                 <normaloff>:/DesktopCapture/pen.png</normaloff>:/DesktopCapture/pen.png</iconset>
+              </property>
+              <property name="popupMode">
+               <enum>QToolButton::InstantPopup</enum>
+              </property>
+              <property name="autoRaise">
+               <bool>true</bool>
               </property>
              </widget>
             </item>

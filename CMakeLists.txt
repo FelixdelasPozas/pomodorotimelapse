@@ -31,6 +31,7 @@ include_directories(
   ${CMAKE_BINARY_DIR}          # Generated .h files
   ${CMAKE_CURRENT_BINARY_DIR}  # For wrap/ui files
   D:/Desarrollo/Libs/libvpx-v1.3.0
+  D:/Desarrollo/Libs/libwebm
   )
 
 set(CMAKE_CXX_FLAGS " -Wall -Wno-deprecated -std=c++11 -fpermissive -mwindows")
@@ -67,17 +68,24 @@ set (CORE_SOURCES
   CaptureDesktopThread.cpp
   Pomodoro.cpp
   PomodoroStatistics.cpp
+  VP8Interface.cpp
+  webmEBMLwriter.cpp
   ${CMAKE_CURRENT_BINARY_DIR}/DesktopCapture.rc
   )
 
 set(VPX_LIBS
   D:/Desarrollo/Libs/libvpx-v1.3.0/libvpx.a
 )
+
+set(WEBM_LIBS
+  D:/Desarrollo/Libs/libwebm/libwebm.a
+)
  
 set(CORE_EXTERNAL_LIBS
   ${QT_LIBRARIES}
   ${OpenCV_LIBS}
   ${VPX_LIBS}
+  ${WEBM_LIBS}
 )
 
 add_executable(DesktopCapture ${CORE_SOURCES})

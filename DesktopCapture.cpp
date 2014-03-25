@@ -10,18 +10,6 @@
 #include "ProbeResolutionsDialog.h"
 #include "CaptureDesktopThread.h"
 #include "PomodoroStatistics.h"
-#include "RGB2YUV.h"
-
-// VPX
-#define VPX_CODEC_DISABLE_COMPAT 1
-#include "vpx/vpx_encoder.h"
-#include "vpx/vp8cx.h"
-#include "vpx/vpx_codec.h"
-#include "vpx/vpx_image.h"
-#define interface (vpx_codec_vp8_cx())
-#define fourcc    0x30385056
-#define IVF_FILE_HDR_SZ  (32)
-#define IVF_FRAME_HDR_SZ (12)
 
 // OpenCV
 #include <opencv2/highgui/highgui.hpp>
@@ -36,7 +24,7 @@
 const QString DesktopCapture::CAPTURE_TIME = QString("Time Between Captures");
 const QString DesktopCapture::CAPTURE_ENABLED = QString("Enable Desktop Capture");
 const QString DesktopCapture::CAPTURE_VIDEO = QString("Capture Video");
-const QString DesktopCapture::CAPTURE_VIDEO_CODEC = QString("Capture Video Codec");
+const QString DesktopCapture::CAPTURE_VIDEO_QUALITY = QString("Capture Video Quality");
 const QString DesktopCapture::CAPTURED_MONITOR = QString("Captured Desktop Monitor");
 const QString DesktopCapture::MONITORS_LIST = QString("Monitor Resolutions");
 const QString DesktopCapture::OUTPUT_DIR = QString("Output Directory");
@@ -60,7 +48,7 @@ const QString DesktopCapture::POMODOROS_CONTINUOUS_TICTAC = QString("Continuous 
 const QString DesktopCapture::POMODOROS_SESSION_NUMBER = QString("Pomodoros In Session");
 const QString DesktopCapture::POMODOROS_LAST_TASK = QString("Last task");
 
-const QStringList DesktopCapture::VIDEO_CODECS = { QString("VP8"), QString("VP9") };
+const QStringList DesktopCapture::CAPTURE_VIDEO_QUALITY_STRINGS = { QString("Poor (Fast)"), QString("Good"), QString("Best") };
 
 //-----------------------------------------------------------------
 DesktopCapture::DesktopCapture()
@@ -72,7 +60,6 @@ DesktopCapture::DesktopCapture()
 {
 	setupUi(this);
 
-	qDebug() << QString(vpx_codec_iface_name(interface));
 	setWindowTitle("Desktop Capture");
 	setWindowIcon(QIcon(":/DesktopCapture/application.ico"));
 
@@ -93,9 +80,9 @@ DesktopCapture::DesktopCapture()
 	connect(m_cameraPositionComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(updateCameraPositionComboBox(int)));
 	connect(m_continuousTicTac, SIGNAL(stateChanged(int)), this, SLOT(updateContinuousTicTac(int)));
 	connect(m_pomodoroUseSounds, SIGNAL(stateChanged(int)), this, SLOT(updateUseSounds(int)));
-	connect(m_captureVideo, SIGNAL(stateChanged(int)), this, SLOT(updateCaptureVideo(int)));
 	connect(m_captureAllMonitors, SIGNAL(stateChanged(int)), this, SLOT(updateMonitorsCheckBox(int)));
 	connect(m_captureMonitorComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(updateMonitorsComboBox(int)));
+	connect(m_captureVideo, SIGNAL(stateChanged(int)), this, SLOT(updateVideoQuality(int)));
 	connect(m_taskEditButton, SIGNAL(pressed()), this, SLOT(updateTaskName()), Qt::QueuedConnection);
 
 	m_screenshotImage->installEventFilter(this);
@@ -297,18 +284,18 @@ void DesktopCapture::loadConfiguration()
 		settings.setValue(CAPTURE_VIDEO, captureVideo);
 	}
 	m_captureVideo->setChecked(captureVideo);
-	m_videoCodecComboBox->setEnabled(captureVideo && this->m_captureGroupBox->isChecked());
 
-	int videoCodecIndex;
-	if (settings.contains(CAPTURE_VIDEO_CODEC))
-		videoCodecIndex = settings.value(CAPTURE_VIDEO_CODEC, 0).toInt();
+	int videoQuality;
+	if (settings.contains(CAPTURE_VIDEO_QUALITY))
+		videoQuality = settings.value(CAPTURE_VIDEO_QUALITY, 2).toInt();
 	else
 	{
-		videoCodecIndex = 0;
-		settings.setValue(CAPTURE_VIDEO_CODEC, videoCodecIndex);
+		videoQuality = 2;
+		settings.setValue(CAPTURE_VIDEO_QUALITY, videoQuality);
 	}
-	m_videoCodecComboBox->insertItems(0, VIDEO_CODECS);
-	m_videoCodecComboBox->setCurrentIndex(videoCodecIndex);
+	m_captureVideoQuality->setEnabled(captureVideo);
+	m_captureVideoQuality->insertItems(0, CAPTURE_VIDEO_QUALITY_STRINGS);
+	m_captureVideoQuality->setCurrentIndex(videoQuality);
 
 	QString outputDir;
 	if (settings.contains(OUTPUT_DIR))
@@ -378,7 +365,7 @@ void DesktopCapture::saveConfiguration()
   settings.setValue(CAPTURE_TIME, m_screeshotTime->time());
   settings.setValue(CAPTURE_ENABLED, m_captureGroupBox->isChecked());
   settings.setValue(CAPTURE_VIDEO, m_captureVideo->isChecked());
-  settings.setValue(CAPTURE_VIDEO_CODEC, m_videoCodecComboBox->currentIndex());
+  settings.setValue(CAPTURE_VIDEO_QUALITY, m_captureVideoQuality->currentIndex());
   settings.setValue(CAMERA_OVERLAY_FIXED_POSITION, m_cameraPositionComboBox->currentIndex());
   settings.setValue(POMODOROS_LAST_TASK, m_pomodoroTask->text());
 
@@ -572,9 +559,7 @@ void DesktopCapture::updateCameraResolutionsComboBox(int status)
 void DesktopCapture::saveCapture(QPixmap *capture)
 {
 	QString format("png");
-
 	QString fileName = m_dirEditLabel->text() + tr("/DesktopCapture_") + QString("%1").arg(m_secuentialNumber,4,'d',0,'0') + QString(".") + format;
-
 	capture->save(fileName, format.toAscii(), 0);
 }
 
@@ -638,7 +623,7 @@ void DesktopCapture::activateTrayIcon(QSystemTrayIcon::ActivationReason reason)
 			m_started = false;
 
 			if (m_captureGroupBox->isChecked())
-				disconnect(&m_timer, SIGNAL(timeout()), this, SLOT(takeScreenshot()));
+				disconnect(&m_timer, SIGNAL(timeout()), this, SLOT(capture()));
 
 			if (m_pomodoroGroupBox->isChecked())
 			{
@@ -652,26 +637,10 @@ void DesktopCapture::activateTrayIcon(QSystemTrayIcon::ActivationReason reason)
 
 		if (m_captureThread)
 		{
-			if (this->m_secuentialNumber != 0)
+			if (m_secuentialNumber != 0)
 			{
-				qDebug() << "Processed" << m_secuentialNumber - 1 << "frames.";
-				vpx_img_free (&m_vp8_rawImage);
-				if (vpx_codec_destroy(&m_vp8_codec))
-				{
-					qDebug() << "Failed to destroy codec";
-				}
-
-				FILE *outfile;
-				if (!(outfile = fopen(this->m_vp8_filename.toStdString().c_str(), "r+")))
-				{
-					qDebug() << "error opening output file.";
-				}
-				// Try to rewrite the file header with the actual frame count
-				if (!fseek(outfile, 0, SEEK_SET))
-					write_ivf_file_header(outfile, &m_vp8_cfg, this->m_secuentialNumber + 1);
-				fclose(outfile);
-
-				this->m_secuentialNumber = 0;
+				delete m_vp8_interface;
+				m_secuentialNumber = 0;
 			}
 			m_captureThread->resume();
 		}
@@ -816,13 +785,6 @@ bool DesktopCapture::eventFilter(QObject *object, QEvent *event)
 }
 
 //-----------------------------------------------------------------
-void DesktopCapture::updateCaptureVideo(int status)
-{
-	bool value = (status == Qt::Checked);
-	m_videoCodecComboBox->setEnabled(value);
-}
-
-//-----------------------------------------------------------------
 QPoint DesktopCapture::computeNewPosition(const QPoint &dragPoint, const QPoint &point)
 {
 	QSize imageGeometry = m_screenshotImage->pixmap()->size();
@@ -889,31 +851,34 @@ void DesktopCapture::startCapture()
 
 		m_timer.setInterval(ms);
 		m_timer.setSingleShot(false);
-		connect(&m_timer, SIGNAL(timeout()), this, SLOT(takeScreenshot()), Qt::QueuedConnection);
+		connect(&m_timer, SIGNAL(timeout()), this, SLOT(capture()), Qt::QueuedConnection);
 
 		QString message("Capture interval set to");
 		if (time.hour() != 0)
 		{
+			message += QString(" %1 hour").arg(time.hour());
+
 			if (time.hour() > 1)
-				message += QString(" %1 hours").arg(time.hour());
-			else
-				message += QString(" %1 hour").arg(time.hour());
-		}
-		if (time.minute() != 0)
-		{
-			if (time.minute() > 1)
-				message += QString(" %1 minutes").arg(time.minute());
-			else
-				message += QString(" %1 minute").arg(time.minute());
-		}
-		if (time.second() != 0)
-		{
-			if (time.second() > 1)
-				message += QString(" %1 seconds.").arg(time.second());
-			else
-				message += QString(" %1 second.").arg(time.second());
+				message += QString("s");
 		}
 
+		if (time.minute() != 0)
+		{
+			message += QString(" %1 minute").arg(time.minute());
+
+			if (time.minute() > 1)
+				message += QString("s");
+		}
+
+		if (time.second() != 0)
+		{
+			message += QString(" %1 second").arg(time.second());
+			if (time.second() > 1)
+
+				message += QString("s");
+		}
+
+		message += QString(".");
 		trayMessage = message;
 		m_timer.start();
 	}
@@ -929,25 +894,29 @@ void DesktopCapture::startCapture()
 
 			if (time.hour() != 0)
 			{
+				message += QString(" %1 hour").arg(time.hour());
+
 				if (time.hour() > 1)
-					message += QString(" %1 hours").arg(time.hour());
-				else
-					message += QString(" %1 hour").arg(time.hour());
+					message += QString("s");
 			}
+
 			if (time.minute() != 0)
 			{
+				message += QString(" %1 minute").arg(time.minute());
+
 				if (time.minute() > 1)
-					message += QString(" %1 minutes").arg(time.minute());
-				else
-					message += QString(" %1 minute").arg(time.minute());
+					message += QString("s");
 			}
+
 			if (time.second() != 0)
 			{
+				message += QString(" %1 second").arg(time.second());
+
 				if (time.second() > 1)
-					message += QString(" %1 seconds.").arg(time.second());
-				else
-					message += QString(" %1 second.").arg(time.second());
+					message += QString("s");
 			}
+
+			message += QString(".");
 		}
 
 		if (m_captureGroupBox->isChecked())
@@ -978,7 +947,7 @@ void DesktopCapture::startCapture()
 }
 
 //-----------------------------------------------------------------
-void DesktopCapture::takeScreenshot()
+void DesktopCapture::capture()
 {
 	QIcon icon;
 	if (m_screenshotAnimateTray->isChecked() && (m_trayIcon != nullptr))
@@ -986,111 +955,42 @@ void DesktopCapture::takeScreenshot()
 		icon = m_trayIcon->icon();
 		m_trayIcon->setIcon(QIcon(":/DesktopCapture/application-shot.ico"));
 	}
-	static int sWidth, sHeight;
 
 	if (m_captureThread)
 	{
-		m_vp8_filename = this->m_dirEditLabel->text() + QString("\\DesktopCapture_") + QDateTime::currentDateTime().toString("dd_MM_yyyy") + QString(".vp8");
+		int sWidth, sHeight;
 
-		if (m_secuentialNumber == 0)
+		auto pixmap = m_captureThread->getImage();
+
+		if(!m_captureVideo->isChecked())
 		{
-			FILE *outfile;
-			if(!(outfile = fopen(m_vp8_filename.toStdString().c_str(), "w")))
-			{
-				qDebug() << "failed to open file a";
-				return;
-			}
-
-			QRect desktopGeometry;
-			if (this->m_captureAllMonitors->isChecked())
-				desktopGeometry = QApplication::desktop()->geometry();
-			else
-				desktopGeometry = QApplication::desktop()->screenGeometry(this->m_captureMonitorComboBox->currentIndex());
-
-			// VP8 codec limits the captured image size
-			sWidth = desktopGeometry.width() - desktopGeometry.width() % 16;
-			sHeight = desktopGeometry.height() - desktopGeometry.height() % 16;
-
-			// soportados por el encoder son: VPX_IMG_FMT_YV12 y VPX_IMG_FMT_I420
-			if (!vpx_img_alloc(&m_vp8_rawImage, VPX_IMG_FMT_I420, sWidth, sHeight, 1))
-			{
-				qDebug() << "cannot allocate memory for image";
-				return;
-			}
-
-			// Populate encoder configuration
-			auto res = vpx_codec_enc_config_default(interface, &m_vp8_cfg, 0);
-			if (VPX_CODEC_OK != res)
-			{
-				qDebug() << QString("Failed to get config: %1").arg(vpx_codec_err_to_string(res));
-				return;
-			}
-			qDebug() << "q_w" << m_vp8_cfg.g_w << "g_h" << m_vp8_cfg.g_h << "bitrate" << m_vp8_cfg.rc_target_bitrate;
-			m_vp8_cfg.rc_target_bitrate = sWidth * sHeight * m_vp8_cfg.rc_target_bitrate / m_vp8_cfg.g_w / m_vp8_cfg.g_h;
-			m_vp8_cfg.g_w = sWidth;
-			m_vp8_cfg.g_h = sHeight;
-			m_vp8_cfg.g_timebase.num = 1001;
-			m_vp8_cfg.g_timebase.den = 30000;
-			qDebug() << "q_w" << m_vp8_cfg.g_w << "g_h" << m_vp8_cfg.g_h << "bitrate" << m_vp8_cfg.rc_target_bitrate;
-
-			write_ivf_file_header(outfile, &m_vp8_cfg, 0);
-			fclose(outfile);
-
-			// Initialize codec
-			if (vpx_codec_enc_init(&m_vp8_codec, interface, &m_vp8_cfg, 0))
-			{
-				qDebug() << "Failed to initialize encoder";
-				return;
-			}
+			saveCapture(pixmap);
 		}
-
-		FILE *outfile;
-		if(!(outfile = fopen(m_vp8_filename.toStdString().c_str(), "r+")))
+		else
 		{
-			qDebug() << "failed to open file b";
-			return;
-		}
-		fseek(outfile, 0, SEEK_END);
-
-		m_captureThread->takeScreenshot();
-		auto image = m_captureThread->getImage()->toImage().convertToFormat(QImage::Format_RGB32);
-		//RGBtoYUV420PSameSize(image.bits(), m_vp8_rawImage.img_data, 4, 0, sWidth, sHeight);
-		rgb32_to_i420(sWidth, sHeight, image.bits(), m_vp8_rawImage.img_data);
-
-		vpx_codec_iter_t iter = NULL;
-		const vpx_codec_cx_pkt_t *pkt;
-
-		int result = vpx_codec_encode(&m_vp8_codec, &m_vp8_rawImage, m_secuentialNumber, 1, 0, VPX_DL_BEST_QUALITY);
-		if (VPX_CODEC_OK != result)
-		{
-			qDebug() << "Failed to encode frame" << m_secuentialNumber;
-			switch(result)
+			if (m_secuentialNumber == 0)
 			{
-				case VPX_CODEC_OK: qDebug() << "??"; break;
-				case VPX_CODEC_INCAPABLE: qDebug() << "codec incapable"; break;
-				case VPX_CODEC_INVALID_PARAM: qDebug() << "invalid param" << QString(vpx_codec_error_detail(&m_vp8_codec));
+				QString fileName = this->m_dirEditLabel->text() + QString("\\DesktopCapture_") + QDateTime::currentDateTime().toString("dd_MM_yyyy") + QString(".webm");
 
-				break;
-			}
-		}
+				QRect desktopGeometry;
+				if (this->m_captureAllMonitors->isChecked())
+					desktopGeometry = QApplication::desktop()->geometry();
+				else
+					desktopGeometry = QApplication::desktop()->screenGeometry(this->m_captureMonitorComboBox->currentIndex());
 
-		while ((pkt = vpx_codec_get_cx_data(&m_vp8_codec, &iter)))
-		{
-			switch (pkt->kind)
-			{
-				case VPX_CODEC_CX_FRAME_PKT:
-					write_ivf_frame_header(outfile, pkt);
-					(void) fwrite(pkt->data.frame.buf, 1, pkt->data.frame.sz, outfile);
-					qDebug() << "escribe frame" << m_secuentialNumber << (pkt->kind == VPX_CODEC_CX_FRAME_PKT && (pkt->data.frame.flags & VPX_FRAME_IS_KEY) ? "K" : ".");
-					break;
-				default:
-					break;
+				// VP8 codec limits the captured image size to be % 16
+				sWidth = desktopGeometry.width() - desktopGeometry.width() % 16;
+				sHeight = desktopGeometry.height() - desktopGeometry.height() % 16;
+
+				m_vp8_interface = new VP8_Interface(fileName, sHeight, sWidth, m_captureVideoQuality->currentIndex());
 			}
+
+			m_captureThread->takeScreenshot();
+			auto image = pixmap->toImage().convertToFormat(QImage::Format_RGB32);
+			m_vp8_interface->encodeFrame(&image, m_secuentialNumber);
 		}
-		fclose(outfile);
 	}
 
-	// saveCapture(m_captureThread->getImage());
 	++m_secuentialNumber;
 
 	if (m_screenshotAnimateTray->isChecked() && (m_trayIcon != nullptr))
@@ -1251,7 +1151,7 @@ void DesktopCapture::statisticsDialogClosed(int unused)
 		{
 			m_started = false;
 			if (m_captureGroupBox->isChecked())
-				disconnect(&m_timer, SIGNAL(timeout()), this, SLOT(takeScreenshot()));
+				disconnect(&m_timer, SIGNAL(timeout()), this, SLOT(capture()));
 
 			if (m_pomodoroGroupBox->isChecked())
 			{
@@ -1285,61 +1185,13 @@ void DesktopCapture::updateTaskName()
 		 m_pomodoroTask->setText(text);
 		 m_pomodoro.setTask(m_pomodoroTask->text());
 	 }
+
+	 this->m_taskEditButton->setDown(false);
 }
 
 //-----------------------------------------------------------------
-void mem_put_le16(char *mem, unsigned int val)
+void DesktopCapture::updateVideoQuality(int status)
 {
-    mem[0] = val;
-    mem[1] = val>>8;
-}
-
-//-----------------------------------------------------------------
-void mem_put_le32(char *mem, unsigned int val)
-{
-    mem[0] = val;
-    mem[1] = val>>8;
-    mem[2] = val>>16;
-    mem[3] = val>>24;
-}
-
-//-----------------------------------------------------------------
-void write_ivf_file_header(FILE *outfile,
-                                  const vpx_codec_enc_cfg_t *cfg,
-                                  int frame_cnt) {
-    char header[32];
-
-    if(cfg->g_pass != VPX_RC_ONE_PASS && cfg->g_pass != VPX_RC_LAST_PASS)
-        return;
-    header[0] = 'D';
-    header[1] = 'K';
-    header[2] = 'I';
-    header[3] = 'F';
-    mem_put_le16(header+4,  0);                   /* version */
-    mem_put_le16(header+6,  32);                  /* headersize */
-    mem_put_le32(header+8,  fourcc);              /* headersize */
-    mem_put_le16(header+12, cfg->g_w);            /* width */
-    mem_put_le16(header+14, cfg->g_h);            /* height */
-    mem_put_le32(header+16, cfg->g_timebase.den); /* rate */
-    mem_put_le32(header+20, cfg->g_timebase.num); /* scale */
-    mem_put_le32(header+24, frame_cnt);           /* length */
-    mem_put_le32(header+28, 0);                   /* unused */
-
-    (void) fwrite(header, 1, 32, outfile);
-}
-
-void write_ivf_frame_header(FILE *outfile, const vpx_codec_cx_pkt_t *pkt)
-{
-    char             header[12];
-    vpx_codec_pts_t  pts;
-
-    if(pkt->kind != VPX_CODEC_CX_FRAME_PKT)
-        return;
-
-    pts = pkt->data.frame.pts;
-    mem_put_le32(header, pkt->data.frame.sz);
-    mem_put_le32(header+4, pts&0xFFFFFFFF);
-    mem_put_le32(header+8, pts >> 32);
-
-    (void) fwrite(header, 1, 12, outfile);
+	bool value = (status == Qt::Checked);
+	m_captureVideoQuality->setEnabled(value);
 }
