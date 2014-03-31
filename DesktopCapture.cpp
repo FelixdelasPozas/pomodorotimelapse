@@ -982,7 +982,7 @@ void DesktopCapture::capture()
 				sWidth = desktopGeometry.width() - desktopGeometry.width() % 16;
 				sHeight = desktopGeometry.height() - desktopGeometry.height() % 16;
 
-				m_vp8_interface = new VP8_Interface(fileName, sHeight, sWidth, m_captureVideoQuality->currentIndex());
+				m_vp8_interface = new VPX_Interface(fileName, sHeight, sWidth, m_captureVideoQuality->currentIndex());
 			}
 
 			m_captureThread->takeScreenshot();

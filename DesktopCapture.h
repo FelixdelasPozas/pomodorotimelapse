@@ -12,7 +12,7 @@
 #include "Resolutions.h"
 #include "Pomodoro.h"
 #include "PomodoroStatistics.h"
-#include "VP8Interface.h"
+#include "VPXInterface.h"
 #include "ui_MainWindow.h"
 
 // Qt
@@ -119,7 +119,7 @@ class DesktopCapture
 		unsigned long         m_secuentialNumber;
 		bool                  m_started;
 		PomodoroStatistics   *m_statisticsDialog;
-		VP8_Interface        *m_vp8_interface;
+		VPX_Interface        *m_vp8_interface;
 };
 
 #endif // DESKTOP_CAPTURE_H_
