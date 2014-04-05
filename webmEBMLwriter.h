@@ -97,7 +97,7 @@ void Ebml_StartSubElement(EbmlGlobal *glob, off_t *ebmlLoc, unsigned int class_i
 void Ebml_EndSubElement(EbmlGlobal *glob, off_t *ebmlLoc);
 
 void write_webm_seek_element(EbmlGlobal *ebml, unsigned int id, off_t pos);
-void write_webm_file_header(EbmlGlobal *glob, const vpx_codec_enc_cfg_t *cfg, const struct vpx_rational *fps, stereo_format_t stereo_fmt, unsigned int fourcc);
+void write_webm_file_header(EbmlGlobal *glob, const vpx_codec_enc_cfg_t *cfg, const struct vpx_rational *fps);
 void write_webm_block(EbmlGlobal *glob, const vpx_codec_enc_cfg_t *cfg, const vpx_codec_cx_pkt_t *pkt);
 void write_webm_file_footer(EbmlGlobal *glob, int hash);
 

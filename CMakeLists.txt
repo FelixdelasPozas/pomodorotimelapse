@@ -23,6 +23,9 @@ include(${QT_USE_FILE})
 
 find_package(OpenCV REQUIRED)
 
+set(LIBVPX_LIBRARY_DIR "D:/Desarrollo/Libs/libvpx-v1.3.0")
+set(LIBYUV_INCLUDE_DIR "D:/Desarrollo/Libs/libyuv/include")
+
 include_directories(
   ${CMAKE_SOURCE_DIR}
   ${CMAKE_SOURCE_DIR}/Camera
@@ -30,8 +33,8 @@ include_directories(
   ${CMAKE_CURRENT_SOURCE_DIR}
   ${CMAKE_BINARY_DIR}          # Generated .h files
   ${CMAKE_CURRENT_BINARY_DIR}  # For wrap/ui files
-  D:/Desarrollo/Libs/libvpx-v1.3.0
-  D:/Desarrollo/Libs/libyuv/include
+  ${LIBVPX_LIBRARY_DIR}
+  ${LIBYUV_INCLUDE_DIR}
   )
 
 set(CMAKE_CXX_FLAGS " -Wall -Wno-deprecated -std=c++11 -fpermissive -mwindows")
@@ -71,7 +74,7 @@ set (CORE_SOURCES
   VPXInterface.cpp
   webmEBMLwriter.cpp
   ${CMAKE_CURRENT_BINARY_DIR}/DesktopCapture.rc
-  )
+)
 
 set(VPX_LIBS
   D:/Desarrollo/Libs/libvpx-v1.3.0/libvpx.a

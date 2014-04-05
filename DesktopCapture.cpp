@@ -987,7 +987,7 @@ void DesktopCapture::capture()
 
 			m_captureThread->takeScreenshot();
 			auto image = pixmap->toImage().convertToFormat(QImage::Format_RGB32);
-			m_vp8_interface->encodeFrame(&image, m_secuentialNumber);
+			m_vp8_interface->encodeFrame(&image);
 		}
 	}
 

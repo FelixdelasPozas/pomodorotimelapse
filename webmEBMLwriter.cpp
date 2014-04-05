@@ -52,12 +52,9 @@ unsigned int murmur(const void *key, int len, unsigned int seed)
 
 	switch (len)
 	{
-		case 3:
-			h ^= data[2] << 16;
-		case 2:
-			h ^= data[1] << 8;
-		case 1:
-			h ^= data[0];
+		case 3:	h ^= data[2] << 16;
+		case 2:	h ^= data[1] << 8;
+		case 1:	h ^= data[0];
 			h *= m;
 	};
 
@@ -355,10 +352,11 @@ void write_webm_seek_info(EbmlGlobal *ebml)
 	Ebml_EndSubElement(ebml, &start);
 
 	/* Create and write the Segment Info. */
-	strcpy(version_string, "DesktopCapture v1.0 - ");
+	strcpy(version_string, "DesktopCapture v1.0 - libVPX ");
 	strncat(version_string, vpx_codec_version_str(), sizeof(version_string) - 1 - strlen(version_string));
 
 	frame_time = (uint64_t) 1000 * ebml->framerate.den / ebml->framerate.num;
+
 	ebml->segment_info_pos = ftello(ebml->stream);
 	Ebml_StartSubElement(ebml, &startInfo, Info);
 	Ebml_SerializeUnsigned(ebml, TimecodeScale, 1000000);
@@ -369,7 +367,7 @@ void write_webm_seek_info(EbmlGlobal *ebml)
 }
 
 //------------------------------------------------------------------
-void write_webm_file_header(EbmlGlobal *glob, const vpx_codec_enc_cfg_t *cfg, const struct vpx_rational *fps, stereo_format_t stereo_fmt,	unsigned int fourcc)
+void write_webm_file_header(EbmlGlobal *glob, const vpx_codec_enc_cfg_t *cfg, const struct vpx_rational *fps)
 {
 	off_t start;
 	off_t trackStart;
@@ -406,11 +404,11 @@ void write_webm_file_header(EbmlGlobal *glob, const vpx_codec_enc_cfg_t *cfg, co
 	glob->track_id_pos = ftello(glob->stream);
 	Ebml_SerializeUnsigned32(glob, TrackUID, trackID);
 	Ebml_SerializeUnsigned(glob, TrackType, 1);
-	Ebml_SerializeString(glob, CodecID, fourcc == VP8_FOURCC ? "V_VP8" : "V_VP9");
+	Ebml_SerializeString(glob, CodecID, "V_VP8");
 	Ebml_StartSubElement(glob, &videoStart, Video);
 	Ebml_SerializeUnsigned(glob, PixelWidth, pixelWidth);
 	Ebml_SerializeUnsigned(glob, PixelHeight, pixelHeight);
-	Ebml_SerializeUnsigned(glob, StereoMode, stereo_fmt);
+	Ebml_SerializeUnsigned(glob, StereoMode, STEREO_FORMAT_MONO);
 	Ebml_EndSubElement(glob, &videoStart);
 
 	/* Close Track entry. */
