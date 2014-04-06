@@ -71,6 +71,7 @@ class DesktopCapture
 	  static const QString CAPTURE_ENABLED;
 	  static const QString CAPTURE_TIME;
 	  static const QString CAPTURE_VIDEO;
+	  static const QString CAPTURE_VIDEO_FPS;
 	  static const QString CAPTURE_VIDEO_QUALITY;
 	  static const QString CAPTURED_MONITOR;
 	  static const QString MONITORS_LIST;
@@ -103,7 +104,7 @@ class DesktopCapture
 	  void setupTrayIcon();
 	  void setupCaptureThread();
 	  void saveCapture(QPixmap *);
-	  QPoint computeNewPosition(const QPoint &dragPoint = QPoint(0,0), const QPoint &point = QPoint(0,0));
+	  QPoint computeNewPIPPosition(const QPoint &dragPoint = QPoint(0,0), const QPoint &point = QPoint(0,0));
 
 		QStringList           m_cameraResolutionsNames;
 		ResolutionList        m_cameraResolutions;

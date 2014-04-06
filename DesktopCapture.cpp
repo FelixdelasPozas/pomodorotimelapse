@@ -24,6 +24,7 @@
 const QString DesktopCapture::CAPTURE_TIME = QString("Time Between Captures");
 const QString DesktopCapture::CAPTURE_ENABLED = QString("Enable Desktop Capture");
 const QString DesktopCapture::CAPTURE_VIDEO = QString("Capture Video");
+const QString DesktopCapture::CAPTURE_VIDEO_FPS = QString("Capture Video FPS");
 const QString DesktopCapture::CAPTURE_VIDEO_QUALITY = QString("Capture Video Quality");
 const QString DesktopCapture::CAPTURED_MONITOR = QString("Captured Desktop Monitor");
 const QString DesktopCapture::MONITORS_LIST = QString("Monitor Resolutions");
@@ -285,6 +286,17 @@ void DesktopCapture::loadConfiguration()
 	}
 	m_captureVideo->setChecked(captureVideo);
 
+	int videoFps;
+	if (settings.contains(CAPTURE_VIDEO_FPS))
+		videoFps = settings.value(CAPTURE_VIDEO_FPS, 15).toInt();
+	else
+	{
+		videoFps = 15;
+		settings.setValue(CAPTURE_VIDEO_FPS, videoFps);
+	}
+	m_fps->setEnabled(captureVideo);
+	m_fps->setValue(videoFps);
+
 	int videoQuality;
 	if (settings.contains(CAPTURE_VIDEO_QUALITY))
 		videoQuality = settings.value(CAPTURE_VIDEO_QUALITY, 2).toInt();
@@ -365,6 +377,7 @@ void DesktopCapture::saveConfiguration()
   settings.setValue(CAPTURE_TIME, m_screeshotTime->time());
   settings.setValue(CAPTURE_ENABLED, m_captureGroupBox->isChecked());
   settings.setValue(CAPTURE_VIDEO, m_captureVideo->isChecked());
+  settings.setValue(CAPTURE_VIDEO_FPS, m_fps->value());
   settings.setValue(CAPTURE_VIDEO_QUALITY, m_captureVideoQuality->currentIndex());
   settings.setValue(CAMERA_OVERLAY_FIXED_POSITION, m_cameraPositionComboBox->currentIndex());
   settings.setValue(POMODOROS_LAST_TASK, m_pomodoroTask->text());
@@ -515,7 +528,7 @@ void DesktopCapture::updateMonitorsCheckBox(int status)
 		{
 			if (m_cameraEnabled)
 			{
-				computeNewPosition();
+				computeNewPIPPosition();
 				m_captureThread->setOverlayPosition(m_PIPposition);
 			}
 			m_captureThread->setCaptureMonitor(m_captureMonitorComboBox->currentIndex());
@@ -532,7 +545,7 @@ void DesktopCapture::updateMonitorsComboBox(int index)
 
 		if (m_cameraEnabled)
 		{
-			computeNewPosition();
+			computeNewPIPPosition();
 			m_captureThread->setOverlayPosition(m_PIPposition);
 			m_cameraPositionComboBox->setCurrentIndex(0);
 		}
@@ -701,7 +714,7 @@ void DesktopCapture::updateCameraResolution(int status)
 	if (m_captureThread)
 	{
 		m_captureThread->setResolution(m_cameraResolutions.at(status));
-		computeNewPosition();
+		computeNewPIPPosition();
 		m_captureThread->setOverlayPosition(m_PIPposition);
 	}
 }
@@ -721,6 +734,7 @@ bool DesktopCapture::eventFilter(QObject *object, QEvent *event)
 		return object->eventFilter(object, event);
 
 	static bool drag = false;
+
 	static QPoint dragPoint = QPoint(0, 0);
 	QMouseEvent *me = static_cast<QMouseEvent *>(event);
 	Resolution cameraResolution = m_cameraResolutions.at(m_cameraResolutionComboBox->currentIndex());
@@ -755,7 +769,9 @@ bool DesktopCapture::eventFilter(QObject *object, QEvent *event)
 		         (m_PIPposition.y() > mappedPoint.y()) ||
 		         (m_PIPposition.x()+cameraResolution.width < mappedPoint.x()) ||
 		         (m_PIPposition.y()+cameraResolution.height < mappedPoint.y()) )
+				{
 					break;
+				}
 
 				m_cameraPositionComboBox->setCurrentIndex(0);
 				drag = true;
@@ -766,14 +782,14 @@ bool DesktopCapture::eventFilter(QObject *object, QEvent *event)
 			if ((me->button() == Qt::LeftButton) && drag)
 			{
 				drag = false;
-				m_captureThread->setOverlayPosition(computeNewPosition(dragPoint, me->pos()));
+				m_captureThread->setOverlayPosition(computeNewPIPPosition(dragPoint, me->pos()));
 				dragPoint = me->pos();
 			}
 			break;
 		case QEvent::MouseMove:
 			if (drag)
 			{
-				m_captureThread->setOverlayPosition(computeNewPosition(dragPoint, me->pos()));
+				m_captureThread->setOverlayPosition(computeNewPIPPosition(dragPoint, me->pos()));
 				dragPoint = me->pos();
 			}
 			break;
@@ -785,7 +801,7 @@ bool DesktopCapture::eventFilter(QObject *object, QEvent *event)
 }
 
 //-----------------------------------------------------------------
-QPoint DesktopCapture::computeNewPosition(const QPoint &dragPoint, const QPoint &point)
+QPoint DesktopCapture::computeNewPIPPosition(const QPoint &dragPoint, const QPoint &point)
 {
 	QSize imageGeometry = m_screenshotImage->pixmap()->size();
 	QRect geometry;
@@ -812,7 +828,6 @@ QPoint DesktopCapture::computeNewPosition(const QPoint &dragPoint, const QPoint 
 
 	if (m_PIPposition.x() > xLimit)
 		m_PIPposition.setX(xLimit);
-
 
 	if (m_PIPposition.y() < 0)
 		m_PIPposition.setY(0);
@@ -958,8 +973,7 @@ void DesktopCapture::capture()
 
 	if (m_captureThread)
 	{
-		int sWidth, sHeight;
-
+		m_captureThread->takeScreenshot();
 		auto pixmap = m_captureThread->getImage();
 
 		if(!m_captureVideo->isChecked())
@@ -978,14 +992,9 @@ void DesktopCapture::capture()
 				else
 					desktopGeometry = QApplication::desktop()->screenGeometry(this->m_captureMonitorComboBox->currentIndex());
 
-				// VP8 codec limits the captured image size to be % 16
-				sWidth = desktopGeometry.width() - desktopGeometry.width() % 16;
-				sHeight = desktopGeometry.height() - desktopGeometry.height() % 16;
-
-				m_vp8_interface = new VPX_Interface(fileName, sHeight, sWidth, m_captureVideoQuality->currentIndex());
+				m_vp8_interface = new VPX_Interface(fileName, desktopGeometry.height(), desktopGeometry.width(), m_captureVideoQuality->currentIndex(), m_fps->value());
 			}
 
-			m_captureThread->takeScreenshot();
 			auto image = pixmap->toImage().convertToFormat(QImage::Format_RGB32);
 			m_vp8_interface->encodeFrame(&image);
 		}
@@ -1028,12 +1037,14 @@ void DesktopCapture::updateCaptureDesktop(bool status)
 	m_screeshotTime->setEnabled(status);
 	m_dirButton->setEnabled(status);
 	m_dirEditLabel->setEnabled(status);
+	m_fps->setEnabled(status);
 }
 
 //-----------------------------------------------------------------
 void DesktopCapture::updatePomodoro(bool status)
 {
 	m_startButton->setEnabled(m_captureGroupBox->isChecked() || status);
+	m_continuousTicTac->setEnabled(status && m_pomodoroUseSounds->isChecked());
 }
 
 //-----------------------------------------------------------------
@@ -1195,3 +1206,4 @@ void DesktopCapture::updateVideoQuality(int status)
 	bool value = (status == Qt::Checked);
 	m_captureVideoQuality->setEnabled(value);
 }
+

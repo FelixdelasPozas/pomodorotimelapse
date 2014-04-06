@@ -29,7 +29,7 @@ class QImage;
 class VPX_Interface
 {
 	public:
-		VPX_Interface(QString fileName, int height, int width, int quality);
+		VPX_Interface(QString fileName, int height, int width, int quality, int fps);
 		virtual ~VPX_Interface();
 
 		void encodeFrame(QImage *frame);
@@ -47,6 +47,7 @@ class VPX_Interface
 		int                   m_quality;
 		int                   m_hash;
 		long int              m_frameNumber;
+		int                   m_fps;
 
 		EbmlGlobal            m_ebml;
 };

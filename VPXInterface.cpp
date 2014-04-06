@@ -19,13 +19,14 @@
 const int VPX_Interface::VP8_quality_values[3]{ VPX_DL_REALTIME, VPX_DL_GOOD_QUALITY, VPX_DL_BEST_QUALITY };
 
 //------------------------------------------------------------------
-VPX_Interface::VPX_Interface(QString fileName, int height, int width, int quality)
+VPX_Interface::VPX_Interface(QString fileName, int height, int width, int quality, int fps)
 : m_vp8_filename{fileName}
 , m_width{width - (width % 16)}
 , m_height{height - (height % 16)}
 , m_quality{VP8_quality_values[quality]}
 , m_hash{0}
 , m_frameNumber{0}
+, m_fps{fps}
 {
 	memset(&m_ebml, 0, sizeof(EbmlGlobal));
 	m_ebml.last_pts_ms = -1;
@@ -44,6 +45,7 @@ VPX_Interface::VPX_Interface(QString fileName, int height, int width, int qualit
 		return;
 	}
 
+// SCALE IMAGE BUFFER ///////////////////////////////////////////////////////////
 //	if (!vpx_img_alloc(&m_vp8_rawImageScaled, VPX_IMG_FMT_I420, 720, 304, 1))
 //	{
 //		qDebug() << "cannot allocate memory for image";
@@ -64,7 +66,7 @@ VPX_Interface::VPX_Interface(QString fileName, int height, int width, int qualit
 	m_vp8_config.g_w = m_width;
 	m_vp8_config.g_h = m_height;
 	m_vp8_config.g_timebase.num = 1;
-	m_vp8_config.g_timebase.den = 30;
+	m_vp8_config.g_timebase.den = m_fps;
 	m_vp8_config.g_threads = 2;
 	m_vp8_config.g_pass = VPX_RC_ONE_PASS;
 	m_vp8_config.g_profile = 0;            // Default profile.
@@ -81,8 +83,8 @@ VPX_Interface::VPX_Interface(QString fileName, int height, int width, int qualit
 		return;
 	}
 
-	struct vpx_rational arg_framerate = {30, 1};
-	write_webm_file_header(&m_ebml, &m_vp8_config, &arg_framerate);
+	struct vpx_rational framerate = {m_fps, 1};
+	write_webm_file_header(&m_ebml, &m_vp8_config, &framerate);
 }
 
 //------------------------------------------------------------------
@@ -109,7 +111,8 @@ void VPX_Interface::encodeFrame(QImage* frame)
 	                   m_vp8_rawImage.planes[2], m_vp8_rawImage.stride[2],
 	                   m_width, m_height);
 
-//	int result2 = libyuv::I420Scale(m_vp8_rawImage.planes[0], m_vp8_rawImage.stride[0],
+// SCALE IMAGE //////////////////////////////////////////////////////////////////
+//	libyuv::I420Scale(m_vp8_rawImage.planes[0], m_vp8_rawImage.stride[0],
 //      	            m_vp8_rawImage.planes[1], m_vp8_rawImage.stride[1],
 //      	            m_vp8_rawImage.planes[2], m_vp8_rawImage.stride[2],
 //      	            m_width, m_height,
@@ -119,8 +122,8 @@ void VPX_Interface::encodeFrame(QImage* frame)
 //      	            m_width/2, m_height/2,
 //      	            libyuv::kFilterBox);
 //
-//	qDebug() << "new witdh" << m_width/2 << "new height" << m_height/2 << "failed?" << (result2 != 0);
 
+// DUMP RAW FRAME ///////////////////////////////////////////////////////////////
 //	QString frameName = QString("D:\\Descargas\\rawFrame") + QString::number(m_frameNumber) + QString(".raw");
 //	FILE *rawFrame = fopen(frameName.toStdString().c_str(), "wb");
 //	if (rawFrame != nullptr)
@@ -133,7 +136,7 @@ void VPX_Interface::encodeFrame(QImage* frame)
 	vpx_codec_iter_t iter = nullptr;
 	const vpx_codec_cx_pkt_t *pkt;
 
-	int result = vpx_codec_encode(&m_vp8_context, &m_vp8_rawImage, m_frameNumber, 33, 0, m_quality);
+	int result = vpx_codec_encode(&m_vp8_context, &m_vp8_rawImage, m_frameNumber, 1000/m_fps, 0, m_quality);
 	if (VPX_CODEC_OK != result)
 	{
 		qDebug() << "Failed to encode frame" << m_frameNumber;
