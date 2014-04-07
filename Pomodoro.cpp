@@ -126,7 +126,8 @@ void Pomodoro::stopTimers()
 	m_progressTimer.stop();
 	// disconnect respective signals in the caller.
 
-	if (m_useSounds)
+	bool noSounds = (m_status == Status::Stopped || m_status == Status::Paused);
+	if (m_useSounds && !noSounds)
 	{
 		if (m_continuousTicTac)
 		{
@@ -358,15 +359,15 @@ void Pomodoro::endPomodoro()
 	m_completedTasks << QPair<QString, int>(m_task, m_numPomodoros);
 	++m_numPomodoros;
 
+	stopTimers();
+	disconnect(&m_timer, SIGNAL(timeout()), this, SLOT(endPomodoro()));
+
 	if (m_numPomodoros == m_sessionPomodoros)
 	{
 		invalidate();
 		emit sessionEnded();
 		return;
 	}
-
-	stopTimers();
-	disconnect(&m_timer, SIGNAL(timeout()), this, SLOT(endPomodoro()));
 
 	emit pomodoroEnded();
 	startShortBreak();

@@ -66,6 +66,11 @@ class DesktopCapture
 	  void statisticsDialogClosed(int unused);
 	  void updateVideoQuality(int status);
 	  void updateTaskName();
+	  void stopCaptureAction();
+	  void showStatistics();
+	  void changeTask();
+	  void pausePomodoro();
+	  void quitApplication();
 
 	private:
 	  static const QString CAPTURE_ENABLED;
@@ -102,6 +107,7 @@ class DesktopCapture
 	  void saveConfiguration();
 	  void setupCameraResolutions();
 	  void setupTrayIcon();
+	  void stopCapture();
 	  void setupCaptureThread();
 	  void saveCapture(QPixmap *);
 	  QPoint computeNewPIPPosition(const QPoint &dragPoint = QPoint(0,0), const QPoint &point = QPoint(0,0));
@@ -121,6 +127,13 @@ class DesktopCapture
 		bool                  m_started;
 		PomodoroStatistics   *m_statisticsDialog;
 		VPX_Interface        *m_vp8_interface;
+
+		QAction *m_menuPause;
+		QAction *m_menuShowStats;
+		QAction *m_menuStopCapture;
+		QAction *m_menuChangeTask;
+		QAction *m_menuQuit;
+		bool m_paused;
 };
 
 #endif // DESKTOP_CAPTURE_H_

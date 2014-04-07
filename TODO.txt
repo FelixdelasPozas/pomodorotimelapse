@@ -1,9 +1,5 @@
 TODO
 
-v1.1 ----------------------------------------------------------------
-	Add VP9 codec encoding and configuration.
-	Codec threads configuration in the GUI.
-
 v1.0 ----------------------------------------------------------------
 	Overlay pomodoro statistics in the capture. 
 	Overlay pomodoro statistics position dragabble like the camera one.

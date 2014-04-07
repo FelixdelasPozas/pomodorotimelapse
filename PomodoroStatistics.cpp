@@ -14,7 +14,7 @@
 #include <QDebug>
 
 //-----------------------------------------------------------------
-PomodoroStatistics::PomodoroStatistics(Pomodoro* pomodoro, QWidget* parent)
+PomodoroStatistics::PomodoroStatistics(Pomodoro* pomodoro, bool paused, QWidget* parent)
 : QDialog(parent)
 , m_pomodoro{pomodoro}
 , m_paused{false}
@@ -37,6 +37,9 @@ PomodoroStatistics::PomodoroStatistics(Pomodoro* pomodoro, QWidget* parent)
 	connect(&m_timer, SIGNAL(timeout()), this, SLOT(updateElapsedTime()), Qt::DirectConnection);
 	connect(m_taskButton, SIGNAL(pressed()), this, SLOT(updateTask()), Qt::QueuedConnection);
 	m_timer.start();
+
+	if(paused)
+		pause();
 }
 
 //-----------------------------------------------------------------

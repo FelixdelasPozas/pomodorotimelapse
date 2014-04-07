@@ -26,7 +26,7 @@ class PomodoroStatistics
 {
 	Q_OBJECT
 	public:
-		explicit PomodoroStatistics(Pomodoro *pomodoro, QWidget *parent = nullptr);
+		explicit PomodoroStatistics(Pomodoro *pomodoro, bool paused, QWidget *parent = nullptr);
 		virtual ~PomodoroStatistics();
 
 		void updateGUI(Pomodoro::Status status);
