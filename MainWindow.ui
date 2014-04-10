@@ -120,6 +120,48 @@
            </layout>
           </item>
           <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_12" stretch="1,0">
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <item>
+             <widget class="QLabel" name="label_7">
+              <property name="text">
+               <string>Time between captures</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QTimeEdit" name="m_screeshotTime">
+              <property name="time">
+               <time>
+                <hour>0</hour>
+                <minute>0</minute>
+                <second>30</second>
+               </time>
+              </property>
+              <property name="maximumTime">
+               <time>
+                <hour>0</hour>
+                <minute>59</minute>
+                <second>59</second>
+               </time>
+              </property>
+              <property name="minimumTime">
+               <time>
+                <hour>0</hour>
+                <minute>0</minute>
+                <second>5</second>
+               </time>
+              </property>
+              <property name="displayFormat">
+               <string>mm:ss</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
            <widget class="QCheckBox" name="m_cameraEnabled">
             <property name="text">
              <string>Enable Camera</string>
@@ -191,6 +233,13 @@
            </widget>
           </item>
           <item>
+           <widget class="QCheckBox" name="m_overlayStats">
+            <property name="text">
+             <string>Overlay pomodoro statistics in the capture</string>
+            </property>
+           </widget>
+          </item>
+          <item>
            <widget class="QCheckBox" name="m_captureVideo">
             <property name="text">
              <string>Capture Video</string>
@@ -198,59 +247,33 @@
            </widget>
           </item>
           <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_14">
+           <layout class="QHBoxLayout" name="horizontalLayout_16" stretch="1,0">
             <property name="topMargin">
              <number>0</number>
             </property>
             <item>
-             <widget class="QLabel" name="label_11">
+             <widget class="QLabel" name="label_12">
               <property name="text">
-               <string>Video Quality</string>
+               <string>Output Video Framerate</string>
               </property>
              </widget>
             </item>
             <item>
-             <widget class="QComboBox" name="m_captureVideoQuality"/>
-            </item>
-           </layout>
-          </item>
-          <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_12" stretch="1,0">
-            <property name="topMargin">
-             <number>0</number>
-            </property>
-            <item>
-             <widget class="QLabel" name="label_7">
-              <property name="text">
-               <string>Time between captures</string>
+             <widget class="QSpinBox" name="m_fps">
+              <property name="suffix">
+               <string> fps</string>
               </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QTimeEdit" name="m_screeshotTime">
-              <property name="time">
-               <time>
-                <hour>0</hour>
-                <minute>0</minute>
-                <second>30</second>
-               </time>
+              <property name="minimum">
+               <number>5</number>
               </property>
-              <property name="maximumTime">
-               <time>
-                <hour>0</hour>
-                <minute>59</minute>
-                <second>59</second>
-               </time>
+              <property name="maximum">
+               <number>30</number>
               </property>
-              <property name="minimumTime">
-               <time>
-                <hour>0</hour>
-                <minute>0</minute>
-                <second>5</second>
-               </time>
+              <property name="singleStep">
+               <number>5</number>
               </property>
-              <property name="displayFormat">
-               <string>mm:ss</string>
+              <property name="value">
+               <number>15</number>
               </property>
              </widget>
             </item>
@@ -291,39 +314,6 @@
               </property>
               <property name="text">
                <string>...</string>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </item>
-          <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_16" stretch="1,0">
-            <property name="topMargin">
-             <number>0</number>
-            </property>
-            <item>
-             <widget class="QLabel" name="label_12">
-              <property name="text">
-               <string>Output Video Framerate</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QSpinBox" name="m_fps">
-              <property name="suffix">
-               <string> fps</string>
-              </property>
-              <property name="minimum">
-               <number>5</number>
-              </property>
-              <property name="maximum">
-               <number>30</number>
-              </property>
-              <property name="singleStep">
-               <number>5</number>
-              </property>
-              <property name="value">
-               <number>15</number>
               </property>
              </widget>
             </item>

@@ -10,6 +10,7 @@
 
 // Application
 #include "Resolutions.h"
+#include "Pomodoro.h"
 
 // OpenCV
 #include <opencv2/highgui/highgui.hpp>
@@ -32,7 +33,8 @@ class CaptureDesktopThread
 
 		explicit CaptureDesktopThread(int capturedMonitor,
 				                          Resolution cameraResolution,
-				                          QPoint overlayPosition,
+				                          QPoint cameraOverlayPosition,
+				                          QPoint statsOverlayPosition,
 				                          QPainter::CompositionMode compositionMode,
 				                          QObject *parent = nullptr);
 		virtual ~CaptureDesktopThread();
@@ -48,12 +50,17 @@ class CaptureDesktopThread
 		void setCaptureMonitor(int monitor);
 		bool setCameraEnabled(bool);
 		bool setResolution(const Resolution &resolution);
-		void setOverlayPosition(const QPoint &point);
-		void setOverlayPosition(QString positionName);
-		void setOverlayCompositionMode(const QPainter::CompositionMode mode);
+		void setCameraOverlayPosition(const QPoint &point);
+		void setCameraOverlayPosition(QString positionName);
+		void setCameraOverlayCompositionMode(const QPainter::CompositionMode mode);
+		void setStatsOverlayPosition(const QPoint &point);
 		void setPaintFrame(bool);
-		QPoint getOverlayPosition()
-		{ return m_position; };
+		void setPomodoro(Pomodoro *pomodoro);
+		QPoint getCameraOverlayPosition()
+		{ return m_cameraPosition; };
+
+		QPoint getStatsOverlayPosition()
+		{ return m_statsPosition; }
 
 		void run();
 
@@ -65,6 +72,8 @@ class CaptureDesktopThread
 
 	private:
 		void overlayCameraImage(QImage &baseImage, const QImage &overlayImage);
+		void overlayPomodoro(QImage &baseImage);
+		void drawPomodoroUnit(QPainter &painter, const QColor &color, const QPoint &position, const QString &text, int width = 15);
 		QImage MatToQImage(const cv::Mat& mat);
 
 		bool             m_aborted;
@@ -80,7 +89,9 @@ class CaptureDesktopThread
 		QMutex           m_mutex;
 		QWaitCondition   m_pauseWaitCondition;
 		cv::Mat          m_frame;
-		QPoint           m_position;
+		QPoint           m_cameraPosition;
+		QPoint           m_statsPosition;
+		Pomodoro        *m_pomodoro;
 
 		QPainter::CompositionMode m_compositionMode;
 		bool m_paintFrame;

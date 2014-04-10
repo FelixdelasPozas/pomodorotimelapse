@@ -64,7 +64,6 @@ class DesktopCapture
 	  void updateContinuousTicTac(int status);
 	  void updateUseSounds(int status);
 	  void statisticsDialogClosed(int unused);
-	  void updateVideoQuality(int status);
 	  void updateTaskName();
 	  void stopCaptureAction();
 	  void showStatistics();
@@ -77,7 +76,6 @@ class DesktopCapture
 	  static const QString CAPTURE_TIME;
 	  static const QString CAPTURE_VIDEO;
 	  static const QString CAPTURE_VIDEO_FPS;
-	  static const QString CAPTURE_VIDEO_QUALITY;
 	  static const QString CAPTURED_MONITOR;
 	  static const QString MONITORS_LIST;
 	  static const QString OUTPUT_DIR;
@@ -100,6 +98,8 @@ class DesktopCapture
 	  static const QString POMODOROS_CONTINUOUS_TICTAC;
 	  static const QString POMODOROS_SESSION_NUMBER;
 	  static const QString POMODOROS_LAST_TASK;
+	  static const QString POMODOROS_OVERLAY;
+	  static const QString POMODOROS_OVERLAY_POSITION;
 
 	  static const QStringList CAPTURE_VIDEO_QUALITY_STRINGS;
 
@@ -121,6 +121,7 @@ class DesktopCapture
 		QMutex                m_mutex;
 		QPixmap              *m_cameraPixmap;
 		QPoint                m_PIPposition;
+		QPoint                m_statsPosition;
 		QPainter::CompositionMode m_compositionMode;
 		QTimer                m_timer;
 		unsigned long         m_secuentialNumber;

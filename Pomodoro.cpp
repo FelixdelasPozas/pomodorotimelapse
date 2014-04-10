@@ -356,7 +356,7 @@ void Pomodoro::updateProgress()
 //-----------------------------------------------------------------
 void Pomodoro::endPomodoro()
 {
-	m_completedTasks << QPair<QString, int>(m_task, m_numPomodoros);
+	m_completedTasks[m_numPomodoros] = m_task;
 	++m_numPomodoros;
 
 	stopTimers();

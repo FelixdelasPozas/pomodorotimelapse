@@ -36,7 +36,8 @@ const QStringList CaptureDesktopThread::POSITION_NAMES = { QString("Free"),
 //-----------------------------------------------------------------
 CaptureDesktopThread::CaptureDesktopThread(int capturedMonitor,
 		                                       Resolution cameraResolution,
-		                                       QPoint overlayPosition,
+		                                       QPoint cameraOverlayPosition,
+		                                       QPoint statsOverlayPosition,
 		                                       QPainter::CompositionMode compositionMode,
 		                                       QObject* parent)
 : QThread(parent)
@@ -47,7 +48,8 @@ CaptureDesktopThread::CaptureDesktopThread(int capturedMonitor,
 , m_paintFrame{false}
 {
 	setCaptureMonitor(capturedMonitor);
-	setOverlayPosition(overlayPosition);
+	setCameraOverlayPosition(cameraOverlayPosition);
+	setStatsOverlayPosition(statsOverlayPosition);
 
 	if (cameraResolution.name != QString())
 	{
@@ -71,7 +73,7 @@ bool CaptureDesktopThread::setResolution(const Resolution &resolution)
 	QMutexLocker lock(&m_mutex);
 
 	bool opened = m_camera.isOpened();
-	bool result;
+	bool result = false;
 
 	if (opened)
 	{
@@ -162,30 +164,30 @@ void CaptureDesktopThread::resume()
 }
 
 //-----------------------------------------------------------------
-void CaptureDesktopThread::setOverlayPosition(const QPoint &point)
+void CaptureDesktopThread::setCameraOverlayPosition(const QPoint &point)
 {
 	QMutexLocker lock(&m_mutex);
 
-	m_position = point;
+	m_cameraPosition = point;
 
-	if (m_position.x() < 0)
-		m_position.setX(0);
+	if (m_cameraPosition.x() < 0)
+		m_cameraPosition.setX(0);
 
-	if (m_position.y() < 0)
-		m_position.setY(0);
+	if (m_cameraPosition.y() < 0)
+		m_cameraPosition.setY(0);
 
   int xLimit = m_width - m_cameraResolution.width;
-	if (m_position.x() > xLimit)
-		m_position.setX(xLimit);
+	if (m_cameraPosition.x() > xLimit)
+		m_cameraPosition.setX(xLimit);
 
 
   int yLimit = m_height - m_cameraResolution.height;
-	if (m_position.y() > yLimit)
-		m_position.setY(yLimit);
+	if (m_cameraPosition.y() > yLimit)
+		m_cameraPosition.setY(yLimit);
 }
 
 //-----------------------------------------------------------------
-void CaptureDesktopThread::setOverlayPosition(QString positionName)
+void CaptureDesktopThread::setCameraOverlayPosition(QString positionName)
 {
 	int position = POSITION_NAMES.indexOf(positionName);
 	if (position == -1)
@@ -196,40 +198,40 @@ void CaptureDesktopThread::setOverlayPosition(QString positionName)
 	switch (position)
 	{
 		case 1:
-			m_position.setX(0);
-			m_position.setY(0);
+			m_cameraPosition.setX(0);
+			m_cameraPosition.setY(0);
 			break;
 		case 2:
-			m_position.setX(m_width/2 - m_cameraResolution.width/2);
-			m_position.setY(0);
+			m_cameraPosition.setX(m_width/2 - m_cameraResolution.width/2);
+			m_cameraPosition.setY(0);
 			break;
 		case 3:
-			m_position.setX(m_width - m_cameraResolution.width);
-			m_position.setY(0);
+			m_cameraPosition.setX(m_width - m_cameraResolution.width);
+			m_cameraPosition.setY(0);
 			break;
 		case 4:
-			m_position.setX(0);
-			m_position.setY(m_height/2-m_cameraResolution.height/2);
+			m_cameraPosition.setX(0);
+			m_cameraPosition.setY(m_height/2-m_cameraResolution.height/2);
 			break;
 		case 5:
-			m_position.setX(m_width/2 - m_cameraResolution.width/2);
-			m_position.setY(m_height/2-m_cameraResolution.height/2);
+			m_cameraPosition.setX(m_width/2 - m_cameraResolution.width/2);
+			m_cameraPosition.setY(m_height/2-m_cameraResolution.height/2);
 			break;
 		case 6:
-			m_position.setX(m_width - m_cameraResolution.width);
-			m_position.setY(m_height/2-m_cameraResolution.height/2);
+			m_cameraPosition.setX(m_width - m_cameraResolution.width);
+			m_cameraPosition.setY(m_height/2-m_cameraResolution.height/2);
 			break;
 		case 7:
-			m_position.setX(0);
-			m_position.setY(m_height - m_cameraResolution.height);
+			m_cameraPosition.setX(0);
+			m_cameraPosition.setY(m_height - m_cameraResolution.height);
 			break;
 		case 8:
-			m_position.setX(m_width/2 - m_cameraResolution.width/2);
-			m_position.setY(m_height - m_cameraResolution.height);
+			m_cameraPosition.setX(m_width/2 - m_cameraResolution.width/2);
+			m_cameraPosition.setY(m_height - m_cameraResolution.height);
 			break;
 		case 9:
-			m_position.setX(m_width - m_cameraResolution.width);
-			m_position.setY(m_height - m_cameraResolution.height);
+			m_cameraPosition.setX(m_width - m_cameraResolution.width);
+			m_cameraPosition.setY(m_height - m_cameraResolution.height);
 			break;
 		case 0: // Free, nothing to be done
 		default:
@@ -253,6 +255,36 @@ void CaptureDesktopThread::run()
 
 		emit render();
 	}
+}
+
+//-----------------------------------------------------------------
+void CaptureDesktopThread::setPomodoro(Pomodoro *pomodoro)
+{
+	QMutexLocker lock(&m_mutex);
+	m_pomodoro = pomodoro;
+}
+
+//-----------------------------------------------------------------
+void CaptureDesktopThread::setStatsOverlayPosition(const QPoint& point)
+{
+	QMutexLocker lock(&m_mutex);
+
+	m_statsPosition = point;
+
+	if (m_statsPosition.x() < 0)
+		m_statsPosition.setX(0);
+
+	if (m_statsPosition.y() < 0)
+		m_statsPosition.setY(0);
+
+  int xLimit = m_width - 50;
+	if (m_statsPosition.x() > xLimit)
+		m_statsPosition.setX(xLimit);
+
+
+  int yLimit = m_height - (15 * m_pomodoro->getPomodorosInSession());
+	if (m_statsPosition.y() > yLimit)
+		m_statsPosition.setY(yLimit);
 }
 
 //-----------------------------------------------------------------
@@ -297,7 +329,7 @@ void CaptureDesktopThread::overlayCameraImage(QImage &baseImage, const QImage &o
 {
   QPainter painter(&baseImage);
   painter.setCompositionMode(m_compositionMode);
-  painter.drawImage(m_position.x(), m_position.y(), overlayImage);
+  painter.drawImage(m_cameraPosition.x(), m_cameraPosition.y(), overlayImage);
 
   if (m_paintFrame)
   {
@@ -309,21 +341,113 @@ void CaptureDesktopThread::overlayCameraImage(QImage &baseImage, const QImage &o
 
   	for (int i = 0; i < 3; ++i)
   	{
-    	poly.setPoint(0, m_position.x()+i, m_position.y()+i);
-    	poly.setPoint(1, m_position.x()+m_cameraResolution.width-i, m_position.y()+i);
-    	poly.setPoint(2, m_position.x()+m_cameraResolution.width-i, m_position.y()+m_cameraResolution.height-i);
-    	poly.setPoint(3, m_position.x()+i, m_position.y()+m_cameraResolution.height-i);
-    	poly.setPoint(4, m_position.x()+i, m_position.y()+i);
+    	poly.setPoint(0, m_cameraPosition.x()+i, m_cameraPosition.y()+i);
+    	poly.setPoint(1, m_cameraPosition.x()+m_cameraResolution.width-i, m_cameraPosition.y()+i);
+    	poly.setPoint(2, m_cameraPosition.x()+m_cameraResolution.width-i, m_cameraPosition.y()+m_cameraResolution.height-i);
+    	poly.setPoint(3, m_cameraPosition.x()+i, m_cameraPosition.y()+m_cameraResolution.height-i);
+    	poly.setPoint(4, m_cameraPosition.x()+i, m_cameraPosition.y()+i);
     	painter.drawConvexPolygon(poly);
-  		painter.drawLine(QPoint(m_position.x() + middle.x() - minimum, m_position.y() + middle.y() - 1+i), QPoint(m_position.x() + middle.x() + minimum, m_position.y() + middle.y() - 1+i));
-    	painter.drawLine(QPoint(m_position.x() + middle.x() - 1+i, m_position.y() + middle.y() - minimum), QPoint(m_position.x() + middle.x() - 1+i, m_position.y() + middle.y() + minimum));
+  		painter.drawLine(QPoint(m_cameraPosition.x() + middle.x() - minimum, m_cameraPosition.y() + middle.y() - 1+i), QPoint(m_cameraPosition.x() + middle.x() + minimum, m_cameraPosition.y() + middle.y() - 1+i));
+    	painter.drawLine(QPoint(m_cameraPosition.x() + middle.x() - 1+i, m_cameraPosition.y() + middle.y() - minimum), QPoint(m_cameraPosition.x() + middle.x() - 1+i, m_cameraPosition.y() + middle.y() + minimum));
   	}
   }
   painter.end();
 }
 
 //-----------------------------------------------------------------
-void CaptureDesktopThread::setOverlayCompositionMode(const QPainter::CompositionMode mode)
+void CaptureDesktopThread::drawPomodoroUnit(QPainter &painter, const QColor &color, const QPoint &position, const QString &text, int width)
+{
+	QBrush brush(color);
+	painter.setBrush(brush);
+	painter.fillRect(position.x(), position.y(), 50, width, color);
+	painter.drawText(position.x()+5, position.y(), text);
+}
+
+//-----------------------------------------------------------------
+void CaptureDesktopThread::overlayPomodoro(QImage &image)
+{
+	if (m_pomodoro == nullptr)
+		return;
+
+	static unsigned long total = 0;
+
+	QPainter painter(&image);
+
+	if (m_paintFrame)
+	{
+  	QPolygon poly(5);
+    painter.setPen(QColor(Qt::yellow));
+    int height = 15 * m_pomodoro->getPomodorosInSession();
+  	for (int i = 0; i < 3; ++i)
+  	{
+    	poly.setPoint(0, m_statsPosition.x()+i, m_statsPosition.y()+i);
+    	poly.setPoint(1, m_statsPosition.x()+ 50-i, m_statsPosition.y()+i);
+    	poly.setPoint(2, m_statsPosition.x()+ 50-i, m_statsPosition.y()+ height-i);
+    	poly.setPoint(3, m_statsPosition.x()+i, m_statsPosition.y()+ height-i);
+    	poly.setPoint(4, m_statsPosition.x()+i, m_statsPosition.y()+i);
+    	painter.drawConvexPolygon(poly);
+  	}
+	}
+	else
+	{
+		QPoint position = m_statsPosition;
+		for(unsigned int i = 0; i < m_pomodoro->completedPomodoros(); ++i)
+		{
+			drawPomodoroUnit(painter, Qt::red, position, m_pomodoro->getCompletedTasks()[i]);
+			position.setY(position.y() + 15);
+
+			if (m_pomodoro->completedShortBreaks() >= i)
+			{
+				drawPomodoroUnit(painter, Qt::blue, position, QString("Short break"));
+				position.setY(position.y() + 15);
+			}
+
+			if (i != 0 && (i % m_pomodoro->getPomodorosBeforeBreak() == 0))
+			{
+				drawPomodoroUnit(painter, Qt::green, position, QString("Long Break"));
+				position.setY(position.y()+15);
+			}
+		}
+
+		QColor color;
+		QString text;
+		unsigned long mSec = m_pomodoro->elapsed();
+		QTime zero;
+		switch(m_pomodoro->status())
+		{
+			case Pomodoro::Status::Stopped:
+				return;
+				break;
+			case Pomodoro::Status::Pomodoro:
+				color = Qt::red;
+				text = m_pomodoro->getTask();
+				total = zero.msecsTo(m_pomodoro->getPomodoroTime());
+				break;
+			case Pomodoro::Status::ShortBreak:
+				color = Qt::blue;
+				text = QString("In A Short Break");
+				total = zero.msecsTo(m_pomodoro->getShortBreakTime());
+				break;
+			case Pomodoro::Status::LongBreak:
+				color = Qt::green;
+				text = QString("In A Long Break");
+				total = zero.msecsTo(m_pomodoro->getLongBreakTime());
+				break;
+			case Pomodoro::Status::Paused:
+				color = Qt::gray;
+				text = QString("Paused");
+				break;
+			default:
+				Q_ASSERT(false);
+				break;
+		}
+		int pixels = static_cast<double>(mSec) / static_cast<double>(total) * 15;
+		drawPomodoroUnit(painter, color, position, text, pixels);
+	}
+}
+
+//-----------------------------------------------------------------
+void CaptureDesktopThread::setCameraOverlayCompositionMode(const QPainter::CompositionMode mode)
 {
 	m_compositionMode = mode;
 }
@@ -351,6 +475,7 @@ void CaptureDesktopThread::takeScreenshot()
 		QImage image = desktopImage.toImage();
 		QImage cameraImage = MatToQImage(m_frame);
 		overlayCameraImage(image, cameraImage);
+		overlayPomodoro(image);
 		desktopImage = QPixmap::fromImage(image);
 	}
 	else

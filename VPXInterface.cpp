@@ -19,11 +19,11 @@
 const int VPX_Interface::VP8_quality_values[3]{ VPX_DL_REALTIME, VPX_DL_GOOD_QUALITY, VPX_DL_BEST_QUALITY };
 
 //------------------------------------------------------------------
-VPX_Interface::VPX_Interface(QString fileName, int height, int width, int quality, int fps)
+VPX_Interface::VPX_Interface(QString fileName, int height, int width, int fps)
 : m_vp8_filename{fileName}
 , m_width{width - (width % 16)}
 , m_height{height - (height % 16)}
-, m_quality{VP8_quality_values[quality]}
+, m_quality{VPX_DL_BEST_QUALITY}
 , m_hash{0}
 , m_frameNumber{0}
 , m_fps{fps}

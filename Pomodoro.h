@@ -17,7 +17,7 @@
 #include <QIcon>
 #include <QSound>
 #include <QThread>
-#include <QPair>
+#include <QMap>
 
 // C++11
 #include <cstdint>
@@ -70,7 +70,7 @@ class Pomodoro
 		{ return m_sessionPomodoros; };
 		QString getTask()
 		{ return m_task; };
-		QList<QPair<QString, int>>  getCompletedTasks()
+		QMap<int, QString> getCompletedTasks()
 		{ return m_completedTasks; };
 
 
@@ -125,7 +125,7 @@ class Pomodoro
 		bool          m_useSounds;        // Use sounds.
 		QTime         m_startTime;        // Start time of the last interval, used for pausing.
 		unsigned int  m_elapsedMSeconds;  // Elapsed seconds since the last time m_timer started.
-		QList<QPair<QString, int>> m_completedTasks;   // List of tasks completed.
+		QMap<int, QString> m_completedTasks; // Task names of completed pomodoros.
 
 		QSound       *m_crank;
 		QSound       *m_tictac;
