@@ -45,7 +45,7 @@ class Pomodoro
 		void start();
 		void pause(bool value);
 		void stop();
-		void invalidate();
+		void invalidateCurrent();
 		unsigned int elapsed();
 
 		void startPomodoro();
@@ -58,6 +58,7 @@ class Pomodoro
 		void setTask(QString title);
 		void setContinuousTicTac(bool value);
 		void setSessionPodomodos(unsigned int value);
+		void setPomodorosBeforeBreak(unsigned int value);
 		void setUseSounds(bool value);
 		QIcon icon();
 
@@ -82,10 +83,12 @@ class Pomodoro
 		{	return m_numLongBreaks;	}
 		QTime completedSessionTime();
 		QTime elapsedTime();
+	  void clear();
 
 	  enum class Status : std::int8_t { Pomodoro = 1, ShortBreak = 2, LongBreak = 3, Stopped = 4, Paused = 5 };
 	  Status status()
 	  { return m_status; };
+
 
 	signals:
 		void beginPomodoro();

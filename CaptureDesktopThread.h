@@ -73,7 +73,7 @@ class CaptureDesktopThread
 	private:
 		void overlayCameraImage(QImage &baseImage, const QImage &overlayImage);
 		void overlayPomodoro(QImage &baseImage);
-		void drawPomodoroUnit(QPainter &painter, const QColor &color, const QPoint &position, const QString &text, int width = 15);
+		void drawPomodoroUnit(QPainter &painter, QColor color, const QPoint &position, const QString &text, int width = 250);
 		QImage MatToQImage(const cv::Mat& mat);
 
 		bool             m_aborted;

@@ -1,5 +1,5 @@
 TODO
 
-v1.0 ----------------------------------------------------------------
-	Overlay pomodoro statistics in the capture. 
-	Overlay pomodoro statistics position dragabble like the camera one.
+v1.1 ----------------------------------------------------------------
+	Refactorize code.
+	

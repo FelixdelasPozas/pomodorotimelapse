@@ -102,12 +102,12 @@ static const ResolutionList CommonResolutions = { { QString("SQCIF"), 128, 96 },
 																									{ QString("WHUXGA"), 7680, 4800 },
 																									{ QString("QUHD(16K)"), 15360, 8640 } };
 
-static QString getResolutionAsString(Resolution res)
+inline QString getResolutionAsString(const Resolution &res)
 {
 	return QString("%1x%2 - ").arg(res.width).arg(res.height) + res.name;
 }
 
-static Resolution getResolution(int width, int height)
+inline Resolution getResolution(const int width, const int height)
 {
 	Resolution match;
 

@@ -44,6 +44,7 @@ CaptureDesktopThread::CaptureDesktopThread(int capturedMonitor,
 , m_aborted{false}
 , m_cameraEnabled{true}
 , m_paused{false}
+, m_pomodoro{nullptr}
 , m_compositionMode{compositionMode}
 , m_paintFrame{false}
 {
@@ -94,12 +95,11 @@ void CaptureDesktopThread::setCaptureMonitor(int monitor)
 	else
 		desktopGeometry = QApplication::desktop()->screenGeometry(monitor);
 
-	m_mutex.lock();
+	QMutexLocker lock(&m_mutex);
 	m_x = desktopGeometry.x();
 	m_y = desktopGeometry.y();
 	m_width = desktopGeometry.width();
 	m_height = desktopGeometry.height();
-	m_mutex.unlock();
 }
 
 //-----------------------------------------------------------------
@@ -277,12 +277,15 @@ void CaptureDesktopThread::setStatsOverlayPosition(const QPoint& point)
 	if (m_statsPosition.y() < 0)
 		m_statsPosition.setY(0);
 
-  int xLimit = m_width - 50;
+  int xLimit = m_width - 250;
 	if (m_statsPosition.x() > xLimit)
 		m_statsPosition.setX(xLimit);
 
+	int height = 15;
+	if (m_pomodoro != nullptr)
+		height = 15 * ((2 * m_pomodoro->getPomodorosInSession()) - 1 + (m_pomodoro->getPomodorosInSession() / m_pomodoro->getPomodorosBeforeBreak()) - ((m_pomodoro->getPomodorosInSession() % m_pomodoro->getPomodorosBeforeBreak() == 0) ? 1 : 0));
 
-  int yLimit = m_height - (15 * m_pomodoro->getPomodorosInSession());
+  int yLimit = m_height - height;
 	if (m_statsPosition.y() > yLimit)
 		m_statsPosition.setY(yLimit);
 }
@@ -355,12 +358,15 @@ void CaptureDesktopThread::overlayCameraImage(QImage &baseImage, const QImage &o
 }
 
 //-----------------------------------------------------------------
-void CaptureDesktopThread::drawPomodoroUnit(QPainter &painter, const QColor &color, const QPoint &position, const QString &text, int width)
+void CaptureDesktopThread::drawPomodoroUnit(QPainter &painter, QColor color, const QPoint &position, const QString &text, int width)
 {
 	QBrush brush(color);
+	color.setAlphaF(0.8);
 	painter.setBrush(brush);
-	painter.fillRect(position.x(), position.y(), 50, width, color);
-	painter.drawText(position.x()+5, position.y(), text);
+	painter.fillRect(position.x(), position.y(), width, 15, color);
+	painter.setPen(Qt::white);
+	painter.setOpacity(0.8);
+	painter.drawText(position.x()+2, position.y()+13, text);
 }
 
 //-----------------------------------------------------------------
@@ -372,44 +378,64 @@ void CaptureDesktopThread::overlayPomodoro(QImage &image)
 	static unsigned long total = 0;
 
 	QPainter painter(&image);
+	QFont font = painter.font();
+	font.setBold(true);
+	int height = 15 * ((2 * m_pomodoro->getPomodorosInSession()) - 1 + (m_pomodoro->getPomodorosInSession() / m_pomodoro->getPomodorosBeforeBreak()) - ((m_pomodoro->getPomodorosInSession() % m_pomodoro->getPomodorosBeforeBreak() == 0) ? 1 : 0));
+	QColor color = Qt::lightGray;
+	color.setAlphaF(0.33);
+	painter.fillRect(m_statsPosition.x(), m_statsPosition.y(), 250, height, color);
 
 	if (m_paintFrame)
 	{
-  	QPolygon poly(5);
+	 	QPolygon poly(5);
     painter.setPen(QColor(Qt::yellow));
-    int height = 15 * m_pomodoro->getPomodorosInSession();
   	for (int i = 0; i < 3; ++i)
   	{
     	poly.setPoint(0, m_statsPosition.x()+i, m_statsPosition.y()+i);
-    	poly.setPoint(1, m_statsPosition.x()+ 50-i, m_statsPosition.y()+i);
-    	poly.setPoint(2, m_statsPosition.x()+ 50-i, m_statsPosition.y()+ height-i);
+    	poly.setPoint(1, m_statsPosition.x()+ 250-i, m_statsPosition.y()+i);
+    	poly.setPoint(2, m_statsPosition.x()+ 250-i, m_statsPosition.y()+ height-i);
     	poly.setPoint(3, m_statsPosition.x()+i, m_statsPosition.y()+ height-i);
     	poly.setPoint(4, m_statsPosition.x()+i, m_statsPosition.y()+i);
     	painter.drawConvexPolygon(poly);
   	}
+
+  	painter.setPen(Qt::white);
+  	QFont serifFont("Times", 15, QFont::Bold);
+  	painter.setFont(serifFont);
+  	QFontMetrics metrics(serifFont);
+  	int fontWidth = metrics.width(QString("Pomodoro"));
+  	int fontHeight = metrics.height();
+  	QPoint position = QPoint(m_statsPosition.x() + 125 - fontWidth/2 , (2*m_statsPosition.y()+height)/2 - fontHeight/2);
+  	painter.drawText(position, QString("Pomodoro"));
+  	fontWidth = metrics.width(QString("Statistics"));
+  	position = QPoint(m_statsPosition.x() + 125 - fontWidth/2, position.y()+5 + fontHeight);
+  	painter.drawText(position, QString("Statistics"));
+
 	}
 	else
 	{
 		QPoint position = m_statsPosition;
-		for(unsigned int i = 0; i < m_pomodoro->completedPomodoros(); ++i)
+		for(unsigned int i = 1; i <= m_pomodoro->completedPomodoros(); ++i)
 		{
-			drawPomodoroUnit(painter, Qt::red, position, m_pomodoro->getCompletedTasks()[i]);
-			position.setY(position.y() + 15);
+			drawPomodoroUnit(painter, Qt::red, position, m_pomodoro->getCompletedTasks()[i-1]);
+			position.setY(position.y()+ 15);
 
-			if (m_pomodoro->completedShortBreaks() >= i)
+			if (i <= m_pomodoro->completedShortBreaks())
 			{
 				drawPomodoroUnit(painter, Qt::blue, position, QString("Short break"));
-				position.setY(position.y() + 15);
+				position.setY(position.y()+ 15);
 			}
 
-			if (i != 0 && (i % m_pomodoro->getPomodorosBeforeBreak() == 0))
+			bool longBreak = (i % m_pomodoro->getPomodorosBeforeBreak() == 0) &&
+					             ((i / m_pomodoro->getPomodorosBeforeBreak()) <= m_pomodoro->completedLongBreaks());
+
+			if (longBreak)
 			{
 				drawPomodoroUnit(painter, Qt::green, position, QString("Long Break"));
-				position.setY(position.y()+15);
+				position.setY(position.y()+ 15);
 			}
 		}
 
-		QColor color;
 		QString text;
 		unsigned long mSec = m_pomodoro->elapsed();
 		QTime zero;
@@ -441,7 +467,8 @@ void CaptureDesktopThread::overlayPomodoro(QImage &image)
 				Q_ASSERT(false);
 				break;
 		}
-		int pixels = static_cast<double>(mSec) / static_cast<double>(total) * 15;
+
+		int pixels = static_cast<double>(mSec) / static_cast<double>(total) * 250;
 		drawPomodoroUnit(painter, color, position, text, pixels);
 	}
 }

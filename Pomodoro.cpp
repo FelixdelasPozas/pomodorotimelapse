@@ -124,8 +124,8 @@ void Pomodoro::stopTimers()
 {
 	m_timer.stop();
 	m_progressTimer.stop();
-	// disconnect respective signals in the caller.
 
+	// disconnect respective signals in the caller.
 	bool noSounds = (m_status == Status::Stopped || m_status == Status::Paused);
 	if (m_useSounds && !noSounds)
 	{
@@ -177,6 +177,12 @@ void Pomodoro::start()
 {
 	Q_ASSERT(m_status == Status::Stopped);
 
+	m_numLongBreaks = 0;
+	m_numShortBreaks = 0;
+	m_numPomodoros = 0;
+	m_progress = 0;
+	m_completedTasks.clear();
+
 	if (m_numPomodoros == 0 || ((m_numPomodoros == m_numShortBreaks) && (m_numPomodoros % m_numBeforeBreak != 0)))
 		startPomodoro();
 	else
@@ -216,7 +222,9 @@ void Pomodoro::pause(bool value)
 			// resume
 			QTime time = QTime(0,0,0,0);
 			time = time.addMSecs(m_elapsedMSeconds);
-			unsigned long mSeconds, progressInterval, progressMSeconds;
+			unsigned long mSeconds = 0;
+			unsigned long progressInterval = 0;
+			unsigned long progressMSeconds = 0;
 			if (Status::Pomodoro == oldStatus)
 			{
 				mSeconds = time.msecsTo(getPomodoroTime());
@@ -266,19 +274,18 @@ unsigned int Pomodoro::elapsed()
 //-----------------------------------------------------------------
 void Pomodoro::stop()
 {
+	if (Status::Stopped == m_status)
+		return;
+
 	stopTimers();
 	m_timer.disconnect(&m_timer, SIGNAL(timeout()), this, SLOT(endPomodoro()));
 	m_timer.disconnect(&m_timer, SIGNAL(timeout()), this, SLOT(endLongBreak()));
 	m_timer.disconnect(&m_timer, SIGNAL(timeout()), this, SLOT(endShortBreak()));
-	m_numLongBreaks = 0;
-	m_numShortBreaks = 0;
-	m_numPomodoros = 0;
-	m_progress = 0;
 	m_status = Status::Stopped;
 }
 
 //-----------------------------------------------------------------
-void Pomodoro::invalidate()
+void Pomodoro::invalidateCurrent()
 {
 	if (Status::Stopped == m_status)
 		return;
@@ -288,8 +295,21 @@ void Pomodoro::invalidate()
 	m_timer.disconnect(&m_timer, SIGNAL(timeout()), this, SLOT(endLongBreak()));
 	m_timer.disconnect(&m_timer, SIGNAL(timeout()), this, SLOT(endShortBreak()));
 	m_progress = 0;
-	m_status = Status::Stopped;
-	start();
+	switch(m_status)
+	{
+		case Status::Pomodoro:
+			startPomodoro();
+			break;
+		case Status::ShortBreak:
+			startShortBreak();
+			break;
+		case Status::LongBreak:
+			startLongBreak();
+			break;
+		case Status::Paused:
+		default:
+			break;
+	}
 }
 
 //-----------------------------------------------------------------
@@ -322,7 +342,7 @@ void Pomodoro::setTask(QString taskTitle)
 //-----------------------------------------------------------------
 void Pomodoro::updateProgress()
 {
-	unsigned long interval;
+	unsigned long interval = 0;
 	switch(m_status)
 	{
 		case Status::Pomodoro:
@@ -359,15 +379,16 @@ void Pomodoro::endPomodoro()
 	m_completedTasks[m_numPomodoros] = m_task;
 	++m_numPomodoros;
 
-	stopTimers();
-	disconnect(&m_timer, SIGNAL(timeout()), this, SLOT(endPomodoro()));
-
 	if (m_numPomodoros == m_sessionPomodoros)
 	{
-		invalidate();
+		stop();
+		m_icon = QIcon(QString(":/DesktopCapture/0.ico"));
 		emit sessionEnded();
 		return;
 	}
+
+	stopTimers();
+	disconnect(&m_timer, SIGNAL(timeout()), this, SLOT(endPomodoro()));
 
 	emit pomodoroEnded();
 	startShortBreak();
@@ -424,6 +445,12 @@ void Pomodoro::setSessionPodomodos(unsigned int value)
 		m_sessionPomodoros = value;
 }
 
+void Pomodoro::setPomodorosBeforeBreak(unsigned int value)
+{
+	if (m_status == Status::Stopped)
+		this->m_numBeforeBreak = value;
+}
+
 //-----------------------------------------------------------------
 QTime Pomodoro::completedSessionTime()
 {
@@ -447,4 +474,12 @@ QTime Pomodoro::elapsedTime()
 		returnTime = returnTime.addMSecs(m_elapsedMSeconds + m_startTime.elapsed());
 
 	return returnTime;
+}
+
+//-----------------------------------------------------------------
+void Pomodoro::clear()
+{
+	m_numPomodoros = 0;
+	m_numShortBreaks = 0;
+	m_numLongBreaks = 0;
 }

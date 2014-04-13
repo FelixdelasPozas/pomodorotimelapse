@@ -21,6 +21,7 @@ PomodoroStatistics::PomodoroStatistics(Pomodoro* pomodoro, bool paused, QWidget*
 , m_result{Result::None}
 {
 	setupUi(this);
+	setWindowFlags(Qt::Window | Qt::CustomizeWindowHint | Qt::WindowTitleHint| Qt::WindowSystemMenuHint);
 	setWindowTitle("Pomodoro Statistics");
 	setWindowIcon(QIcon(":/DesktopCapture/2.ico"));
 
@@ -32,11 +33,14 @@ PomodoroStatistics::PomodoroStatistics(Pomodoro* pomodoro, bool paused, QWidget*
 	connect(m_continue, SIGNAL(pressed()), this, SLOT(resume()));
 	connect(m_pause, SIGNAL(pressed()), this, SLOT(pause()));
 
-	m_timer.setInterval(1000);
-	m_timer.setSingleShot(false);
-	connect(&m_timer, SIGNAL(timeout()), this, SLOT(updateElapsedTime()), Qt::DirectConnection);
-	connect(m_taskButton, SIGNAL(pressed()), this, SLOT(updateTask()), Qt::QueuedConnection);
-	m_timer.start();
+	if(m_pomodoro->status() != Pomodoro::Status::Stopped)
+	{
+		m_timer.setInterval(1000);
+		m_timer.setSingleShot(false);
+		connect(&m_timer, SIGNAL(timeout()), this, SLOT(updateElapsedTime()), Qt::DirectConnection);
+		connect(m_taskButton, SIGNAL(pressed()), this, SLOT(updateTask()), Qt::QueuedConnection);
+		m_timer.start();
+	}
 
 	if(paused)
 		pause();
@@ -52,7 +56,7 @@ PomodoroStatistics::~PomodoroStatistics()
 //-----------------------------------------------------------------
 void PomodoroStatistics::invalidate()
 {
-	m_pomodoro->invalidate();
+	m_pomodoro->invalidateCurrent();
 }
 
 //-----------------------------------------------------------------
@@ -98,8 +102,13 @@ void PomodoroStatistics::pause()
 //-----------------------------------------------------------------
 void PomodoroStatistics::updateElapsedTime()
 {
-	QTime elapsedTime = m_pomodoro->elapsedTime();
-	m_elapsedTime->setText(elapsedTime.toString(Qt::TextDate));
+	if (m_pomodoro->status() == Pomodoro::Status::Stopped)
+		m_elapsedTime->setText("--:--:--");
+	else
+	{
+		QTime elapsedTime = m_pomodoro->elapsedTime();
+		m_elapsedTime->setText(elapsedTime.toString(Qt::TextDate));
+	}
 	m_elapsedTime->repaint();
 }
 
@@ -135,8 +144,6 @@ void PomodoroStatistics::updateGUI(Pomodoro::Status status)
 	QTime totalTime = QTime(0, 0, 0, 0);
 	totalTime = totalTime.addSecs(totalMs);
 
-	m_completedTime->setText(totalTime.toString(Qt::TextDate));
-
 	QTime elapsedTime = m_pomodoro->elapsedTime();
 	m_elapsedTime->setText(elapsedTime.toString(Qt::TextDate));
 
@@ -153,7 +160,14 @@ void PomodoroStatistics::updateGUI(Pomodoro::Status status)
 					m_status->setText("<span style=\" color:#000000;\">Paused</span>");
 				else
 					if (status == Pomodoro::Status::Stopped)
-						accept();
+					{
+						m_status->setText("<span style=\" color:#000000;\">Session finished</span>");
+						m_elapsedTime->setText("--:--:--");
+						m_invalidate->setEnabled(false);
+						m_pause->setEnabled(false);
+					}
+
+	m_completedTime->setText(totalTime.toString(Qt::TextDate));
 
 	m_taskName->setText(m_pomodoro->getTask());
 	repaint();

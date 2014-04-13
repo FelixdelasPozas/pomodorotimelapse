@@ -88,7 +88,10 @@ DesktopCapture::DesktopCapture()
 	connect(m_pomodoroUseSounds, SIGNAL(stateChanged(int)), this, SLOT(updateUseSounds(int)));
 	connect(m_captureAllMonitors, SIGNAL(stateChanged(int)), this, SLOT(updateMonitorsCheckBox(int)));
 	connect(m_captureMonitorComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(updateMonitorsComboBox(int)));
-	connect(m_taskEditButton, SIGNAL(pressed()), this, SLOT(updateTaskName()), Qt::QueuedConnection);
+	connect(m_taskEditButton, SIGNAL(pressed()), this, SLOT(updateTaskName()));
+	connect(m_overlayStats, SIGNAL(stateChanged(int)), this, SLOT(updatePomodoroOverlay(int)));
+	connect(m_pomodorosBreakNumber, SIGNAL(valueChanged(int)), this, SLOT(updatePomodoroValues()));
+	connect(m_pomodorosNumber, SIGNAL(valueChanged(int)), this, SLOT(updatePomodoroValues()));
 
 	m_screenshotImage->installEventFilter(this);
 
@@ -190,6 +193,7 @@ void DesktopCapture::loadConfiguration()
 		settings.setValue(POMODORO_TIME, pomodoroTime);
 	}
 	m_pomodoroTime->setTime(pomodoroTime);
+	m_pomodoro.setPomodoroTime(pomodoroTime);
 
 	QTime shortBreak;
 	if (settings.contains(POMODORO_SHORT_BREAK_TIME))
@@ -200,6 +204,7 @@ void DesktopCapture::loadConfiguration()
 		settings.setValue(POMODORO_SHORT_BREAK_TIME, shortBreak);
 	}
 	m_shortBreakTime->setTime(shortBreak);
+	m_pomodoro.setShortBreakTime(shortBreak);
 
 	QTime longBreak;
 	if (settings.contains(POMODORO_LONG_BREAK_TIME))
@@ -210,6 +215,7 @@ void DesktopCapture::loadConfiguration()
 		settings.setValue(POMODORO_LONG_BREAK_TIME, longBreak);
 	}
 	m_longBreakTime->setTime(longBreak);
+	m_pomodoro.setLongBreakTime(longBreak);
 
 	int pomodorosBeforeBreak;
 	if (settings.contains(POMODOROS_BEFORE_BREAK))
@@ -220,6 +226,7 @@ void DesktopCapture::loadConfiguration()
 		settings.setValue(POMODOROS_BEFORE_BREAK, pomodorosBeforeBreak);
 	}
 	m_pomodorosBreakNumber->setValue(pomodorosBeforeBreak);
+	m_pomodoro.setPomodorosBeforeBreak(pomodorosBeforeBreak);
 
 	bool animatePomodoro;
 	if (settings.contains(POMODOROS_ANIMATED_TRAY_ENABLED))
@@ -263,6 +270,7 @@ void DesktopCapture::loadConfiguration()
 		settings.setValue(POMODOROS_SESSION_NUMBER, pomodorosInSession);
 	}
 	m_pomodorosNumber->setValue(pomodorosInSession);
+	m_pomodoro.setSessionPodomodos(pomodorosInSession);
 
 	QString task;
 	if (settings.contains(POMODOROS_LAST_TASK))
@@ -546,7 +554,9 @@ void DesktopCapture::updateMonitorsCheckBox(int status)
 			if (m_cameraEnabled)
 			{
 				computeNewPIPPosition();
+				computeNewStatsPosition();
 				m_captureThread->setCameraOverlayPosition(m_PIPposition);
+				m_captureThread->setStatsOverlayPosition(m_statsPosition);
 			}
 			m_captureThread->setCaptureMonitor(m_captureMonitorComboBox->currentIndex());
 		}
@@ -676,6 +686,8 @@ void DesktopCapture::setupCaptureThread()
 		resolution = m_cameraResolutions.at(m_cameraResolutionComboBox->currentIndex());
 
 	m_captureThread = new CaptureDesktopThread(monitor, resolution, m_PIPposition, m_statsPosition, m_compositionMode, this);
+	if (m_pomodoroGroupBox->isChecked())
+		m_captureThread->setPomodoro(&m_pomodoro);
 
 	connect(m_captureThread, SIGNAL(render()), this, SLOT(renderImage()), Qt::QueuedConnection);
 	m_captureThread->start(QThread::Priority::NormalPriority);
@@ -730,6 +742,8 @@ bool DesktopCapture::eventFilter(QObject *object, QEvent *event)
 	if (!m_captureThread || !m_cameraEnabled->isChecked() || !m_screenshotImage->pixmap())
 		return object->eventFilter(object, event);
 
+	static bool insideCamera = false;
+	static bool insideStats = false;
 	static bool drag = false;
 
 	static QPoint dragPoint = QPoint(0, 0);
@@ -768,8 +782,24 @@ bool DesktopCapture::eventFilter(QObject *object, QEvent *event)
 		         (m_PIPposition.x()+cameraResolution.width < mappedPoint.x()) ||
 		         (m_PIPposition.y()+cameraResolution.height < mappedPoint.y()) )
 				{
-					break;
+					insideCamera = false;
 				}
+				else
+					insideCamera = true;
+
+				int height = 15 * ((2 * m_pomodoro.getPomodorosInSession() - 1) + (m_pomodoro.getPomodorosInSession() / m_pomodoro.getPomodorosBeforeBreak()) - ((m_pomodoro.getPomodorosInSession() % m_pomodoro.getPomodorosBeforeBreak() == 0) ? 1 : 0));
+				if ( (m_statsPosition.x() > mappedPoint.x()) ||
+		         (m_statsPosition.y() > mappedPoint.y()) ||
+		         (m_statsPosition.x()+250 < mappedPoint.x()) ||
+		         (m_statsPosition.y()+height < mappedPoint.y()) )
+				{
+					insideStats = false;
+				}
+				else
+					insideStats = true;
+
+				if(!insideCamera && !insideStats)
+					break;
 
 				m_cameraPositionComboBox->setCurrentIndex(0);
 				drag = true;
@@ -777,17 +807,29 @@ bool DesktopCapture::eventFilter(QObject *object, QEvent *event)
 			}
 			break;
 		case QEvent::MouseButtonRelease:
-			if ((me->button() == Qt::LeftButton) && drag)
+			if ((me->button() == Qt::LeftButton) && drag && (insideCamera || insideStats))
 			{
 				drag = false;
-				m_captureThread->setCameraOverlayPosition(computeNewPIPPosition(dragPoint, me->pos()));
+				if(insideCamera)
+					m_captureThread->setCameraOverlayPosition(computeNewPIPPosition(dragPoint, me->pos()));
+				else
+					if(insideStats)
+						m_captureThread->setStatsOverlayPosition(computeNewStatsPosition(dragPoint, me->pos()));
+
 				dragPoint = me->pos();
+				insideCamera = false;
+				insideStats = false;
 			}
 			break;
 		case QEvent::MouseMove:
-			if (drag)
+			if (drag && (insideCamera || insideStats))
 			{
-				m_captureThread->setCameraOverlayPosition(computeNewPIPPosition(dragPoint, me->pos()));
+				if(insideCamera)
+					m_captureThread->setCameraOverlayPosition(computeNewPIPPosition(dragPoint, me->pos()));
+				else
+					if(insideStats)
+						m_captureThread->setStatsOverlayPosition(computeNewStatsPosition(dragPoint, me->pos()));
+
 				dragPoint = me->pos();
 			}
 			break;
@@ -834,6 +876,43 @@ QPoint DesktopCapture::computeNewPIPPosition(const QPoint &dragPoint, const QPoi
 		m_PIPposition.setY(yLimit);
 
 	return m_PIPposition;
+}
+
+//-----------------------------------------------------------------
+QPoint DesktopCapture::computeNewStatsPosition(const QPoint &dragPoint, const QPoint &point)
+{
+	QSize imageGeometry = m_screenshotImage->pixmap()->size();
+	QRect geometry;
+	if (!m_captureAllMonitors->isChecked())
+		geometry = QApplication::desktop()->screenGeometry(m_captureMonitorComboBox->currentIndex());
+	else
+		geometry = QApplication::desktop()->geometry();
+
+	double ratioX = static_cast<double>(geometry.width()) / static_cast<double>(imageGeometry.width());
+	double ratioY = static_cast<double>(geometry.height()) / static_cast<double>(imageGeometry.height());
+
+	int height = 15 * ((2 * m_pomodoro.getPomodorosInSession() - 1) + (m_pomodoro.getPomodorosInSession() / m_pomodoro.getPomodorosBeforeBreak()) - ((m_pomodoro.getPomodorosInSession() % m_pomodoro.getPomodorosBeforeBreak() == 0) ? 1 : 0));
+	int dx = (point.x() - dragPoint.x())*ratioX;
+	int dy = (point.y() - dragPoint.y())*ratioY;
+	int xLimit = geometry.width() - 250;
+	int yLimit = geometry.height() - height;
+
+	m_statsPosition.setX(m_statsPosition.x() + dx);
+	m_statsPosition.setY(m_statsPosition.y() + dy);
+
+	if (m_statsPosition.x() < 0)
+		m_statsPosition.setX(0);
+
+	if (m_statsPosition.x() > xLimit)
+		m_statsPosition.setX(xLimit);
+
+	if (m_statsPosition.y() < 0)
+		m_statsPosition.setY(0);
+
+	if (m_statsPosition.y() > yLimit)
+		m_statsPosition.setY(yLimit);
+
+	return m_statsPosition;
 }
 
 //-----------------------------------------------------------------
@@ -938,11 +1017,8 @@ void DesktopCapture::startCapture()
 		if (m_pomodoroAnimateTray->isChecked() && (m_trayIcon != nullptr))
 			m_trayIcon->setIcon(QIcon(":/DesktopCapture/0-red.ico"));
 
-		m_pomodoro.setPomodoroTime(m_pomodoroTime->time());
-		m_pomodoro.setShortBreakTime(m_shortBreakTime->time());
-		m_pomodoro.setLongBreakTime(m_longBreakTime->time());
-		m_pomodoro.setTask(m_pomodoroTask->text());
-		connect(&m_pomodoro, SIGNAL(progress(unsigned int)), this, SLOT(updateTrayProgress(unsigned int)), Qt::DirectConnection);
+		updatePomodoroValues();
+		connect(&m_pomodoro, SIGNAL(progress(unsigned int)), this, SLOT(updateTrayProgress()), Qt::DirectConnection);
 		connect(&m_pomodoro, SIGNAL(pomodoroEnded()), this, SLOT(trayMessage()), Qt::DirectConnection);
 		connect(&m_pomodoro, SIGNAL(shortBreakEnded()), this, SLOT(trayMessage()), Qt::DirectConnection);
 		connect(&m_pomodoro, SIGNAL(longBreakEnded()), this, SLOT(trayMessage()), Qt::DirectConnection);
@@ -1068,7 +1144,7 @@ void DesktopCapture::updateCameraPositionComboBox(int status)
 }
 
 //-----------------------------------------------------------------
-void DesktopCapture::updateTrayProgress(unsigned int progress)
+void DesktopCapture::updateTrayProgress()
 {
 	if (m_trayIcon != nullptr)
 		m_trayIcon->setIcon(m_pomodoro.icon());
@@ -1089,6 +1165,7 @@ void DesktopCapture::trayMessage()
 		disconnect(&m_pomodoro, SIGNAL(sessionEnded()), this, SLOT(trayMessage()));
 		message = QString("Session pomodoros completed!");
 		nextStatus = Pomodoro::Status::Stopped;
+		updateTrayProgress();
 	}
 
 	if (m_pomodoro.status() == Pomodoro::Status::Pomodoro)
@@ -1226,6 +1303,8 @@ void DesktopCapture::stopCapture()
 			disconnect(&m_pomodoro, SIGNAL(longBreakEnded()), this, SLOT(trayMessage()));
 			disconnect(&m_pomodoro, SIGNAL(sessionEnded()), this, SLOT(trayMessage()));
 			m_pomodoroTask->setText(m_pomodoro.getTask());
+			m_pomodoro.stop();
+			m_pomodoro.clear();
 		}
 	}
 
@@ -1296,4 +1375,22 @@ void DesktopCapture::quitApplication()
 	m_pomodoro.pause(true);
 	stopCapture();
 	QApplication::instance()->quit();
+}
+
+//-----------------------------------------------------------------
+void DesktopCapture::updatePomodoroOverlay(int status)
+{
+	if(m_captureThread)
+		m_captureThread->setPomodoro((status == true ? &m_pomodoro : nullptr));
+}
+
+//-----------------------------------------------------------------
+void DesktopCapture::updatePomodoroValues()
+{
+	m_pomodoro.setPomodoroTime(m_pomodoroTime->time());
+	m_pomodoro.setShortBreakTime(m_shortBreakTime->time());
+	m_pomodoro.setLongBreakTime(m_longBreakTime->time());
+	m_pomodoro.setPomodorosBeforeBreak(m_pomodorosBreakNumber->value());
+	m_pomodoro.setSessionPodomodos(m_pomodorosNumber->value());
+	m_pomodoro.setTask(m_pomodoroTask->text());
 }

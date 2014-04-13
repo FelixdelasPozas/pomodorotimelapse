@@ -59,7 +59,7 @@ class DesktopCapture
 	  void startCapture();
 	  void capture();
 	  void updatePomodoro(bool status);
-	  void updateTrayProgress(unsigned int status);
+	  void updateTrayProgress();
 	  void trayMessage();
 	  void updateContinuousTicTac(int status);
 	  void updateUseSounds(int status);
@@ -70,6 +70,8 @@ class DesktopCapture
 	  void changeTask();
 	  void pausePomodoro();
 	  void quitApplication();
+	  void updatePomodoroOverlay(int status);
+	  void updatePomodoroValues();
 
 	private:
 	  static const QString CAPTURE_ENABLED;
@@ -111,6 +113,7 @@ class DesktopCapture
 	  void setupCaptureThread();
 	  void saveCapture(QPixmap *);
 	  QPoint computeNewPIPPosition(const QPoint &dragPoint = QPoint(0,0), const QPoint &point = QPoint(0,0));
+	  QPoint computeNewStatsPosition(const QPoint &dragPoint = QPoint(0,0), const QPoint &point = QPoint(0,0));
 
 		QStringList           m_cameraResolutionsNames;
 		ResolutionList        m_cameraResolutions;
