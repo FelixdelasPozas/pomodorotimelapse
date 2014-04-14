@@ -661,14 +661,27 @@ void DesktopCapture::activateTrayIcon(QSystemTrayIcon::ActivationReason reason)
 	if ((reason) && (reason != QSystemTrayIcon::DoubleClick))
 		return;
 
-	if(m_pomodoroGroupBox->isChecked() && (m_pomodoro.status() != Pomodoro::Status::Stopped))
+	if(!m_started)
 	{
-		m_paused = false;
-		showStatistics();
+		m_trayIcon->hide();
+
+		if (m_captureThread != nullptr)
+			m_captureThread->resume();
+
+		show();
+		setWindowState(windowState() & (~Qt::WindowMinimized | Qt::WindowActive));
 	}
 	else
 	{
-		stopCaptureAction();
+		if(m_pomodoroGroupBox->isChecked() && (m_pomodoro.status() != Pomodoro::Status::Stopped))
+		{
+			m_paused = false;
+			showStatistics();
+		}
+		else
+		{
+			stopCaptureAction();
+		}
 	}
 }
 
