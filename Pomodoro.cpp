@@ -9,6 +9,7 @@
 #include <QString>
 #include <QDir>
 #include <QFile>
+#include <QDebug>
 
 // Length of sounds
 static const int LENGTH_CRANK  = 530;
@@ -146,6 +147,7 @@ void Pomodoro::startPomodoro()
 	connect(&m_timer, SIGNAL(timeout()), this, SLOT(endPomodoro()), Qt::QueuedConnection);
 	m_progressTimer.setInterval(m_pomodoroTime / 8);
 	m_status = Status::Pomodoro;
+	m_progress = 0;
 	emit beginPomodoro();
 	startTimers();
 }
@@ -157,6 +159,7 @@ void Pomodoro::startShortBreak()
 	connect(&m_timer, SIGNAL(timeout()), this, SLOT(endShortBreak()), Qt::QueuedConnection);
 	m_progressTimer.setInterval(m_shortBreakTime / 8);
 	m_status = Status::ShortBreak;
+	m_progress = 0;
 	emit beginShortBreak();
 	startTimers();
 }
@@ -168,6 +171,7 @@ void Pomodoro::startLongBreak()
 	connect(&m_timer, SIGNAL(timeout()), this, SLOT(endLongBreak()), Qt::QueuedConnection);
 	m_progressTimer.setInterval(m_longBreakTime / 8);
 	m_status = Status::LongBreak;
+	m_progress = 0;
 	emit beginLongBreak();
 	startTimers();
 }
@@ -183,19 +187,11 @@ void Pomodoro::start()
 	m_progress = 0;
 	m_completedTasks.clear();
 
-	if (m_numPomodoros == 0 || ((m_numPomodoros == m_numShortBreaks) && (m_numPomodoros % m_numBeforeBreak != 0)))
-		startPomodoro();
-	else
-	{
-		if (m_numPomodoros % m_numBeforeBreak != 0)
-			startShortBreak();
-		else
-			startLongBreak();
-	}
+	startPomodoro();
 }
 
 //-----------------------------------------------------------------
-void Pomodoro::pause(bool value)
+void Pomodoro::pause()
 {
 	static Status oldStatus;
 
@@ -217,49 +213,48 @@ void Pomodoro::pause(bool value)
 		}
 	}
 	else
-		if (Status::Paused == m_status)
+	{
+		// resume
+		QTime time = QTime(0, 0, 0, 0);
+		time = time.addMSecs(m_elapsedMSeconds);
+		unsigned long mSeconds = 0;
+		unsigned long progressInterval = 0;
+		unsigned long progressMSeconds = 0;
+		if (Status::Pomodoro == oldStatus)
 		{
-			// resume
-			QTime time = QTime(0,0,0,0);
-			time = time.addMSecs(m_elapsedMSeconds);
-			unsigned long mSeconds = 0;
-			unsigned long progressInterval = 0;
-			unsigned long progressMSeconds = 0;
-			if (Status::Pomodoro == oldStatus)
+			mSeconds = time.msecsTo(getPomodoroTime());
+			progressInterval = m_pomodoroTime / 8;
+			progressMSeconds = m_pomodoroTime - m_elapsedMSeconds;
+		}
+		else
+			if (Status::ShortBreak == oldStatus)
 			{
-				mSeconds = time.msecsTo(getPomodoroTime());
-				progressInterval = m_pomodoroTime / 8;
-				progressMSeconds = m_pomodoroTime - m_elapsedMSeconds;
+				mSeconds = time.msecsTo(getShortBreakTime());
+				progressInterval = m_shortBreakTime / 8;
+				progressMSeconds = m_shortBreakTime - m_elapsedMSeconds;
 			}
 			else
-				if(Status::ShortBreak == oldStatus)
+				if (Status::LongBreak == oldStatus)
 				{
-					mSeconds = time.msecsTo(getShortBreakTime());
-					progressInterval = m_shortBreakTime / 8;
-					progressMSeconds = m_shortBreakTime - m_elapsedMSeconds;
+					mSeconds = time.msecsTo(getLongBreakTime());
+					progressInterval = m_longBreakTime / 8;
+					progressMSeconds = m_longBreakTime - m_elapsedMSeconds;
 				}
-				else
-					if(Status::LongBreak == oldStatus)
-					{
-						mSeconds = time.msecsTo(getLongBreakTime());
-						progressInterval = m_longBreakTime / 8;
-						progressMSeconds = m_longBreakTime - m_elapsedMSeconds;
-					}
 
-			m_status = oldStatus;
+		m_status = oldStatus;
 
-			m_startTime = QTime(0,0,0,0);
-			m_startTime.start();
-			m_timer.setInterval(mSeconds);
-			m_timer.start();
+		m_startTime = QTime(0, 0, 0, 0);
+		m_startTime.start();
+		m_timer.setInterval(mSeconds);
+		m_timer.start();
 
-			progressMSeconds = progressMSeconds % progressInterval;
-			m_progressTimer.setInterval(progressMSeconds);
-			m_progressTimer.start();
+		progressMSeconds = progressMSeconds % progressInterval;
+		m_progressTimer.setInterval(progressMSeconds);
+		m_progressTimer.start();
 
-			if (m_continuousTicTac)
-				m_tictac->play();
-		}
+		if (m_continuousTicTac)
+			m_tictac->play();
+	}
 }
 
 //-----------------------------------------------------------------
@@ -278,9 +273,27 @@ void Pomodoro::stop()
 		return;
 
 	stopTimers();
-	m_timer.disconnect(&m_timer, SIGNAL(timeout()), this, SLOT(endPomodoro()));
-	m_timer.disconnect(&m_timer, SIGNAL(timeout()), this, SLOT(endLongBreak()));
-	m_timer.disconnect(&m_timer, SIGNAL(timeout()), this, SLOT(endShortBreak()));
+	switch(m_status)
+	{
+		case Status::Pomodoro:
+			m_timer.disconnect(&m_timer, SIGNAL(timeout()), this, SLOT(endPomodoro()));
+			break;
+		case Status::ShortBreak:
+			m_timer.disconnect(&m_timer, SIGNAL(timeout()), this, SLOT(endShortBreak()));
+			break;
+		case Status::LongBreak:
+			m_timer.disconnect(&m_timer, SIGNAL(timeout()), this, SLOT(endLongBreak()));
+			break;
+		case Status::Paused:
+			pause();
+			stop();
+			return;
+			break;
+		default:
+			Q_ASSERT(false);
+			break;
+	}
+
 	m_status = Status::Stopped;
 }
 
@@ -290,23 +303,27 @@ void Pomodoro::invalidateCurrent()
 	if (Status::Stopped == m_status)
 		return;
 
-	stopTimers();
-	m_timer.disconnect(&m_timer, SIGNAL(timeout()), this, SLOT(endPomodoro()));
-	m_timer.disconnect(&m_timer, SIGNAL(timeout()), this, SLOT(endLongBreak()));
-	m_timer.disconnect(&m_timer, SIGNAL(timeout()), this, SLOT(endShortBreak()));
-	m_progress = 0;
+	if(Status::Paused != m_status)
+		stopTimers();
+
 	switch(m_status)
 	{
 		case Status::Pomodoro:
+			m_timer.disconnect(&m_timer, SIGNAL(timeout()), this, SLOT(endPomodoro()));
 			startPomodoro();
 			break;
 		case Status::ShortBreak:
+			m_timer.disconnect(&m_timer, SIGNAL(timeout()), this, SLOT(endShortBreak()));
 			startShortBreak();
 			break;
 		case Status::LongBreak:
+			m_timer.disconnect(&m_timer, SIGNAL(timeout()), this, SLOT(endLongBreak()));
 			startLongBreak();
 			break;
 		case Status::Paused:
+			pause();
+			invalidateCurrent();
+			break;
 		default:
 			break;
 	}
@@ -482,4 +499,34 @@ void Pomodoro::clear()
 	m_numPomodoros = 0;
 	m_numShortBreaks = 0;
 	m_numLongBreaks = 0;
+}
+
+//-----------------------------------------------------------------
+QString Pomodoro::statusMessage()
+{
+	QString returnVal;
+
+	switch(m_status)
+	{
+		case Status::Stopped:
+			returnVal = QString("Stopped.");
+			break;
+		case Status::Pomodoro:
+			returnVal = QString("In a pomodoro.");
+			break;
+		case Status::ShortBreak:
+			returnVal = QString("In a short break.");
+			break;
+		case Status::LongBreak:
+			returnVal = QString("In a long break.");
+			break;
+		case Status::Paused:
+			returnVal = QString("Paused.");
+			break;
+		default:
+			Q_ASSERT(false);
+			break;
+	}
+
+	return returnVal;
 }

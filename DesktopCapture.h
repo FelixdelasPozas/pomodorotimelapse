@@ -63,7 +63,7 @@ class DesktopCapture
 	  void trayMessage();
 	  void updateContinuousTicTac(int status);
 	  void updateUseSounds(int status);
-	  void statisticsDialogClosed(int unused);
+	  void statisticsDialogClosed();
 	  void updateTaskName();
 	  void stopCaptureAction();
 	  void showStatistics();

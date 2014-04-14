@@ -15,6 +15,7 @@
 // Qt
 #include <QImage>
 #include <QDebug>
+#include <QFile>
 
 const int VPX_Interface::VP8_quality_values[3]{ VPX_DL_REALTIME, VPX_DL_GOOD_QUALITY, VPX_DL_BEST_QUALITY };
 
@@ -96,7 +97,11 @@ VPX_Interface::~VPX_Interface()
 		qDebug() << "Failed to destroy codec";
 	}
 
-	write_webm_file_footer(&m_ebml, m_hash);
+	if (m_frameNumber != 0)
+		write_webm_file_footer(&m_ebml, m_hash);
+	else
+		QFile::remove(m_vp8_filename);
+
 	fclose(m_ebml.stream);
 }
 

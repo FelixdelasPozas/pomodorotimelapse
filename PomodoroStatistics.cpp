@@ -78,23 +78,16 @@ void PomodoroStatistics::resume()
 void PomodoroStatistics::pause()
 {
 	if (!m_paused)
-	{
-		m_paused = true;
-		m_pomodoro->pause(true);
 		m_pause->setText("Resume");
-		m_invalidate->setEnabled(false);
-		m_continue->setEnabled(false);
-		m_stop->setEnabled(false);
-	}
 	else
-	{
-		m_paused = false;
-		m_pomodoro->pause(false);
 		m_pause->setText("Pause");
-		m_invalidate->setEnabled(true);
-		m_continue->setEnabled(true);
-		m_stop->setEnabled(true);
-	}
+
+	m_invalidate->setEnabled(m_paused);
+	m_continue->setEnabled(m_paused);
+	m_stop->setEnabled(m_paused);
+
+	m_paused = !m_paused;
+	m_pomodoro->pause();
 
 	updateGUI(m_pomodoro->status());
 }

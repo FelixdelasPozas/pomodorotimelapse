@@ -43,7 +43,7 @@ class Pomodoro
 		virtual ~Pomodoro();
 
 		void start();
-		void pause(bool value);
+		void pause();
 		void stop();
 		void invalidateCurrent();
 		unsigned int elapsed();
@@ -88,6 +88,8 @@ class Pomodoro
 	  enum class Status : std::int8_t { Pomodoro = 1, ShortBreak = 2, LongBreak = 3, Stopped = 4, Paused = 5 };
 	  Status status()
 	  { return m_status; };
+
+	  QString statusMessage();
 
 
 	signals:

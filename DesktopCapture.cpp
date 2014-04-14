@@ -102,7 +102,6 @@ DesktopCapture::DesktopCapture()
 //-----------------------------------------------------------------
 DesktopCapture::~DesktopCapture()
 {
-	saveConfiguration();
 	if (m_captureThread)
 	{
 		if(m_started)
@@ -114,6 +113,8 @@ DesktopCapture::~DesktopCapture()
 	}
 
 	delete m_captureThread;
+
+	saveConfiguration();
 }
 
 //-----------------------------------------------------------------
@@ -609,10 +610,11 @@ void DesktopCapture::setupTrayIcon()
 	if(!QSystemTrayIcon::isSystemTrayAvailable())
 		return;
 
+	QMenu *menu = new QMenu(this);
 	m_trayIcon = new QSystemTrayIcon(this);
 	m_trayIcon->setIcon(QIcon(":/DesktopCapture/application.ico"));
-
-	QMenu *menu = new QMenu(this);
+	m_trayIcon->setContextMenu(menu);
+	connect(m_trayIcon, SIGNAL(activated(QSystemTrayIcon::ActivationReason)), this, SLOT(activateTrayIcon(QSystemTrayIcon::ActivationReason)));
 
 	m_menuPause = new QAction(QString("Pause pomodoro"), menu);
 	connect(m_menuPause, SIGNAL(triggered()), this, SLOT(pausePomodoro()), Qt::QueuedConnection);
@@ -628,9 +630,6 @@ void DesktopCapture::setupTrayIcon()
 
 	m_menuQuit = new QAction(QString("Exit application"), menu);
 	connect(m_menuQuit, SIGNAL(triggered()), this, SLOT(quitApplication()), Qt::QueuedConnection);
-
-	m_trayIcon->setContextMenu(menu);
-	connect(m_trayIcon, SIGNAL(activated(QSystemTrayIcon::ActivationReason)), this, SLOT(activateTrayIcon(QSystemTrayIcon::ActivationReason)));
 }
 
 //-----------------------------------------------------------------
@@ -686,6 +685,7 @@ void DesktopCapture::setupCaptureThread()
 		resolution = m_cameraResolutions.at(m_cameraResolutionComboBox->currentIndex());
 
 	m_captureThread = new CaptureDesktopThread(monitor, resolution, m_PIPposition, m_statsPosition, m_compositionMode, this);
+
 	if (m_pomodoroGroupBox->isChecked())
 		m_captureThread->setPomodoro(&m_pomodoro);
 
@@ -925,16 +925,18 @@ void DesktopCapture::closeEvent(QCloseEvent *event)
 //-----------------------------------------------------------------
 void DesktopCapture::startCapture()
 {
-	QString trayMessage;
 	if (!m_captureGroupBox->isChecked() && !m_pomodoroGroupBox->isChecked())
 		return;
 
+	QString trayMessage;
 	m_started = true;
 
 	if (m_captureGroupBox->isChecked())
 	{
-		if (m_captureThread && !m_captureThread->isPaused())
-		m_captureThread->pause();
+		Q_ASSERT(m_captureThread != nullptr);
+
+		if (!m_captureThread->isPaused())
+			m_captureThread->pause();
 
 		auto time = m_screeshotTime->time();
 		int ms = time.second() * 1000 + time.minute() * 1000 * 60 + time.hour() * 60 * 60 * 1000 + time.msec();
@@ -963,8 +965,8 @@ void DesktopCapture::startCapture()
 		if (time.second() != 0)
 		{
 			message += QString(" %1 second").arg(time.second());
-			if (time.second() > 1)
 
+			if (time.second() > 1)
 				message += QString("s");
 		}
 
@@ -1039,7 +1041,11 @@ void DesktopCapture::startCapture()
 		menu->addSeparator();
 		menu->addAction(m_menuQuit);
 
-		m_trayIcon->setToolTip(QString("In a pomodoro."));
+		if (m_pomodoroGroupBox->isChecked())
+			m_trayIcon->setToolTip(m_pomodoro.statusMessage());
+		else
+			m_trayIcon->setToolTip(QString("Capturing desktop."));
+
 		m_trayIcon->show();
 		m_trayIcon->showMessage(QString("Started"), trayMessage, QSystemTrayIcon::MessageIcon::Information, 1000);
 	}
@@ -1131,6 +1137,9 @@ void DesktopCapture::updatePomodoro(bool status)
 {
 	m_startButton->setEnabled(m_captureGroupBox->isChecked() || status);
 	m_continuousTicTac->setEnabled(status && m_pomodoroUseSounds->isChecked());
+	m_overlayStats->setEnabled(status);
+	if (m_captureThread)
+		m_captureThread->setPomodoro((status && m_captureGroupBox->isChecked() && this->m_overlayStats->isChecked()) ? &m_pomodoro : nullptr);
 }
 
 //-----------------------------------------------------------------
@@ -1165,7 +1174,6 @@ void DesktopCapture::trayMessage()
 		disconnect(&m_pomodoro, SIGNAL(sessionEnded()), this, SLOT(trayMessage()));
 		message = QString("Session pomodoros completed!");
 		nextStatus = Pomodoro::Status::Stopped;
-		updateTrayProgress();
 	}
 
 	if (m_pomodoro.status() == Pomodoro::Status::Pomodoro)
@@ -1210,6 +1218,7 @@ void DesktopCapture::trayMessage()
 	{
 		m_trayIcon->showMessage(QString("Pomodoro Timer"), message, QSystemTrayIcon::MessageIcon::NoIcon, 1000);
 		m_trayIcon->setToolTip(tooltip);
+		updateTrayProgress();
 	}
 
 	if (m_statisticsDialog != nullptr)
@@ -1232,41 +1241,16 @@ void DesktopCapture::updateUseSounds(int status)
 }
 
 //-----------------------------------------------------------------
-void DesktopCapture::statisticsDialogClosed(int unused)
+void DesktopCapture::statisticsDialogClosed()
 {
-	disconnect(m_statisticsDialog, SIGNAL(finished(int)), this, SLOT(statisticsDialogClosed(int)));
+	disconnect(m_statisticsDialog, SIGNAL(finished(int)), this, SLOT(statisticsDialogClosed()));
 	PomodoroStatistics::Result result = m_statisticsDialog->getResult();
 
 	delete m_statisticsDialog;
 	m_statisticsDialog = nullptr;
 
 	if (result == PomodoroStatistics::Result::Stop)
-	{
-		m_trayIcon->hide();
-		m_trayIcon->setIcon(QIcon(":/DesktopCapture/application.ico"));
-
-		if (m_started)
-		{
-			m_started = false;
-			if (m_captureGroupBox->isChecked())
-				disconnect(&m_timer, SIGNAL(timeout()), this, SLOT(capture()));
-
-			if (m_pomodoroGroupBox->isChecked())
-			{
-				disconnect(&m_pomodoro, SIGNAL(pomodoroEnded()), this, SLOT(trayMessage()));
-				disconnect(&m_pomodoro, SIGNAL(shortBreakEnded()), this, SLOT(trayMessage()));
-				disconnect(&m_pomodoro, SIGNAL(longBreakEnded()), this, SLOT(trayMessage()));
-				disconnect(&m_pomodoro, SIGNAL(sessionEnded()), this, SLOT(trayMessage()));
-				m_pomodoroTask->setText(m_pomodoro.getTask());
-			}
-		}
-
-		if (m_captureThread)
-			m_captureThread->resume();
-
-		show();
-		setWindowState(windowState() & (~Qt::WindowMinimized | Qt::WindowActive));
-	}
+		stopCaptureAction();
 }
 
 //-----------------------------------------------------------------
@@ -1289,32 +1273,28 @@ void DesktopCapture::stopCaptureAction()
 //-----------------------------------------------------------------
 void DesktopCapture::stopCapture()
 {
-	if (m_started)
+	m_started = false;
+
+	if (m_captureGroupBox->isChecked())
+		disconnect(&m_timer, SIGNAL(timeout()), this, SLOT(capture()));
+
+	if (m_pomodoroGroupBox->isChecked())
 	{
-		m_started = false;
-
-		if (m_captureGroupBox->isChecked())
-			disconnect(&m_timer, SIGNAL(timeout()), this, SLOT(capture()));
-
-		if (m_pomodoroGroupBox->isChecked())
-		{
-			disconnect(&m_pomodoro, SIGNAL(pomodoroEnded()), this, SLOT(trayMessage()));
-			disconnect(&m_pomodoro, SIGNAL(shortBreakEnded()), this, SLOT(trayMessage()));
-			disconnect(&m_pomodoro, SIGNAL(longBreakEnded()), this, SLOT(trayMessage()));
-			disconnect(&m_pomodoro, SIGNAL(sessionEnded()), this, SLOT(trayMessage()));
-			m_pomodoroTask->setText(m_pomodoro.getTask());
-			m_pomodoro.stop();
-			m_pomodoro.clear();
-		}
+		disconnect(&m_pomodoro, SIGNAL(pomodoroEnded()), this, SLOT(trayMessage()));
+		disconnect(&m_pomodoro, SIGNAL(shortBreakEnded()), this, SLOT(trayMessage()));
+		disconnect(&m_pomodoro, SIGNAL(longBreakEnded()), this, SLOT(trayMessage()));
+		disconnect(&m_pomodoro, SIGNAL(sessionEnded()), this, SLOT(trayMessage()));
+		m_pomodoroTask->setText(m_pomodoro.getTask());
+		m_pomodoro.stop();
+		m_pomodoro.clear();
 	}
 
 	if (m_captureThread)
 	{
-		if (m_secuentialNumber != 0)
-		{
+		if(m_captureVideo->isChecked())
 			delete m_vp8_interface;
-			m_secuentialNumber = 0;
-		}
+
+		m_secuentialNumber = 0;
 		m_captureThread->resume();
 	}
 
@@ -1334,15 +1314,13 @@ void DesktopCapture::stopCapture()
 //-----------------------------------------------------------------
 void DesktopCapture::showStatistics()
 {
-	if (m_statisticsDialog != nullptr)
+	if (m_statisticsDialog == nullptr)
 	{
-		m_statisticsDialog->raise();
-		return;
+		m_statisticsDialog = new PomodoroStatistics(&m_pomodoro, m_paused, this);
+		connect(m_statisticsDialog, SIGNAL(finished(int)), this, SLOT(statisticsDialogClosed()), Qt::QueuedConnection);
+		m_statisticsDialog->show();
 	}
 
-	m_statisticsDialog = new PomodoroStatistics(&m_pomodoro, m_paused, this);
-	connect(m_statisticsDialog, SIGNAL(finished(int)), this, SLOT(statisticsDialogClosed(int)), Qt::QueuedConnection);
-	m_statisticsDialog->show();
 	m_statisticsDialog->raise();
 }
 
@@ -1366,13 +1344,14 @@ void DesktopCapture::changeTask()
 void DesktopCapture::pausePomodoro()
 {
 	m_paused = true;
+	m_pomodoro.pause();
 	showStatistics();
 }
 
 //-----------------------------------------------------------------
 void DesktopCapture::quitApplication()
 {
-	m_pomodoro.pause(true);
+	m_pomodoro.stop();
 	stopCapture();
 	QApplication::instance()->quit();
 }
@@ -1381,7 +1360,7 @@ void DesktopCapture::quitApplication()
 void DesktopCapture::updatePomodoroOverlay(int status)
 {
 	if(m_captureThread)
-		m_captureThread->setPomodoro((status == true ? &m_pomodoro : nullptr));
+		m_captureThread->setPomodoro(status ? &m_pomodoro : nullptr);
 }
 
 //-----------------------------------------------------------------
