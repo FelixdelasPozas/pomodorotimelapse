@@ -1385,4 +1385,7 @@ void DesktopCapture::updatePomodoroValues()
 	m_pomodoro.setPomodorosBeforeBreak(m_pomodorosBreakNumber->value());
 	m_pomodoro.setSessionPodomodos(m_pomodorosNumber->value());
 	m_pomodoro.setTask(m_pomodoroTask->text());
+
+	if(m_overlayStats->isChecked() && m_pomodoroGroupBox->isChecked() && m_captureThread)
+		m_captureThread->setStatsOverlayPosition(computeNewStatsPosition());
 }
