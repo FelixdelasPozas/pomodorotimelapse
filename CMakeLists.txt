@@ -23,8 +23,8 @@ include(${QT_USE_FILE})
 
 find_package(OpenCV REQUIRED)
 
-set(LIBVPX_LIBRARY_DIR "D:/Desarrollo/Libs/libvpx-v1.3.0")
-set(LIBYUV_INCLUDE_DIR "D:/Desarrollo/Libs/libyuv/include")
+set(LIBVPX_LIBRARY_DIR "D:/Desarrollo/Bibliotecas/libvpx")
+set(LIBYUV_INCLUDE_DIR "D:/Desarrollo/Bibliotecas/libyuv/include")
 
 include_directories(
   ${CMAKE_SOURCE_DIR}
@@ -77,11 +77,11 @@ set (CORE_SOURCES
 )
 
 set(VPX_LIBS
-  D:/Desarrollo/Libs/libvpx-v1.3.0/libvpx.a
+  D:/Desarrollo/Bibliotecas/libvpx/libvpx.a
 )
 
 set(YUV_LIBS
-  D:/Desarrollo/Libs/libyuv/lib/libyuv.a
+  D:/Desarrollo/Bibliotecas/libyuv-build/libyuv.a
 )
 
 set(CORE_EXTERNAL_LIBS
