@@ -1,21 +1,38 @@
 /*
- * Resolutions.h
- *
- *  Created on: 17/01/2014
- *      Author: Felix de las Pozas Alvarez
+    File: Resolutions.h
+    Created on: 17/01/2014
+    Author: Felix de las Pozas Alvarez
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #ifndef COMMON_RESOLUTIONS_LIST_H_
 #define COMMON_RESOLUTIONS_LIST_H_
 
+// Qt
 #include <QString>
 #include <QList>
 
+/** \struct Resolution
+ *  \brief Contains the resolution's height, width and name.
+ *
+ */
 struct Resolution
 {
-	QString name;
-	double width;
-	double height;
+	QString name;  /** name of the resolution */
+	double width;  /** width of the resolution */
+	double height; /** height of the resolution */
 
 	Resolution(QString rName, double rWidth, double rHeight): name{rName}, width{rWidth}, height{rHeight} {};
 	Resolution(): name{QString()}, width{0}, height{0} {};
@@ -29,6 +46,7 @@ struct Resolution
 
 using ResolutionList = QList<Resolution>;
 
+//
 static const ResolutionList CommonResolutions = { { QString("SQCIF"), 128, 96 },
 																									{ QString("QQVGA"), 160, 120 },
 																									{ QString("QCIF"), 176, 144 },
@@ -102,48 +120,27 @@ static const ResolutionList CommonResolutions = { { QString("SQCIF"), 128, 96 },
 																									{ QString("WHUXGA"), 7680, 4800 },
 																									{ QString("QUHD(16K)"), 15360, 8640 } };
 
+//-----------------------------------------------------------------
 inline QString getResolutionAsString(const Resolution &res)
 {
 	return QString("%1x%2 - ").arg(res.width).arg(res.height) + res.name;
 }
 
+//-----------------------------------------------------------------
 inline Resolution getResolution(const int width, const int height)
 {
 	Resolution match;
 
-	for (Resolution resolution: CommonResolutions)
+	for (auto resolution: CommonResolutions)
+	{
 		if (resolution.width == width && resolution.height == height)
 		{
 			match = resolution;
 			break;
 		}
+	}
 
 	return match;
 }
 
 #endif // COMMON_RESOLUTIONS_LIST_H_ */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

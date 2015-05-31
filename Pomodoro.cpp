@@ -5,10 +5,15 @@
  *      Author: Felix de las Pozas Alvarez
  */
 
+// Project
 #include <Pomodoro.h>
+
+// Qt
+#include <QTemporaryFile>
 #include <QString>
 #include <QDir>
 #include <QFile>
+#include <QSound>
 #include <QDebug>
 
 // Length of sounds
@@ -18,51 +23,53 @@ static const int LENGTH_RING   = 1300;
 
 //-----------------------------------------------------------------
 Pomodoro::Pomodoro()
-: m_pomodoroTime{25 * 60 * 1000}
-, m_shortBreakTime{5 * 60 * 1000}
-, m_longBreakTime{15 * 60 * 1000}
-, m_numBeforeBreak{4}
-, m_numPomodoros{0}
-, m_numShortBreaks{0}
-, m_numLongBreaks{0}
-, m_task{QString("Undefined task")}
-, m_progress{0}
-, m_status{Status::Stopped}
+: m_pomodoroTime    {25 * 60 * 1000}
+, m_shortBreakTime  {5 * 60 * 1000}
+, m_longBreakTime   {15 * 60 * 1000}
+, m_numBeforeBreak  {4}
+, m_numPomodoros    {0}
+, m_numShortBreaks  {0}
+, m_numLongBreaks   {0}
+, m_task            {QString("Undefined task")}
+, m_progress        {0}
+, m_status          {Status::Stopped}
 , m_continuousTicTac{false}
 , m_sessionPomodoros{12}
-, m_useSounds{true}
-, m_elapsedMSeconds{0}
+, m_useSounds       {true}
+, m_elapsedMSeconds {0}
 {
 	m_timer.setSingleShot(true);
 	m_progressTimer.setSingleShot(false);
-	connect(&m_progressTimer, SIGNAL(timeout()), this, SLOT(updateProgress()), Qt::QueuedConnection);
 
-	QDir temporalPath = QDir::tempPath();
+	connect(&m_progressTimer, SIGNAL(timeout()),
+	        this,             SLOT(updateProgress()), Qt::QueuedConnection);
 
 	// NOTE: Load sound files. QSound can´t play a file from the qt resource file
 	// so we will dump them first to the temporal directory, then load the resources
 	// and delete them.
-	QString fileName = temporalPath.absolutePath() + QString("/tictac.wav");
-	QFile::copy(":/DesktopCapture/sounds/tictac.wav", fileName);
-	m_tictac = new QSound(fileName);
-	QFile::remove(fileName);
+	QTemporaryFile tictac;
+	tictac.open();
+	tictac.copy(":/DesktopCapture/sounds/tictac.wav");
+  m_tictac = new QSound(tictac.fileName(), this);
 
-	fileName = temporalPath.absolutePath() + QString("/crank.wav");
-	QFile::copy(":/DesktopCapture/sounds/crank.wav", fileName);
-	m_crank = new QSound(fileName);
-	QFile::remove(fileName);
+  QTemporaryFile crank;
+  crank.open();
+  crank.copy(":/DesktopCapture/sounds/crank.wav");
+  m_crank = new QSound(crank.fileName(), this);
 
-	fileName = temporalPath.absolutePath() + QString("/deskbell.wav");
-	QFile::copy(":/DesktopCapture/sounds/deskbell.wav", fileName);
-	m_ring = new QSound(fileName);
-	QFile::remove(fileName);
+  QTemporaryFile deskbell;
+  deskbell.open();
+  deskbell.copy(":/DesktopCapture/sounds/deskbell.wav");
+  m_ring = new QSound(deskbell.fileName(), this);
 }
 
 //-----------------------------------------------------------------
 Pomodoro::~Pomodoro()
 {
 	if (m_status != Status::Stopped)
+	{
 		stop();
+	}
 
 	// delete sounds
 	delete m_tictac;
@@ -74,7 +81,9 @@ Pomodoro::~Pomodoro()
 void Pomodoro::setUseSounds(bool value)
 {
 	if (m_status == Status::Stopped)
+	{
 		m_useSounds = value;
+	}
 }
 
 //-----------------------------------------------------------------
@@ -97,7 +106,7 @@ void Pomodoro::startTimers()
 }
 
 //-----------------------------------------------------------------
-QTime Pomodoro::getPomodoroTime()
+QTime Pomodoro::getPomodoroDuration() const
 {
 	QTime time = QTime(0, 0, 0, 0);
 	time = time.addMSecs(m_pomodoroTime);
@@ -105,7 +114,7 @@ QTime Pomodoro::getPomodoroTime()
 }
 
 //-----------------------------------------------------------------
-QTime Pomodoro::getShortBreakTime()
+QTime Pomodoro::getShortBreakDuration() const
 {
 	QTime time = QTime(0, 0, 0, 0);
 	time = time.addMSecs(m_shortBreakTime);
@@ -113,7 +122,7 @@ QTime Pomodoro::getShortBreakTime()
 }
 
 //-----------------------------------------------------------------
-QTime Pomodoro::getLongBreakTime()
+QTime Pomodoro::getLongBreakDuration() const
 {
 	QTime time = QTime(0, 0, 0, 0);
 	time = time.addMSecs(m_longBreakTime);
@@ -144,11 +153,16 @@ void Pomodoro::stopTimers()
 void Pomodoro::startPomodoro()
 {
 	m_timer.setInterval(m_pomodoroTime);
-	connect(&m_timer, SIGNAL(timeout()), this, SLOT(endPomodoro()), Qt::QueuedConnection);
+
+	connect(&m_timer, SIGNAL(timeout()),
+	        this,     SLOT(endPomodoro()), Qt::QueuedConnection);
+
 	m_progressTimer.setInterval(m_pomodoroTime / 8);
 	m_status = Status::Pomodoro;
 	m_progress = 0;
+
 	emit beginPomodoro();
+
 	startTimers();
 }
 
@@ -156,11 +170,16 @@ void Pomodoro::startPomodoro()
 void Pomodoro::startShortBreak()
 {
 	m_timer.setInterval(m_shortBreakTime);
-	connect(&m_timer, SIGNAL(timeout()), this, SLOT(endShortBreak()), Qt::QueuedConnection);
+
+	connect(&m_timer, SIGNAL(timeout()),
+	        this,     SLOT(endShortBreak()), Qt::QueuedConnection);
+
 	m_progressTimer.setInterval(m_shortBreakTime / 8);
 	m_status = Status::ShortBreak;
 	m_progress = 0;
+
 	emit beginShortBreak();
+
 	startTimers();
 }
 
@@ -168,11 +187,16 @@ void Pomodoro::startShortBreak()
 void Pomodoro::startLongBreak()
 {
 	m_timer.setInterval(m_longBreakTime);
-	connect(&m_timer, SIGNAL(timeout()), this, SLOT(endLongBreak()), Qt::QueuedConnection);
+
+	connect(&m_timer, SIGNAL(timeout()),
+	        this,     SLOT(endLongBreak()), Qt::QueuedConnection);
+
 	m_progressTimer.setInterval(m_longBreakTime / 8);
 	m_status = Status::LongBreak;
 	m_progress = 0;
+
 	emit beginLongBreak();
+
 	startTimers();
 }
 
@@ -193,10 +217,9 @@ void Pomodoro::start()
 //-----------------------------------------------------------------
 void Pomodoro::pause()
 {
-	static Status oldStatus;
+	if (Status::Stopped == m_status) return;
 
-	if (Status::Stopped == m_status)
-		return;
+	static Status oldStatus;
 
 	if (Status::Paused != m_status)
 	{
@@ -220,26 +243,27 @@ void Pomodoro::pause()
 		unsigned long mSeconds = 0;
 		unsigned long progressInterval = 0;
 		unsigned long progressMSeconds = 0;
-		if (Status::Pomodoro == oldStatus)
+
+		switch(oldStatus)
 		{
-			mSeconds = time.msecsTo(getPomodoroTime());
-			progressInterval = m_pomodoroTime / 8;
-			progressMSeconds = m_pomodoroTime - m_elapsedMSeconds;
+		  case Status::Pomodoro:
+	      mSeconds = time.msecsTo(getPomodoroDuration());
+	      progressInterval = m_pomodoroTime / 8;
+	      progressMSeconds = m_pomodoroTime - m_elapsedMSeconds;
+		    break;
+		  case Status::ShortBreak:
+        mSeconds = time.msecsTo(getShortBreakDuration());
+        progressInterval = m_shortBreakTime / 8;
+        progressMSeconds = m_shortBreakTime - m_elapsedMSeconds;
+		    break;
+		  case Status::LongBreak:
+        mSeconds = time.msecsTo(getLongBreakDuration());
+        progressInterval = m_longBreakTime / 8;
+        progressMSeconds = m_longBreakTime - m_elapsedMSeconds;
+		    break;
+		  default:
+		    Q_ASSERT(false);
 		}
-		else
-			if (Status::ShortBreak == oldStatus)
-			{
-				mSeconds = time.msecsTo(getShortBreakTime());
-				progressInterval = m_shortBreakTime / 8;
-				progressMSeconds = m_shortBreakTime - m_elapsedMSeconds;
-			}
-			else
-				if (Status::LongBreak == oldStatus)
-				{
-					mSeconds = time.msecsTo(getLongBreakTime());
-					progressInterval = m_longBreakTime / 8;
-					progressMSeconds = m_longBreakTime - m_elapsedMSeconds;
-				}
 
 		m_status = oldStatus;
 
@@ -253,15 +277,19 @@ void Pomodoro::pause()
 		m_progressTimer.start();
 
 		if (m_continuousTicTac)
+		{
 			m_tictac->play();
+		}
 	}
 }
 
 //-----------------------------------------------------------------
-unsigned int Pomodoro::elapsed()
+unsigned int Pomodoro::elapsed() const
 {
 	if (Status::Paused == m_status)
+	{
 		return m_elapsedMSeconds;
+	}
 
 	return m_elapsedMSeconds + m_startTime.elapsed();
 }
@@ -269,10 +297,10 @@ unsigned int Pomodoro::elapsed()
 //-----------------------------------------------------------------
 void Pomodoro::stop()
 {
-	if (Status::Stopped == m_status)
-		return;
+	if (Status::Stopped == m_status) return;
 
 	stopTimers();
+
 	switch(m_status)
 	{
 		case Status::Pomodoro:
@@ -287,7 +315,6 @@ void Pomodoro::stop()
 		case Status::Paused:
 			pause();
 			stop();
-			return;
 			break;
 		default:
 			Q_ASSERT(false);
@@ -300,24 +327,28 @@ void Pomodoro::stop()
 //-----------------------------------------------------------------
 void Pomodoro::invalidateCurrent()
 {
-	if (Status::Stopped == m_status)
-		return;
+	if (Status::Stopped == m_status) return;
 
 	if(Status::Paused != m_status)
-		stopTimers();
+	{
+	  stopTimers();
+	}
 
 	switch(m_status)
 	{
 		case Status::Pomodoro:
-			m_timer.disconnect(&m_timer, SIGNAL(timeout()), this, SLOT(endPomodoro()));
+			m_timer.disconnect(&m_timer, SIGNAL(timeout()),
+			                   this,     SLOT(endPomodoro()));
 			startPomodoro();
 			break;
 		case Status::ShortBreak:
-			m_timer.disconnect(&m_timer, SIGNAL(timeout()), this, SLOT(endShortBreak()));
+			m_timer.disconnect(&m_timer, SIGNAL(timeout()),
+			                   this,     SLOT(endShortBreak()));
 			startShortBreak();
 			break;
 		case Status::LongBreak:
-			m_timer.disconnect(&m_timer, SIGNAL(timeout()), this, SLOT(endLongBreak()));
+			m_timer.disconnect(&m_timer, SIGNAL(timeout()),
+			                   this,     SLOT(endLongBreak()));
 			startLongBreak();
 			break;
 		case Status::Paused:
@@ -330,21 +361,21 @@ void Pomodoro::invalidateCurrent()
 }
 
 //-----------------------------------------------------------------
-void Pomodoro::setPomodoroTime(QTime duration)
+void Pomodoro::setPomodoroDuration(QTime duration)
 {
 	QTime zeroTime;
 	m_pomodoroTime = zeroTime.msecsTo(duration);
 }
 
 //-----------------------------------------------------------------
-void Pomodoro::setShortBreakTime(QTime duration)
+void Pomodoro::setShortBreakDuration(QTime duration)
 {
 	QTime zeroTime;
 	m_shortBreakTime = zeroTime.msecsTo(duration);
 }
 
 //-----------------------------------------------------------------
-void Pomodoro::setLongBreakTime(QTime duration)
+void Pomodoro::setLongBreakDuration(QTime duration)
 {
 	QTime zeroTime;
 	m_longBreakTime = zeroTime.msecsTo(duration);
@@ -387,6 +418,7 @@ void Pomodoro::updateProgress()
 	}
 
 	emit progress(m_progress);
+
 	++m_progress;
 }
 
@@ -394,6 +426,7 @@ void Pomodoro::updateProgress()
 void Pomodoro::endPomodoro()
 {
 	m_completedTasks[m_numPomodoros] = m_task;
+
 	++m_numPomodoros;
 
 	if (m_numPomodoros == m_sessionPomodoros)
@@ -405,10 +438,19 @@ void Pomodoro::endPomodoro()
 	}
 
 	stopTimers();
-	disconnect(&m_timer, SIGNAL(timeout()), this, SLOT(endPomodoro()));
+	disconnect(&m_timer, SIGNAL(timeout()),
+	           this,     SLOT(endPomodoro()));
 
 	emit pomodoroEnded();
-	startShortBreak();
+
+  if ((m_numPomodoros % m_numBeforeBreak) == 0)
+  {
+    startLongBreak();
+  }
+  else
+  {
+    startShortBreak();
+  }
 }
 
 //-----------------------------------------------------------------
@@ -420,11 +462,7 @@ void Pomodoro::endShortBreak()
 	disconnect(&m_timer, SIGNAL(timeout()), this, SLOT(endShortBreak()));
 
 	emit shortBreakEnded();
-
-	if ((m_numPomodoros % m_numBeforeBreak) == 0)
-		startLongBreak();
-	else
-		startPomodoro();
+	startPomodoro();
 }
 
 //-----------------------------------------------------------------
@@ -450,7 +488,7 @@ void Pomodoro::setContinuousTicTac(bool value)
 }
 
 //-----------------------------------------------------------------
-QIcon Pomodoro::icon()
+QIcon Pomodoro::icon() const
 {
 	return m_icon;
 }
@@ -459,13 +497,17 @@ QIcon Pomodoro::icon()
 void Pomodoro::setSessionPodomodos(unsigned int value)
 {
 	if (m_status == Status::Stopped)
+	{
 		m_sessionPomodoros = value;
+	}
 }
 
 void Pomodoro::setPomodorosBeforeBreak(unsigned int value)
 {
 	if (m_status == Status::Stopped)
+	{
 		this->m_numBeforeBreak = value;
+	}
 }
 
 //-----------------------------------------------------------------
@@ -486,9 +528,13 @@ QTime Pomodoro::elapsedTime()
 {
 	QTime returnTime = QTime(0,0,0,0);
 	if (Status::Paused == m_status)
+	{
 		returnTime = returnTime.addMSecs(m_elapsedMSeconds);
+	}
 	else
+	{
 		returnTime = returnTime.addMSecs(m_elapsedMSeconds + m_startTime.elapsed());
+	}
 
 	return returnTime;
 }
