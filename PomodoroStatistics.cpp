@@ -26,7 +26,8 @@
 #include <QEvent>
 #include <QLineEdit>
 #include <QInputDialog>
-#include <QDebug>
+#include <QPainter>
+#include <QFontMetrics>
 
 //-----------------------------------------------------------------
 PomodoroStatistics::PomodoroStatistics(std::shared_ptr<Pomodoro> pomodoro, QWidget* parent)
@@ -41,6 +42,18 @@ PomodoroStatistics::PomodoroStatistics(std::shared_ptr<Pomodoro> pomodoro, QWidg
 	setWindowIcon(QIcon(":/DesktopCapture/2.ico"));
 
 	m_status->setTextFormat(Qt::RichText);
+
+  connect(m_pomodoro.get(), SIGNAL(beginPomodoro()),
+          this,             SLOT(updateGUI()));
+
+  connect(m_pomodoro.get(), SIGNAL(beginShortBreak()),
+          this,             SLOT(updateGUI()));
+
+  connect(m_pomodoro.get(), SIGNAL(beginLongBreak()),
+          this,             SLOT(updateGUI()));
+
+  connect(m_pomodoro.get(), SIGNAL(sessionEnded()),
+          this,             SLOT(updateGUI()));
 
 	connect(m_invalidate, SIGNAL(pressed()),
 	         this,         SLOT(invalidate()));
@@ -73,6 +86,18 @@ PomodoroStatistics::PomodoroStatistics(std::shared_ptr<Pomodoro> pomodoro, QWidg
 //-----------------------------------------------------------------
 PomodoroStatistics::~PomodoroStatistics()
 {
+  disconnect(m_pomodoro.get(), SIGNAL(beginPomodoro()),
+          this,                SLOT(updateGUI()));
+
+  disconnect(m_pomodoro.get(), SIGNAL(beginShortBreak()),
+          this,                SLOT(updateGUI()));
+
+  disconnect(m_pomodoro.get(), SIGNAL(beginLongBreak()),
+          this,                SLOT(updateGUI()));
+
+  disconnect(m_pomodoro.get(), SIGNAL(sessionEnded()),
+          this,                SLOT(updateGUI()));
+
 	disconnect(&m_timer, SIGNAL(timeout()),
 	           this,     SLOT(updateElapsedTime()));
 
@@ -138,16 +163,16 @@ void PomodoroStatistics::updateGUI()
 {
   if (m_paused)
   {
-    m_pause->setText("Pause");
+    m_pause->setText("Resume");
   }
   else
   {
-    m_pause->setText("Resume");
+    m_pause->setText("Pause");
   }
 
-  m_invalidate->setEnabled(m_paused);
-  m_continue  ->setEnabled(m_paused);
-  m_stop      ->setEnabled(m_paused);
+  m_invalidate->setEnabled(!m_paused);
+  m_continue  ->setEnabled(!m_paused);
+  m_stop      ->setEnabled(!m_paused);
 
 	unsigned long totalMs = 0;
 	QTime pomodoroTime = QTime(0, 0, 0, 0);
@@ -209,6 +234,7 @@ void PomodoroStatistics::updateGUI()
 	m_completedTime->setText(totalTime.toString(Qt::TextDate));
 
 	m_taskName->setText(m_pomodoro->getTask());
+
 	repaint();
 }
 

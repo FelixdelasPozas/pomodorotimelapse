@@ -27,9 +27,11 @@
 #include <QObject>
 #include <QString>
 #include <QIcon>
-#include <QSound>
 #include <QThread>
 #include <QMap>
+
+class QSound;
+class QTemporaryFile;
 
 // C++11
 #include <cstdint>
@@ -309,9 +311,13 @@ class Pomodoro
 		unsigned int  m_elapsedMSeconds;     /** Elapsed seconds since the last time m_timer started. */
 		QMap<int, QString> m_completedTasks; /** Task names of completed pomodoros. */
 
-		QSound       *m_crank;  /** Cranck sound */
+		QSound       *m_crank;  /** Crank sound */
 		QSound       *m_tictac; /** Tic-tac sound */
 		QSound       *m_ring;   /** Alarm ring sound */
+
+		QTemporaryFile *m_tictac_file; /** Crank temporary file */
+		QTemporaryFile *m_crank_file;  /** Tic-tac temporary file */
+		QTemporaryFile *m_ring_file;   /** Alarm ring temporary file */
 };
 
 

@@ -99,7 +99,7 @@ VPX_Interface::VPX_Interface(const QString fileName, const int height, const int
 	m_vp8_config.g_pass = VPX_RC_ONE_PASS;
 	m_vp8_config.g_profile = 0;            // Default profile.
   m_vp8_config.rc_min_quantizer = 0;
-  m_vp8_config.rc_max_quantizer = 50;    // 63 is maximum.
+  m_vp8_config.rc_max_quantizer = 63;    // 63 is maximum.
   m_vp8_config.kf_mode = VPX_KF_AUTO;    // Auto key frames.
 
   m_ebml.framerate = m_vp8_config.g_timebase;

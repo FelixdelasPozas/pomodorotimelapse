@@ -248,6 +248,7 @@ class DesktopCapture
 	  static const QString POMODOROS_OVERLAY_POSITION;
 
 	  static const QStringList CAPTURE_VIDEO_QUALITY_STRINGS;
+	  static const QString INI_FILENAME;
 
 	  /** \brief Returns the time in text.
 	   * \param[in] time
@@ -312,6 +313,7 @@ class DesktopCapture
 
 		QStringList           m_cameraResolutionsNames;
 		ResolutionList        m_cameraResolutions;
+		int                   m_selectedResolution;
 		std::shared_ptr<Pomodoro> m_pomodoro;
 		QPixmap               m_desktopCapture;
 		QSystemTrayIcon      *m_trayIcon;

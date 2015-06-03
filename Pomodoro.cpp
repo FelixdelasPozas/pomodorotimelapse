@@ -9,12 +9,11 @@
 #include <Pomodoro.h>
 
 // Qt
-#include <QTemporaryFile>
 #include <QString>
 #include <QDir>
 #include <QFile>
 #include <QSound>
-#include <QDebug>
+#include <QTemporaryFile>
 
 // Length of sounds
 static const int LENGTH_CRANK  = 530;
@@ -44,23 +43,18 @@ Pomodoro::Pomodoro()
 	connect(&m_progressTimer, SIGNAL(timeout()),
 	        this,             SLOT(updateProgress()), Qt::QueuedConnection);
 
+
 	// NOTE: Load sound files. QSound can´t play a file from the qt resource file
 	// so we will dump them first to the temporal directory, then load the resources
 	// and delete them.
-	QTemporaryFile tictac;
-	tictac.open();
-	tictac.copy(":/DesktopCapture/sounds/tictac.wav");
-  m_tictac = new QSound(tictac.fileName(), this);
+	m_tictac_file = QTemporaryFile::createLocalFile(":/DesktopCapture/sounds/tictac.wav");
+  m_tictac = new QSound(m_tictac_file->fileName(), this);
 
-  QTemporaryFile crank;
-  crank.open();
-  crank.copy(":/DesktopCapture/sounds/crank.wav");
-  m_crank = new QSound(crank.fileName(), this);
+  m_crank_file = QTemporaryFile::createLocalFile(":/DesktopCapture/sounds/crank.wav");
+  m_crank = new QSound(m_crank_file->fileName(), this);
 
-  QTemporaryFile deskbell;
-  deskbell.open();
-  deskbell.copy(":/DesktopCapture/sounds/deskbell.wav");
-  m_ring = new QSound(deskbell.fileName(), this);
+  m_ring_file = QTemporaryFile::createLocalFile(":/DesktopCapture/sounds/deskbell.wav");
+  m_ring = new QSound(m_ring_file->fileName(), this);
 }
 
 //-----------------------------------------------------------------
@@ -71,10 +65,13 @@ Pomodoro::~Pomodoro()
 		stop();
 	}
 
-	// delete sounds
+	// delete sounds and temporal files
 	delete m_tictac;
 	delete m_crank;
 	delete m_ring;
+  delete m_tictac_file;
+  delete m_crank_file;
+  delete m_ring_file;
 }
 
 //-----------------------------------------------------------------

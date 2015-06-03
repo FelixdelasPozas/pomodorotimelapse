@@ -45,5 +45,9 @@
 	<file>sounds/crank.wav</file>
 	<file>sounds/deskbell.wav</file>
 	<file>sounds/tictac.wav</file>
+	<file>webm.ico</file>
+	<file>libyuv.ico</file>
+	<file>qt.ico</file>
+	<file>opencv.ico</file>
   </qresource>
 </RCC>

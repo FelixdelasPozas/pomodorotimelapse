@@ -64,12 +64,12 @@ class PomodoroStatistics
 		 */
 		Result getResult() const;
 
+	private slots:
     /** \brief Updates the dialog with the pomodoro values.
      *
      */
     void updateGUI();
 
-	private slots:
     /** \brief Invalidates current pomodoro unit.
      *
      */
