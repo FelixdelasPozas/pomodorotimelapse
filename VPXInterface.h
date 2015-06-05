@@ -75,20 +75,20 @@ class VPX_Interface
 		 */
 		bool scalingEnabled() const;
 
-		vpx_image_t           m_vp8_rawImage;
-		vpx_image_t           m_vp8_rawImageScaled;
-		vpx_codec_enc_cfg_t   m_vp8_config;
-		vpx_codec_ctx_t       m_vp8_context;
-		QString               m_vp8_filename;
-		int                   m_width;
-		int                   m_height;
-		float                 m_scale;
-		int                   m_quality;
-		int                   m_hash;
-		long int              m_frameNumber;
-		int                   m_fps;
+		vpx_image_t           m_vp8_rawImage;       /** vp8 frame image.                                  */
+		vpx_image_t           m_vp8_rawImageScaled; /** vp8 frame image scaled.                           */
+		vpx_codec_enc_cfg_t   m_vp8_config;         /** codec configuration                               */
+		vpx_codec_ctx_t       m_vp8_context;        /** codec context                                     */
+		QString               m_vp8_filename;       /** video file name                                   */
+		int                   m_width;              /** video resolution width                            */
+		int                   m_height;             /** video resolution height                           */
+		float                 m_scale;              /** ratio of scale between scaled image and original. */
+		int                   m_quality;            /** quality of the video                              */
+		int                   m_hash;               /** murmur hash                                       */
+		long int              m_frameNumber;        /** number of the current frame.                      */
+		int                   m_fps;                /** video's frames per second                         */
 
-		EbmlGlobal            m_ebml;
+		EbmlGlobal            m_ebml;               /** ebml structure (matroska's)                       */
 };
 
 #endif /* VPX_INTERFACE_H_ */

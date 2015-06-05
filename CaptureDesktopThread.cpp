@@ -41,8 +41,8 @@ CaptureDesktopThread::CaptureDesktopThread(int monitor,
 		                                       QObject* parent)
 : QThread          {parent}
 , m_aborted        {false}
-, m_cameraEnabled  {true}
 , m_paused         {false}
+, m_cameraEnabled  {true}
 , m_compositionMode{compositionMode}
 , m_paintFrame     {false}
 , m_pomodoro       {nullptr}
@@ -92,23 +92,16 @@ bool CaptureDesktopThread::setResolution(const Resolution &resolution)
 //-----------------------------------------------------------------
 void CaptureDesktopThread::setMonitor(int monitor)
 {
-	QRect desktopGeometry;
+	QMutexLocker lock(&m_mutex);
 
 	if (monitor == -1)
 	{
-		desktopGeometry = QApplication::desktop()->geometry();
+		m_geometry = QApplication::desktop()->geometry();
 	}
 	else
 	{
-		desktopGeometry = QApplication::desktop()->screenGeometry(monitor);
+		m_geometry = QApplication::desktop()->screenGeometry(monitor);
 	}
-
-	QMutexLocker lock(&m_mutex);
-
-	m_x      = desktopGeometry.x();
-	m_y      = desktopGeometry.y();
-	m_width  = desktopGeometry.width();
-	m_height = desktopGeometry.height();
 }
 
 //-----------------------------------------------------------------
@@ -189,8 +182,8 @@ void CaptureDesktopThread::setCameraOverlayPosition(const QPoint &point)
 		m_cameraPosition.setY(0);
 	}
 
-  int xLimit = m_width - m_cameraResolution.width;
-  int yLimit = m_height - m_cameraResolution.height;
+  int xLimit = m_geometry.width() - m_cameraResolution.width;
+  int yLimit = m_geometry.height() - m_cameraResolution.height;
 
 	if (m_cameraPosition.x() > xLimit)
 	{
@@ -208,6 +201,9 @@ void CaptureDesktopThread::setCameraOverlayPosition(POSITION position)
 {
 	QMutexLocker lock(&m_mutex);
 
+	auto width = m_geometry.width();
+	auto height = m_geometry.height();
+
 	switch (position)
 	{
 		case POSITION::TOP_LEFT:
@@ -215,36 +211,36 @@ void CaptureDesktopThread::setCameraOverlayPosition(POSITION position)
 			m_cameraPosition.setY(0);
 			break;
 		case POSITION::TOP_CENTER:
-			m_cameraPosition.setX(m_width/2 - m_cameraResolution.width/2);
+			m_cameraPosition.setX(width/2 - m_cameraResolution.width/2);
 			m_cameraPosition.setY(0);
 			break;
 		case POSITION::TOP_RIGHT:
-			m_cameraPosition.setX(m_width - m_cameraResolution.width);
+			m_cameraPosition.setX(width - m_cameraResolution.width);
 			m_cameraPosition.setY(0);
 			break;
 		case POSITION::CENTER_LEFT:
 			m_cameraPosition.setX(0);
-			m_cameraPosition.setY(m_height/2-m_cameraResolution.height/2);
+			m_cameraPosition.setY(height/2-m_cameraResolution.height/2);
 			break;
 		case POSITION::CENTER:
-			m_cameraPosition.setX(m_width/2 - m_cameraResolution.width/2);
-			m_cameraPosition.setY(m_height/2-m_cameraResolution.height/2);
+			m_cameraPosition.setX(width/2 - m_cameraResolution.width/2);
+			m_cameraPosition.setY(height/2-m_cameraResolution.height/2);
 			break;
 		case POSITION::CENTER_RIGHT:
-			m_cameraPosition.setX(m_width - m_cameraResolution.width);
-			m_cameraPosition.setY(m_height/2-m_cameraResolution.height/2);
+			m_cameraPosition.setX(width - m_cameraResolution.width);
+			m_cameraPosition.setY(height/2-m_cameraResolution.height/2);
 			break;
 		case POSITION::BOTTOM_LEFT:
 			m_cameraPosition.setX(0);
-			m_cameraPosition.setY(m_height - m_cameraResolution.height);
+			m_cameraPosition.setY(height - m_cameraResolution.height);
 			break;
 		case POSITION::BOTTOM_CENTER:
-			m_cameraPosition.setX(m_width/2 - m_cameraResolution.width/2);
-			m_cameraPosition.setY(m_height - m_cameraResolution.height);
+			m_cameraPosition.setX(width/2 - m_cameraResolution.width/2);
+			m_cameraPosition.setY(height - m_cameraResolution.height);
 			break;
 		case POSITION::BOTTOM_RIGHT:
-			m_cameraPosition.setX(m_width - m_cameraResolution.width);
-			m_cameraPosition.setY(m_height - m_cameraResolution.height);
+			m_cameraPosition.setX(width - m_cameraResolution.width);
+			m_cameraPosition.setY(height - m_cameraResolution.height);
 			break;
 		case POSITION::FREE: // nothing to be done.
 		default:
@@ -297,8 +293,8 @@ void CaptureDesktopThread::setStatsOverlayPosition(const QPoint& point)
 		m_statsPosition.setY(0);
 	}
 
-  int xLimit = m_width - 250;
-  int yLimit = m_height - pomodoroOverlayHeight();
+  int xLimit = m_geometry.width() - 250;
+  int yLimit = m_geometry.height() - pomodoroOverlayHeight();
 
 	if (m_statsPosition.x() > xLimit)
 	{
@@ -521,10 +517,11 @@ void CaptureDesktopThread::setPaintFrame(bool status)
 //-----------------------------------------------------------------
 void CaptureDesktopThread::takeScreenshot()
 {
-	// capture desktop
-	QPixmap desktopImage = QPixmap::grabWindow(QApplication::desktop()->winId(), m_x, m_y, m_width, m_height);
-
 	m_mutex.lock();
+
+	// capture desktop
+	QPixmap desktopImage = QPixmap::grabWindow(QApplication::desktop()->winId(), m_geometry.x(), m_geometry.y(), m_geometry.width(), m_geometry.height());
+
 	// capture camera & composite
 	if (m_cameraEnabled && m_camera.isOpened())
 	{

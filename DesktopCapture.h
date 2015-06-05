@@ -215,6 +215,18 @@ class DesktopCapture
 	   */
 	  void updatePomodoroValues();
 
+	  /** \brief updates the GUI when capture video check box changes.
+	   * * \param[in] status check status value.
+	   *
+	   */
+	  void onCaptureVideoChanged(int status);
+
+	  /** \brief sets the internal scale value.
+     * \param[in] value combo box index.
+     *
+     */
+    void onScaleIndexChanged(int value);
+
 	private:
 	  static const QStringList COMPOSITION_MODES_NAMES;
 	  static const QStringList POSITION_NAMES;
@@ -225,6 +237,7 @@ class DesktopCapture
 	  static const QString CAPTURED_MONITOR;
 	  static const QString MONITORS_LIST;
 	  static const QString OUTPUT_DIR;
+	  static const QString OUTPUT_SCALE;
 	  static const QString APPLICATION_GEOMETRY;
 	  static const QString APPLICATION_STATE;
 	  static const QString CAMERA_ENABLED;
@@ -287,10 +300,10 @@ class DesktopCapture
 	  void setupCaptureThread();
 
 	  /** \brief Saves given image to disk.
-	   * \param[in] picture
+	   * \param[in] picture pointer.
 	   *
 	   */
-	  void saveCapture(const QPixmap *picture) const;
+	  void saveCapture(QPixmap *picture) const;
 
 	  /** \brief Computes the "picture in picture" position of the camera in the captured image.
 	   * \param[in] dragPoint initial drag point.
@@ -311,29 +324,30 @@ class DesktopCapture
 	   */
 	  const QRect captureGeometry() const;
 
-		QStringList           m_cameraResolutionsNames;
-		ResolutionList        m_cameraResolutions;
-		int                   m_selectedResolution;
-		std::shared_ptr<Pomodoro> m_pomodoro;
-		QPixmap               m_desktopCapture;
-		QSystemTrayIcon      *m_trayIcon;
-		CaptureDesktopThread *m_captureThread;
-		QMutex                m_mutex;
-		QPixmap              *m_cameraPixmap;
-		QPoint                m_PIPposition;
-		QPoint                m_statsPosition;
+		QStringList                            m_cameraResolutionsNames;
+		ResolutionList                         m_cameraResolutions;
+		int                                    m_selectedResolution;
+		std::shared_ptr<Pomodoro>              m_pomodoro;
+		QPixmap                                m_desktopCapture;
+		QSystemTrayIcon                       *m_trayIcon;
+		CaptureDesktopThread                  *m_captureThread;
+		QMutex                                 m_mutex;
+		QPoint                                 m_PIPposition;
+		QPoint                                 m_statsPosition;
 		CaptureDesktopThread::COMPOSITION_MODE m_compositionMode;
-		QTimer                m_timer;
-		unsigned long         m_secuentialNumber;
-		bool                  m_started;
-		PomodoroStatistics   *m_statisticsDialog;
-		std::shared_ptr<VPX_Interface> m_vp8_interface;
+		QTimer                                 m_timer;
+		unsigned long                          m_secuentialNumber;
+		bool                                   m_started;
+		PomodoroStatistics                    *m_statisticsDialog;
+		std::shared_ptr<VPX_Interface>         m_vp8_interface;
+		float                                  m_scale;
 
 		QAction *m_menuPause;
 		QAction *m_menuShowStats;
 		QAction *m_menuStopCapture;
 		QAction *m_menuChangeTask;
 		QAction *m_menuQuit;
+
 		bool m_paused;
 };
 

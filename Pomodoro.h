@@ -291,32 +291,32 @@ class Pomodoro
      */
 	  void stopTimers();
 
-		unsigned long m_pomodoroTime;        /** Duration of a pomodoro. */
-		unsigned long m_shortBreakTime;      /** Duration of a short break. */
-		unsigned long m_longBreakTime;       /** Duration of a long break. */
-		unsigned long m_numBeforeBreak;      /** Number of pomodoros before a long break. */
-		unsigned long m_numPomodoros;        /** Number of pomodoros completed in the session session. */
-		unsigned long m_numShortBreaks;      /** Number of short breaks in the session. */
-		unsigned int  m_numLongBreaks;       /** Number of long breaks in the session. */
-		QString       m_task;                /** Title of the task. */
-		QTimer        m_timer;               /** Timer. */
+		unsigned long m_pomodoroTime;        /** Duration of a pomodoro.                                   */
+		unsigned long m_shortBreakTime;      /** Duration of a short break.                                */
+		unsigned long m_longBreakTime;       /** Duration of a long break.                                 */
+		unsigned long m_numBeforeBreak;      /** Number of pomodoros before a long break.                  */
+		unsigned long m_numPomodoros;        /** Number of pomodoros completed in the session session.     */
+		unsigned long m_numShortBreaks;      /** Number of short breaks in the session.                    */
+		unsigned int  m_numLongBreaks;       /** Number of long breaks in the session.                     */
+		QString       m_task;                /** Title of the task.                                        */
+		QTimer        m_timer;               /** Timer.                                                    */
 		QTimer        m_progressTimer;       /** Timer used for progress notifications in 1/8 of the time. */
-		unsigned int  m_progress;            /** Progress counter. */
-		QIcon         m_icon;                /** Icon of actual situation. */
-		Status        m_status;              /** Actual status of the pomodoro. */
-		bool          m_continuousTicTac;    /** Continuous tic-tac sound. */
-		unsigned int  m_sessionPomodoros;    /** Number of pomodoros in a session. */
-		bool          m_useSounds;           /** Use sounds. */
-		QTime         m_startTime;           /** Start time of the last interval, used for pausing. */
-		unsigned int  m_elapsedMSeconds;     /** Elapsed seconds since the last time m_timer started. */
-		QMap<int, QString> m_completedTasks; /** Task names of completed pomodoros. */
+		unsigned int  m_progress;            /** Progress counter.                                         */
+		QIcon         m_icon;                /** Icon of actual situation.                                 */
+		Status        m_status;              /** Actual status of the pomodoro.                            */
+		bool          m_continuousTicTac;    /** Continuous tic-tac sound.                                 */
+		unsigned int  m_sessionPomodoros;    /** Number of pomodoros in a session.                         */
+		bool          m_useSounds;           /** Use sounds.                                               */
+		QTime         m_startTime;           /** Start time of the last interval, used for pausing.        */
+		unsigned int  m_elapsedMSeconds;     /** Elapsed seconds since the last time m_timer started.      */
+		QMap<int, QString> m_completedTasks; /** Task names of completed pomodoros.                        */
 
-		QSound       *m_crank;  /** Crank sound */
-		QSound       *m_tictac; /** Tic-tac sound */
+		QSound       *m_crank;  /** Crank sound      */
+		QSound       *m_tictac; /** Tic-tac sound    */
 		QSound       *m_ring;   /** Alarm ring sound */
 
-		QTemporaryFile *m_tictac_file; /** Crank temporary file */
-		QTemporaryFile *m_crank_file;  /** Tic-tac temporary file */
+		QTemporaryFile *m_tictac_file; /** Crank temporary file      */
+		QTemporaryFile *m_crank_file;  /** Tic-tac temporary file    */
 		QTemporaryFile *m_ring_file;   /** Alarm ring temporary file */
 };
 

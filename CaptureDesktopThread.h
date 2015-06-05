@@ -209,23 +209,21 @@ class CaptureDesktopThread
      */
 		QImage MatToQImage(const cv::Mat& mat);
 
-		bool             m_aborted;
-		QPixmap          m_image;
-		int              m_x;
-		int              m_y;
-		int              m_width;
-		int              m_height;
-		Resolution       m_cameraResolution;
-		cv::VideoCapture m_camera;
-		bool             m_cameraEnabled;
-		bool             m_paused;
-		QMutex           m_mutex;
-		QWaitCondition   m_pauseWaitCondition;
-		cv::Mat          m_frame;
-		QPoint           m_cameraPosition;
-		QPoint           m_statsPosition;
-		COMPOSITION_MODE m_compositionMode;
-		bool             m_paintFrame;
+		bool             m_aborted;              /** true if the thread has been aborted.                          */
+		bool             m_paused;               /** true to stop capturing.                                       */
+		QMutex           m_mutex;                /** thread mutex                                                  */
+		QWaitCondition   m_pauseWaitCondition;   /** thread pause condition                                        */
+
+		QPixmap          m_image;                /** final image after composition.                                */
+		QRect            m_geometry;             /** geometry of the capture area                                  */
+		Resolution       m_cameraResolution;     /** camera resolution                                             */
+		cv::VideoCapture m_camera;               /** opencv camera                                                 */
+		cv::Mat          m_frame;                /** opencv frame.                                                 */
+		bool             m_cameraEnabled;        /** true if camera capture is enabled.                            */
+		QPoint           m_cameraPosition;       /** position of the camera overlay                                */
+		QPoint           m_statsPosition;        /** position of the statistics overlay                            */
+		COMPOSITION_MODE m_compositionMode;      /** composition mode for the camera overlay.                      */
+		bool             m_paintFrame;           /** true to paint a frame of the overlayed camera and statistics. */
 
 		std::shared_ptr<Pomodoro> m_pomodoro;
 };

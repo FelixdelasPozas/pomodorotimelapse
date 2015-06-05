@@ -55,23 +55,6 @@ VPX_Interface::VPX_Interface(const QString fileName, const int height, const int
 		return;
 	}
 
-	// create buffer for frame
-	if (!vpx_img_alloc(&m_vp8_rawImage, VPX_IMG_FMT_I420, m_width, m_height, 1))
-	{
-		qDebug() << "cannot allocate memory for image";
-		return;
-	}
-
-	// create buffer for scaled frame
-	if(scalingEnabled())
-	{
-    if (!vpx_img_alloc(&m_vp8_rawImageScaled, VPX_IMG_FMT_I420, 720, 304, 1))
-    {
-      qDebug() << "cannot allocate memory for image";
-      return;
-    }
-	}
-
 	// populate encoder configuration, we won't use VP9 because the 1-pass is
 	// not yet up to the task
 	auto res = vpx_codec_enc_config_default(vpx_codec_vp8_cx(), &m_vp8_config, 0);
@@ -110,6 +93,23 @@ VPX_Interface::VPX_Interface(const QString fileName, const int height, const int
 		qDebug() << "Failed to initialize encoder";
 		return;
 	}
+
+  // create buffer for frame
+  if (!vpx_img_alloc(&m_vp8_rawImage, VPX_IMG_FMT_I420, m_width, m_height, 1))
+  {
+    qDebug() << "cannot allocate memory for image";
+    return;
+  }
+
+  // create buffer for scaled frame
+  if(scalingEnabled())
+  {
+    if (!vpx_img_alloc(&m_vp8_rawImageScaled, VPX_IMG_FMT_I420, m_vp8_config.g_w, m_vp8_config.g_h, 1))
+    {
+      qDebug() << "cannot allocate memory for image";
+      return;
+    }
+  }
 
 	struct vpx_rational framerate = {m_fps, 1};
 	write_webm_file_header(&m_ebml, &m_vp8_config, &framerate);
@@ -172,7 +172,6 @@ void VPX_Interface::encodeFrame(QImage* frame)
 	{
 	  image = &m_vp8_rawImage;
 	}
-
 
 // DUMP RAW FRAME ///////////////////////////////////////////////////////////////
 //	QString frameName = QString("D:\\Descargas\\rawFrame") + QString::number(m_frameNumber) + QString(".raw");

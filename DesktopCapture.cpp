@@ -57,6 +57,7 @@ const QString DesktopCapture::CAPTURE_VIDEO_FPS               = QString("Capture
 const QString DesktopCapture::CAPTURED_MONITOR                = QString("Captured Desktop Monitor");
 const QString DesktopCapture::MONITORS_LIST                   = QString("Monitor Resolutions");
 const QString DesktopCapture::OUTPUT_DIR                      = QString("Output Directory");
+const QString DesktopCapture::OUTPUT_SCALE                    = QString("Output Scale");
 const QString DesktopCapture::APPLICATION_GEOMETRY            = QString("Application Geometry");
 const QString DesktopCapture::APPLICATION_STATE               = QString("Application State");
 const QString DesktopCapture::CAMERA_ENABLED                  = QString("Camera Enabled");
@@ -125,6 +126,8 @@ DesktopCapture::DesktopCapture()
 	connect(m_overlayStats, SIGNAL(stateChanged(int)), this, SLOT(updatePomodoroOverlay(int)));
 	connect(m_pomodorosBreakNumber, SIGNAL(valueChanged(int)), this, SLOT(updatePomodoroValues()));
 	connect(m_pomodorosNumber, SIGNAL(valueChanged(int)), this, SLOT(updatePomodoroValues()));
+	connect(m_captureVideo, SIGNAL(stateChanged(int)), this, SLOT(onCaptureVideoChanged(int)));
+	connect(m_scaleComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(onScaleIndexChanged(int)));
 
 	m_screenshotImage->installEventFilter(this);
 
@@ -422,6 +425,18 @@ void DesktopCapture::loadConfiguration()
 	}
 	m_dirEditLabel->setText(outputDir);
 
+	int scale;
+	if(settings.contains(OUTPUT_SCALE))
+	{
+	  scale = settings.value(OUTPUT_SCALE, 1).toInt();
+	}
+	else
+	{
+	  scale = 1;
+	  settings.setValue(OUTPUT_SCALE, 1);
+	}
+	onScaleIndexChanged(scale);
+
 	bool captureEnabled;
 	if (settings.contains(CAPTURE_ENABLED))
 	{
@@ -521,6 +536,7 @@ void DesktopCapture::saveConfiguration()
 
 	settings.setValue(MONITORS_LIST, monitors);
 	settings.setValue(OUTPUT_DIR, m_dirEditLabel->text());
+	settings.setValue(OUTPUT_SCALE, m_scaleComboBox->currentIndex());
 	settings.setValue(CAMERA_ENABLED, m_cameraEnabled->isChecked());
 	settings.setValue(CAMERA_ANIMATED_TRAY_ENABLED, m_screenshotAnimateTray->isChecked());
 	settings.setValue(CAMERA_RESOLUTIONS, m_cameraResolutionsNames);
@@ -714,11 +730,19 @@ void DesktopCapture::updateCameraResolutionsComboBox(int status)
 }
 
 //-----------------------------------------------------------------
-void DesktopCapture::saveCapture(const QPixmap *capture) const
+void DesktopCapture::saveCapture(QPixmap *capture) const
 {
 	QString format("png");
 	QString fileName = m_dirEditLabel->text() + tr("/DesktopCapture_") + QString("%1").arg(m_secuentialNumber,4,'d',0,'0') + QString(".") + format;
-	capture->save(fileName, format.toAscii(), 0);
+
+	if(m_scale != 1.0)
+	{
+	  capture->scaled(capture->size() * m_scale, Qt::KeepAspectRatio, Qt::TransformationMode::SmoothTransformation).save(fileName, format.toAscii(), 0);
+	}
+	else
+	{
+	  capture->save(fileName, format.toAscii(), 0);
+	}
 }
 
 //-----------------------------------------------------------------
@@ -1256,7 +1280,7 @@ void DesktopCapture::capture()
 				QString fileName = this->m_dirEditLabel->text() + QString("\\DesktopCapture_") + QDateTime::currentDateTime().toString("dd_MM_yyyy") + QString(".webm");
 				QRect desktopGeometry = captureGeometry();
 
-				m_vp8_interface = std::make_shared<VPX_Interface>(fileName, desktopGeometry.height(), desktopGeometry.width(), m_fps->value());
+				m_vp8_interface = std::make_shared<VPX_Interface>(fileName, desktopGeometry.height(), desktopGeometry.width(), m_fps->value(), m_scale);
 			}
 
 			auto image = pixmap->toImage().convertToFormat(QImage::Format_RGB32);
@@ -1581,6 +1605,15 @@ void DesktopCapture::updatePomodoroValues()
 }
 
 //-----------------------------------------------------------------
+void DesktopCapture::onCaptureVideoChanged(int status)
+{
+  auto enabled = (status == Qt::Checked);
+
+  m_fpsLabel      ->setEnabled(enabled);
+  m_fps           ->setEnabled(enabled);
+}
+
+//-----------------------------------------------------------------
 const QRect DesktopCapture::captureGeometry() const
 {
   QRect geometry;
@@ -1594,4 +1627,27 @@ const QRect DesktopCapture::captureGeometry() const
   }
 
   return geometry;
+}
+
+//-----------------------------------------------------------------
+void DesktopCapture::onScaleIndexChanged(int value)
+{
+  switch(value)
+  {
+    case 0:
+      m_scale = 0.5;
+      break;
+    case 2:
+      m_scale = 1.5;
+      break;
+    case 3:
+      m_scale = 2.0;
+      break;
+    case 1:
+    default:
+      m_scale = 1.0;
+      break;
+  }
+
+  m_scaleComboBox->setCurrentIndex(value);
 }
