@@ -34,6 +34,10 @@
 #include <QPainter>
 #include <QWaitCondition>
 
+// dLib
+#include <dlib/image_processing/frontal_face_detector.h>
+#include <dlib/image_processing/render_face_detections.h>
+
 // C++
 #include <memory>
 
@@ -180,7 +184,7 @@ class CaptureDesktopThread
      * \param[in] overlayImage camera picture.
      *
      */
-		void overlayCameraImage(QImage &baseImage, const QImage &overlayImage);
+		void overlayCameraImage(QImage &baseImage, QImage &overlayImage, QList<dlib::full_object_detection> shapes);
 
     /** \brief Overlays the pomodoro statistics over the desktop captured image.
      * \param[in/out] baseImage captured desktop image.
@@ -226,6 +230,9 @@ class CaptureDesktopThread
 		bool             m_paintFrame;           /** true to paint a frame of the overlayed camera and statistics. */
 
 		std::shared_ptr<Pomodoro> m_pomodoro;
+
+		dlib::frontal_face_detector m_faceDetector;
+		dlib::shape_predictor       m_poseModel;
 };
 
 #endif // CAPTURE_DESKTOP_THREAD_H_

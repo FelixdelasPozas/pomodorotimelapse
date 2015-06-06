@@ -26,6 +26,9 @@ find_package(OpenCV REQUIRED)
 set(LIBVPX_LIBRARY_DIR "D:/Desarrollo/Bibliotecas/libvpx")
 set(LIBYUV_INCLUDE_DIR "D:/Desarrollo/Bibliotecas/libyuv/include")
 
+set(DLIB_INCLUDE_DIR "D:/Desarrollo/Bibliotecas/dlib-18.16")
+set(DLIB_LIBRARY "D:/Desarrollo/Bibliotecas/dlib-build/libdlib.a")
+
 include_directories(
   ${CMAKE_SOURCE_DIR}
   ${CMAKE_SOURCE_DIR}/Camera
@@ -35,6 +38,7 @@ include_directories(
   ${CMAKE_CURRENT_BINARY_DIR}  # For wrap/ui files
   ${LIBVPX_LIBRARY_DIR}
   ${LIBYUV_INCLUDE_DIR}
+  ${DLIB_INCLUDE_DIR}
   )
 
 set(CMAKE_CXX_FLAGS " -Wall -Wno-deprecated -std=c++11 -fpermissive -mwindows")
@@ -89,6 +93,7 @@ set(CORE_EXTERNAL_LIBS
   ${OpenCV_LIBS}
   ${VPX_LIBS}
   ${YUV_LIBS}
+  ${DLIB_LIBRARY}
 )
 
 add_executable(DesktopCapture ${CORE_SOURCES})
