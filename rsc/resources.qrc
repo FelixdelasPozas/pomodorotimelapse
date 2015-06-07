@@ -49,5 +49,7 @@
 	<file>libyuv.ico</file>
 	<file>qt.ico</file>
 	<file>opencv.ico</file>
+	<file>dlib.ico</file>
+	<file>monocle.png</file>
   </qresource>
 </RCC>

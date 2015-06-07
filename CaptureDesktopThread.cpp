@@ -26,6 +26,7 @@
 #include <QImage>
 #include <QPainter>
 #include <QMutexLocker>
+
 #include <QDebug>
 
 // dLib
@@ -50,6 +51,7 @@ CaptureDesktopThread::CaptureDesktopThread(int monitor,
 , m_compositionMode{compositionMode}
 , m_paintFrame     {false}
 , m_pomodoro       {nullptr}
+, m_isTracking     {false}
 {
 	setMonitor(monitor);
 	setCameraOverlayPosition(cameraOverlayPosition);
@@ -66,7 +68,6 @@ CaptureDesktopThread::CaptureDesktopThread(int monitor,
 	}
 
 	m_faceDetector = dlib::get_frontal_face_detector();
-	dlib::deserialize("shape_predictor_68_face_landmarks.dat") >> m_poseModel;
 }
 
 //-----------------------------------------------------------------
@@ -86,6 +87,7 @@ bool CaptureDesktopThread::setResolution(const Resolution &resolution)
 	QMutexLocker lock(&m_mutex);
 
 	m_cameraResolution = resolution;
+	m_isTracking = false;
 
 	if (m_camera.isOpened())
 	{
@@ -266,6 +268,7 @@ void CaptureDesktopThread::run()
 		if (m_paused)
 		{
 			m_pauseWaitCondition.wait(&m_mutex);
+			m_isTracking = false;
 		}
 		m_mutex.unlock();
 
@@ -355,75 +358,53 @@ QImage CaptureDesktopThread::MatToQImage(const cv::Mat& mat)
 }
 
 //-----------------------------------------------------------------
-void CaptureDesktopThread::overlayCameraImage(QImage &baseImage, QImage &overlayImage, QList<dlib::full_object_detection> shapes)
+void CaptureDesktopThread::overlayCameraImage(QImage &baseImage, QImage &overlayImage)
 {
   QPainter painter(&baseImage);
 
   QPainter facePainter(&overlayImage);
-  facePainter.setPen(Qt::white);
+  QPen pen;
+  pen.setWidth(2);
+  pen.setColor(Qt::white);
+  facePainter.setPen(pen);
 
-  for(auto shape: shapes)
+  QImage cropped;
+  if(m_isTracking)
   {
-    auto rectangle = shape.get_rect();
-    facePainter.setPen(Qt::white);
-    facePainter.fillRect(rectangle.left(), rectangle.top(), rectangle.width(), rectangle.height(), Qt::white);
+    auto rectangle = m_faceTracker.get_position();
+    facePainter.drawRect(rectangle.left(), rectangle.top(), rectangle.width(), rectangle.height());
 
+    QPoint center((rectangle.left()+rectangle.right()) / 2, (rectangle.top()+rectangle.bottom()) /2);
+    facePainter.drawEllipse(QPoint(center.x(), center.y()), 5, 5);
 
-    Q_ASSERT(shape.num_parts() == 68);
-    facePainter.setPen(Qt::green);
-    for(int i = 1; i <= 16; ++i)
+    auto width = rectangle.width() * 1.6;
+    auto height = rectangle.height() * 1.6;
+    auto widthRatio = width / static_cast<double>(overlayImage.width());
+    auto heightRatio = height / static_cast<double>(overlayImage.height());
+
+    QRect rect;
+    if(widthRatio > heightRatio)
     {
-      facePainter.drawLine(QPoint(shape.part(i).x(), shape.part(i).y()), QPoint(shape.part(i-1).x(), shape.part(i-1).y()));
+      rect = QRect(center.x() - (overlayImage.width()/2 * widthRatio), center.y() - (overlayImage.height()/2 * widthRatio), overlayImage.width() * widthRatio, overlayImage.height() * widthRatio);
+    }
+    else
+    {
+      rect = QRect(center.x() - (overlayImage.width()/2 * heightRatio), center.y() - (overlayImage.height()/2 * heightRatio), overlayImage.width() * heightRatio, overlayImage.height() * heightRatio);
     }
 
-    for(int i = 28; i <= 30; ++i)
-    {
-      facePainter.drawLine(QPoint(shape.part(i).x(), shape.part(i).y()), QPoint(shape.part(i-1).x(), shape.part(i-1).y()));
-    }
-
-    for(int i = 18; i <= 21; ++i)
-    {
-      facePainter.drawLine(QPoint(shape.part(i).x(), shape.part(i).y()), QPoint(shape.part(i-1).x(), shape.part(i-1).y()));
-    }
-
-    for(int i = 23; i <= 26; ++i)
-    {
-      facePainter.drawLine(QPoint(shape.part(i).x(), shape.part(i).y()), QPoint(shape.part(i-1).x(), shape.part(i-1).y()));
-    }
-
-    for(int i = 31; i <= 35; ++i)
-    {
-      facePainter.drawLine(QPoint(shape.part(i).x(), shape.part(i).y()), QPoint(shape.part(i-1).x(), shape.part(i-1).y()));
-    }
-    facePainter.drawLine(QPoint(shape.part(30).x(), shape.part(30).y()), QPoint(shape.part(35).x(), shape.part(35).y()));
-
-    for(int i = 37; i <= 41; ++i)
-    {
-      facePainter.drawLine(QPoint(shape.part(i).x(), shape.part(i).y()), QPoint(shape.part(i-1).x(), shape.part(i-1).y()));
-    }
-    facePainter.drawLine(QPoint(shape.part(36).x(), shape.part(36).y()), QPoint(shape.part(41).x(), shape.part(41).y()));
-
-    for(int i = 43; i <= 47; ++i)
-    {
-      facePainter.drawLine(QPoint(shape.part(i).x(), shape.part(i).y()), QPoint(shape.part(i-1).x(), shape.part(i-1).y()));
-    }
-    facePainter.drawLine(QPoint(shape.part(42).x(), shape.part(42).y()), QPoint(shape.part(47).x(), shape.part(47).y()));
-
-    for(int i = 49; i <= 59; ++i)
-    {
-      facePainter.drawLine(QPoint(shape.part(i).x(), shape.part(i).y()), QPoint(shape.part(i-1).x(), shape.part(i-1).y()));
-    }
-    facePainter.drawLine(QPoint(shape.part(48).x(), shape.part(48).y()), QPoint(shape.part(59).x(), shape.part(59).y()));
-
-    for(int i = 61; i <= 67; ++i)
-    {
-      facePainter.drawLine(QPoint(shape.part(i).x(), shape.part(i).y()), QPoint(shape.part(i-1).x(), shape.part(i-1).y()));
-    }
-    facePainter.drawLine(QPoint(shape.part(60).x(), shape.part(60).y()), QPoint(shape.part(67).x(), shape.part(67).y()));
+    cropped = overlayImage.copy(rect);
+    cropped = cropped.scaled(overlayImage.size(), Qt::KeepAspectRatio, Qt::SmoothTransformation);
   }
 
   painter.setCompositionMode(COMPOSITION_MODES_QT.at(static_cast<int>(m_compositionMode)));
-  painter.drawImage(m_cameraPosition.x(), m_cameraPosition.y(), overlayImage);
+  if(m_isTracking)
+  {
+    painter.drawImage(m_cameraPosition.x(), m_cameraPosition.y(), cropped);
+  }
+  else
+  {
+    painter.drawImage(m_cameraPosition.x(), m_cameraPosition.y(), overlayImage);
+  }
 
   if (m_paintFrame)
   {
@@ -590,8 +571,10 @@ void CaptureDesktopThread::takeScreenshot()
 {
 	m_mutex.lock();
 
+	static int frames = 0;
+
 	// capture desktop
-	QPixmap desktopImage = QPixmap::grabWindow(QApplication::desktop()->winId(), m_geometry.x(), m_geometry.y(), m_geometry.width(), m_geometry.height());
+	auto desktopImage = QPixmap::grabWindow(QApplication::desktop()->winId(), m_geometry.x(), m_geometry.y(), m_geometry.width(), m_geometry.height());
 
 	// capture camera & composite
 	if (m_cameraEnabled && m_camera.isOpened())
@@ -603,17 +586,38 @@ void CaptureDesktopThread::takeScreenshot()
 		m_mutex.unlock();
 
 		dlib::cv_image<dlib::bgr_pixel> cimg(m_frame);
-		auto faces = m_faceDetector(cimg);
 
-		QList<dlib::full_object_detection> shapes;
-		for(auto face: faces)
+		if(!m_isTracking)
 		{
-		  shapes << m_poseModel(cimg, face);
+		  auto faces = m_faceDetector(cimg);
+
+		  if(!faces.empty())
+		  {
+		    auto trackFace = faces.front();
+		    auto trackArea = trackFace.width() * trackFace.height();
+		    for(auto face: faces)
+		    {
+		      auto area = face.width() * face.height();
+		      if(area > trackArea)
+		      {
+		        trackFace = face;
+		        trackArea = area;
+		      }
+		    }
+
+		    m_faceTracker.start_track(cimg, trackFace);
+		    m_isTracking = true;
+		  }
+		}
+		else
+		{
+		  m_faceTracker.update(cimg);
 		}
 
-		QImage image = desktopImage.toImage();
-		QImage cameraImage = MatToQImage(m_frame);
-		overlayCameraImage(image, cameraImage, shapes);
+		++frames;
+		auto image = desktopImage.toImage();
+		auto cameraImage = MatToQImage(m_frame);
+		overlayCameraImage(image, cameraImage);
 		overlayPomodoro(image);
 		desktopImage = QPixmap::fromImage(image);
 	}

@@ -184,7 +184,7 @@ class CaptureDesktopThread
      * \param[in] overlayImage camera picture.
      *
      */
-		void overlayCameraImage(QImage &baseImage, QImage &overlayImage, QList<dlib::full_object_detection> shapes);
+		void overlayCameraImage(QImage &baseImage, QImage &overlayImage);
 
     /** \brief Overlays the pomodoro statistics over the desktop captured image.
      * \param[in/out] baseImage captured desktop image.
@@ -232,7 +232,8 @@ class CaptureDesktopThread
 		std::shared_ptr<Pomodoro> m_pomodoro;
 
 		dlib::frontal_face_detector m_faceDetector;
-		dlib::shape_predictor       m_poseModel;
+		dlib::correlation_tracker   m_faceTracker;
+		bool m_isTracking;
 };
 
 #endif // CAPTURE_DESKTOP_THREAD_H_
