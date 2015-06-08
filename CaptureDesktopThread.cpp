@@ -68,6 +68,7 @@ CaptureDesktopThread::CaptureDesktopThread(int monitor,
 	}
 
 	m_faceDetector = dlib::get_frontal_face_detector();
+	dlib::deserialize("shape_predictor_68_face_landmarks.dat") >> m_faceShape;
 }
 
 //-----------------------------------------------------------------
@@ -358,7 +359,7 @@ QImage CaptureDesktopThread::MatToQImage(const cv::Mat& mat)
 }
 
 //-----------------------------------------------------------------
-void CaptureDesktopThread::overlayCameraImage(QImage &baseImage, QImage &overlayImage)
+void CaptureDesktopThread::overlayCameraImage(QImage &baseImage, QImage &overlayImage, QList<dlib::full_object_detection> shapes)
 {
   QPainter painter(&baseImage);
 
@@ -376,6 +377,39 @@ void CaptureDesktopThread::overlayCameraImage(QImage &baseImage, QImage &overlay
 
     QPoint center((rectangle.left()+rectangle.right()) / 2, (rectangle.top()+rectangle.bottom()) /2);
     facePainter.drawEllipse(QPoint(center.x(), center.y()), 5, 5);
+
+    for(auto shape: shapes)
+    {
+      // left eye coordinate
+      int x = 0, y = 0;
+      for(int i = 36; i <= 41; ++i)
+      {
+        x += shape.part(i).x();
+        y += shape.part(i).y();
+      }
+      x /= 6;
+      y /= 6;
+      facePainter.drawEllipse(QPoint(x, y), 5, 5);
+
+      // right eye coordinate
+      x = 0;
+      y = 0;
+      for(int i = 42; i <= 47; ++i)
+      {
+        x += shape.part(i).x();
+        y += shape.part(i).y();
+      }
+      x /= 6;
+      y /= 6;
+      facePainter.drawEllipse(QPoint(x, y), 5, 5);
+
+      // mouth coordinate
+      facePainter.drawEllipse(QPoint(shape.part(51).x(), shape.part(51).y()), 5, 5);
+
+//      QImage monocle;
+//      monocle.load(":/DesktopCapture/monocle.png");
+      // Transform and paint the monocle.
+    }
 
     auto width = rectangle.width() * 1.6;
     auto height = rectangle.height() * 1.6;
@@ -586,38 +620,41 @@ void CaptureDesktopThread::takeScreenshot()
 		m_mutex.unlock();
 
 		dlib::cv_image<dlib::bgr_pixel> cimg(m_frame);
+		QList<dlib::full_object_detection> shapes;
 
-		if(!m_isTracking)
-		{
-		  auto faces = m_faceDetector(cimg);
+    auto faces = m_faceDetector(cimg);
 
-		  if(!faces.empty())
-		  {
-		    auto trackFace = faces.front();
-		    auto trackArea = trackFace.width() * trackFace.height();
-		    for(auto face: faces)
-		    {
-		      auto area = face.width() * face.height();
-		      if(area > trackArea)
-		      {
-		        trackFace = face;
-		        trackArea = area;
-		      }
-		    }
+    if(!faces.empty())
+    {
+      auto trackFace = faces.front();
+      auto trackArea = trackFace.width() * trackFace.height();
+      for(auto face: faces)
+      {
+        auto area = face.width() * face.height();
+        if(area > trackArea)
+        {
+          trackFace = face;
+          trackArea = area;
+        }
+      }
 
-		    m_faceTracker.start_track(cimg, trackFace);
-		    m_isTracking = true;
-		  }
-		}
-		else
-		{
-		  m_faceTracker.update(cimg);
-		}
+      if(!m_isTracking)
+      {
+        m_faceTracker.start_track(cimg, trackFace);
+        m_isTracking = true;
+      }
+      else
+      {
+        m_faceTracker.update(cimg);
+      }
+
+      shapes << m_faceShape(cimg, trackFace);
+    }
 
 		++frames;
 		auto image = desktopImage.toImage();
 		auto cameraImage = MatToQImage(m_frame);
-		overlayCameraImage(image, cameraImage);
+		overlayCameraImage(image, cameraImage, shapes);
 		overlayPomodoro(image);
 		desktopImage = QPixmap::fromImage(image);
 	}
