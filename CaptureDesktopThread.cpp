@@ -381,34 +381,50 @@ void CaptureDesktopThread::overlayCameraImage(QImage &baseImage, QImage &overlay
     for(auto shape: shapes)
     {
       // left eye coordinate
-      int x = 0, y = 0;
+      int lx = 0, ly = 0;
       for(int i = 36; i <= 41; ++i)
       {
-        x += shape.part(i).x();
-        y += shape.part(i).y();
+        lx += shape.part(i).x();
+        ly += shape.part(i).y();
       }
-      x /= 6;
-      y /= 6;
-      facePainter.drawEllipse(QPoint(x, y), 5, 5);
+      lx /= 6;
+      ly /= 6;
 
       // right eye coordinate
-      x = 0;
-      y = 0;
+      int rx = 0, ry = 0;
       for(int i = 42; i <= 47; ++i)
       {
-        x += shape.part(i).x();
-        y += shape.part(i).y();
+        rx += shape.part(i).x();
+        ry += shape.part(i).y();
       }
-      x /= 6;
-      y /= 6;
-      facePainter.drawEllipse(QPoint(x, y), 5, 5);
+      rx /= 6;
+      ry /= 6;
 
       // mouth coordinate
-      facePainter.drawEllipse(QPoint(shape.part(51).x(), shape.part(51).y()), 5, 5);
+      int mx = shape.part(51).x();
+      int my = shape.part(51).y();
 
-//      QImage monocle;
-//      monocle.load(":/DesktopCapture/monocle.png");
       // Transform and paint the monocle.
+      QImage monocle;
+      monocle.load(":/DesktopCapture/monocle.png");
+
+      QLineF line(QPoint(lx,ly),QPoint(rx,ry));
+      line.angle();
+
+      auto eyeDistance = std::sqrt(std::pow(rx-lx,2)+std::pow(ry-ly, 2));
+      auto lipDistance = std::sqrt(std::pow(((lx+rx)/2) - mx, 2) + std::pow(((ly+ry)/2) - my, 2));
+      auto widthRatio = eyeDistance/90.0;
+      auto heightRatio = lipDistance/150.0;
+
+      QTransform transform;
+      transform.scale(widthRatio, heightRatio);
+      monocle = monocle.transformed(transform, Qt::SmoothTransformation);
+      auto rotated = transform.map(QPoint(103,78));
+
+      facePainter.translate(QPoint(lx,ly));
+      facePainter.rotate(-line.angle());
+      facePainter.translate(-rotated.x(), -rotated.y());
+      facePainter.drawImage(QPoint(0,0),monocle);
     }
 
     auto width = rectangle.width() * 1.6;
