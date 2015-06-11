@@ -177,6 +177,16 @@ class CaptureDesktopThread
 		void imageAvailable();
 
 	private:
+		struct Mask
+		{
+		  QString resource;
+		  int     eyeDistance;
+		  int     lipDistance;
+		  QPoint  leftEye;
+		};
+
+		static const QList<struct Mask> MASKS;
+
 		static const QList<QPainter::CompositionMode> COMPOSITION_MODES_QT;
 
     /** \brief Overlays the camera image over the desktop captured image.

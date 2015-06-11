@@ -51,5 +51,6 @@
 	<file>opencv.ico</file>
 	<file>dlib.ico</file>
 	<file>monocle.png</file>
+	<file>guyfawkes.png</file>
   </qresource>
 </RCC>

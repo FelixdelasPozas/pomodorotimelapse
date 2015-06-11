@@ -37,6 +37,9 @@ const QList<QPainter::CompositionMode> CaptureDesktopThread::COMPOSITION_MODES_Q
 		                                                                                  QPainter::CompositionMode_Plus,
 		                                                                                  QPainter::CompositionMode_Multiply };
 
+const QList<struct CaptureDesktopThread::Mask> CaptureDesktopThread::MASKS = { { QString(":/DesktopCapture/monocle.png"),   200, 285, QPoint(150,107) },
+                                                                               { QString(":/DesktopCapture/guyfawkes.png"), 275, 285, QPoint(167,292) } };
+
 //-----------------------------------------------------------------
 CaptureDesktopThread::CaptureDesktopThread(int monitor,
 		                                       Resolution cameraResolution,
@@ -372,12 +375,6 @@ void CaptureDesktopThread::overlayCameraImage(QImage &baseImage, QImage &overlay
   QImage cropped;
   if(m_isTracking)
   {
-    auto rectangle = m_faceTracker.get_position();
-    facePainter.drawRect(rectangle.left(), rectangle.top(), rectangle.width(), rectangle.height());
-
-    QPoint center((rectangle.left()+rectangle.right()) / 2, (rectangle.top()+rectangle.bottom()) /2);
-    facePainter.drawEllipse(QPoint(center.x(), center.y()), 5, 5);
-
     for(auto shape: shapes)
     {
       // left eye coordinate
@@ -405,27 +402,30 @@ void CaptureDesktopThread::overlayCameraImage(QImage &baseImage, QImage &overlay
       int my = shape.part(51).y();
 
       // Transform and paint the monocle.
-      QImage monocle;
-      monocle.load(":/DesktopCapture/monocle.png");
+      QImage mask;
+      mask.load(MASKS[0].resource);
 
       QLineF line(QPoint(lx,ly),QPoint(rx,ry));
       line.angle();
 
       auto eyeDistance = std::sqrt(std::pow(rx-lx,2)+std::pow(ry-ly, 2));
       auto lipDistance = std::sqrt(std::pow(((lx+rx)/2) - mx, 2) + std::pow(((ly+ry)/2) - my, 2));
-      auto widthRatio = eyeDistance/90.0;
-      auto heightRatio = lipDistance/150.0;
+      auto widthRatio = eyeDistance/MASKS[0].eyeDistance;
+      auto heightRatio = lipDistance/MASKS[0].lipDistance;
 
       QTransform transform;
       transform.scale(widthRatio, heightRatio);
-      monocle = monocle.transformed(transform, Qt::SmoothTransformation);
-      auto rotated = transform.map(QPoint(103,78));
+      mask = mask.transformed(transform, Qt::SmoothTransformation);
+      auto rotated = transform.map(MASKS[0].leftEye);
 
       facePainter.translate(QPoint(lx,ly));
       facePainter.rotate(-line.angle());
       facePainter.translate(-rotated.x(), -rotated.y());
-      facePainter.drawImage(QPoint(0,0),monocle);
+      facePainter.drawImage(QPoint(0,0),mask);
     }
+
+    auto rectangle = m_faceTracker.get_position();
+    QPoint center((rectangle.left()+rectangle.right()) / 2, (rectangle.top()+rectangle.bottom()) /2);
 
     auto width = rectangle.width() * 1.6;
     auto height = rectangle.height() * 1.6;
