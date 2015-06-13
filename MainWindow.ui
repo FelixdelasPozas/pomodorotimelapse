@@ -321,16 +321,6 @@
            </widget>
           </item>
           <item>
-           <widget class="QCheckBox" name="m_overlayStats">
-            <property name="toolTip">
-             <string>Overlay the statistics of the pomodoro in the capture.</string>
-            </property>
-            <property name="text">
-             <string>Overlay pomodoro statistics in the capture</string>
-            </property>
-           </widget>
-          </item>
-          <item>
            <widget class="QCheckBox" name="m_captureVideo">
             <property name="toolTip">
              <string>Capture video instead of individual images.</string>
@@ -693,42 +683,6 @@
              </layout>
             </item>
             <item>
-             <widget class="QCheckBox" name="m_pomodoroAnimateTray">
-              <property name="toolTip">
-               <string>Animate tray icon with unit progression.</string>
-              </property>
-              <property name="text">
-               <string>Animated tray icon</string>
-              </property>
-              <property name="checked">
-               <bool>true</bool>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QCheckBox" name="m_pomodoroUseSounds">
-              <property name="toolTip">
-               <string>Use sounds.</string>
-              </property>
-              <property name="text">
-               <string>Use sounds</string>
-              </property>
-              <property name="checked">
-               <bool>true</bool>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QCheckBox" name="m_continuousTicTac">
-              <property name="toolTip">
-               <string>Use continuous tic-tac sound when in a unit.</string>
-              </property>
-              <property name="text">
-               <string>Continuous Tic-Tac</string>
-              </property>
-             </widget>
-            </item>
-            <item>
              <layout class="QHBoxLayout" name="horizontalLayout_9" stretch="1,0">
               <property name="topMargin">
                <number>0</number>
@@ -739,7 +693,7 @@
                  <string>Total number of pomodoros in a sesssion.</string>
                 </property>
                 <property name="text">
-                 <string>Number Of Pomodoros Per Session</string>
+                 <string>Pomodoros Per Session</string>
                 </property>
                </widget>
               </item>
@@ -822,6 +776,52 @@
                </widget>
               </item>
              </layout>
+            </item>
+            <item>
+             <widget class="QCheckBox" name="m_pomodoroAnimateTray">
+              <property name="toolTip">
+               <string>Animate tray icon with unit progression.</string>
+              </property>
+              <property name="text">
+               <string>Animated tray icon</string>
+              </property>
+              <property name="checked">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QCheckBox" name="m_pomodoroUseSounds">
+              <property name="toolTip">
+               <string>Use sounds.</string>
+              </property>
+              <property name="text">
+               <string>Use sounds</string>
+              </property>
+              <property name="checked">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QCheckBox" name="m_continuousTicTac">
+              <property name="toolTip">
+               <string>Use continuous tic-tac sound when in a unit.</string>
+              </property>
+              <property name="text">
+               <string>Continuous Tic-Tac</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QCheckBox" name="m_overlayStats">
+              <property name="toolTip">
+               <string>Overlay the statistics of the pomodoro in the capture.</string>
+              </property>
+              <property name="text">
+               <string>Overlay statistics in the capture</string>
+              </property>
+             </widget>
             </item>
            </layout>
           </widget>

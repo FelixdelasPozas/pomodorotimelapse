@@ -1011,6 +1011,7 @@ bool DesktopCapture::eventFilter(QObject *object, QEvent *event)
 				else
 				{
 					insideCamera = true;
+          m_cameraPositionComboBox->setCurrentIndex(0);
 				}
 
 				int height = CaptureDesktopThread::POMODORO_UNIT_HEIGHT * ((2 * m_pomodoro->getPomodorosInSession() - 1) +
@@ -1034,7 +1035,6 @@ bool DesktopCapture::eventFilter(QObject *object, QEvent *event)
 					break;
 				}
 
-				m_cameraPositionComboBox->setCurrentIndex(0);
 				drag = true;
 				dragPoint = me->pos();
 			}
@@ -1365,6 +1365,7 @@ void DesktopCapture::updateCaptureDesktop(bool status)
 	m_dirButton->setEnabled(status);
 	m_dirEditLabel->setEnabled(status);
 	m_fps->setEnabled(status);
+  m_overlayStats->setEnabled(status);
 }
 
 //-----------------------------------------------------------------
