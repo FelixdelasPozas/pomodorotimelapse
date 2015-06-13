@@ -20,6 +20,7 @@
 #ifndef ABOUTDIALOG_H_
 #define ABOUTDIALOG_H_
 
+// Qt
 #include <QDialog>
 #include "ui_AboutDialog.h"
 

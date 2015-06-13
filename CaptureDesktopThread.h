@@ -48,6 +48,7 @@ class CaptureDesktopThread
 	public:
 	  enum class COMPOSITION_MODE: char { COPY, PLUS, MULTIPLY };
 	  enum class POSITION: char { FREE, TOP_LEFT, TOP_CENTER, TOP_RIGHT, CENTER_LEFT, CENTER, CENTER_RIGHT, BOTTOM_LEFT, BOTTOM_CENTER, BOTTOM_RIGHT };
+	  enum class MASK: char { GENTLEMAN, ANONYMOUS, NONE };
 
   	/** \brief CaptureDesktopThread class constructor.
   	 * \param[in] monitor monitor index according to Qt or -1 to capture all monitors.
@@ -63,6 +64,7 @@ class CaptureDesktopThread
 				                          COMPOSITION_MODE compositionMode,
 				                          QPoint           cameraOverlayPosition,
 				                          QPoint           pomodoroOverlayPosition,
+				                          MASK             mask = MASK::NONE,
 				                          QObject         *parent = nullptr);
 
 		/** \brief CaptureDesktopThread class virtual destructor.
@@ -147,14 +149,12 @@ class CaptureDesktopThread
     /** \brief Returns the top-left point of the camera overlay area.
      *
      */
-		QPoint getCameraOverlayPosition()
-		{ return m_cameraPosition; };
+		QPoint getCameraOverlayPosition() const;
 
     /** \brief Returns the top-left point of the pomodoro statistics overlay area.
      *
      */
-		QPoint getStatsOverlayPosition()
-		{ return m_statsPosition; }
+		QPoint getStatsOverlayPosition() const;
 
 		virtual void run() final;
 
@@ -167,6 +167,16 @@ class CaptureDesktopThread
      *
      */
 		void takeScreenshot();
+
+		/** \brief Sets the mask type.
+		 *
+		 */
+		void setMask(MASK mask);
+
+		/** \brief Enables/disables face tracking and centering.
+		 *
+		 */
+		void setTrackFace(bool value);
 
 		static constexpr int   POMODORO_UNIT_MAX_WIDTH = 250;
 		static constexpr int   POMODORO_UNIT_HEIGHT    = 15;
@@ -194,7 +204,7 @@ class CaptureDesktopThread
      * \param[in] overlayImage camera picture.
      *
      */
-		void overlayCameraImage(QImage &baseImage, QImage &overlayImage, QList<dlib::full_object_detection> shapes);
+		void overlayCameraImage(QImage &baseImage, QImage &overlayImage);
 
     /** \brief Overlays the pomodoro statistics over the desktop captured image.
      * \param[in/out] baseImage captured desktop image.
@@ -211,6 +221,26 @@ class CaptureDesktopThread
      *
      */
 		void drawPomodoroUnit(QPainter &painter, QColor color, const QPoint &position, const QString &text, int width = POMODORO_UNIT_MAX_WIDTH);
+
+		/** \brief Draws the mask over the picture.
+		 * \param[in] cameraImage camera image.
+		 * \param[in] shapes face pose shapes.
+		 *
+		 */
+		void drawMask(QImage &cameraImage, dlib::full_object_detection shapes);
+
+		/** \brief Draws the positioning frame around the camra image.
+     * \param[in] cameraImage camera image.
+		 *
+		 */
+		void drawFrame(QImage &cameraImage);
+
+		/** \brief Centers the face in the picture.
+     * \param[in] cameraImage camera image.
+     * \param[in] rectangle rectangle to center on the picture.
+  	 *
+		 */
+		void centerFace(QImage &cameraImage, const dlib::drectangle &rectangle);
 
 		/** \brief Returns the height of the pomodoro overlay.
 		 *
@@ -237,14 +267,15 @@ class CaptureDesktopThread
 		QPoint           m_cameraPosition;       /** position of the camera overlay                                */
 		QPoint           m_statsPosition;        /** position of the statistics overlay                            */
 		COMPOSITION_MODE m_compositionMode;      /** composition mode for the camera overlay.                      */
-		bool             m_paintFrame;           /** true to paint a frame of the overlayed camera and statistics. */
+		bool             m_drawFrame;            /** true to paint a frame of the overlayed camera and statistics. */
+		MASK             m_mask;                 /** mask to paint in the camera image.                            */
+		bool             m_trackFace;            /** true to track and center the face in the camera picture.      */
 
-		std::shared_ptr<Pomodoro> m_pomodoro;
+		std::shared_ptr<Pomodoro> m_pomodoro;    /** pomodoro shared pointer */
 
-		dlib::frontal_face_detector m_faceDetector;
-		dlib::shape_predictor       m_faceShape;
-		dlib::correlation_tracker   m_faceTracker;
-		bool m_isTracking;
+		dlib::frontal_face_detector m_faceDetector; /** dlib face deterctor                           */
+		dlib::shape_predictor       m_faceShape;    /** dlib face poser                               */
+		bool m_isTracking;                          /** true if the object tracker is tracking a face */
 };
 
 #endif // CAPTURE_DESKTOP_THREAD_H_

@@ -227,6 +227,23 @@ class DesktopCapture
      */
     void onScaleIndexChanged(int value);
 
+    /** \brief Changes the drawing mask over the detected face.
+     * \param[in] value combo box index.
+     *
+     */
+    void onMaskIndexChanged(int value);
+
+    /** \brief Updates the face traking value in the capture thread.
+     * \param[in] status check status value.
+     *
+     */
+    void onFaceTrackingChanged(int status);
+
+    /** \brief Shows the about dialog.
+     *
+     */
+    void onAboutButtonPressed();
+
 	private:
 	  static const QStringList COMPOSITION_MODES_NAMES;
 	  static const QStringList POSITION_NAMES;
@@ -247,6 +264,8 @@ class DesktopCapture
 	  static const QString CAMERA_OVERLAY_POSITION;
 	  static const QString CAMERA_OVERLAY_COMPOSITION_MODE;
 	  static const QString CAMERA_OVERLAY_FIXED_POSITION;
+	  static const QString CAMERA_MASK;
+	  static const QString CAMERA_TRACK_FACE;
 	  static const QString POMODORO_ENABLED;
 	  static const QString POMODORO_TIME;
 	  static const QString POMODORO_SHORT_BREAK_TIME;

@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>793</width>
-    <height>636</height>
+    <height>670</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,7 +17,7 @@
    <bool>false</bool>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QVBoxLayout" name="verticalLayout" stretch="1,0,0">
+   <layout class="QVBoxLayout" name="verticalLayout" stretch="1,0">
     <property name="bottomMargin">
      <number>0</number>
     </property>
@@ -265,6 +265,49 @@
            </layout>
           </item>
           <item>
+           <widget class="QCheckBox" name="m_trackFace">
+            <property name="text">
+             <string>Detect and center the face in the picture</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_17">
+            <item>
+             <widget class="QLabel" name="label_11">
+              <property name="text">
+               <string>Mask</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QComboBox" name="m_cameraMaskComboBox">
+              <property name="currentIndex">
+               <number>2</number>
+              </property>
+              <item>
+               <property name="text">
+                <string>I feel like a sir</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Anonymous</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>None</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
            <widget class="QCheckBox" name="m_screenshotAnimateTray">
             <property name="toolTip">
              <string>Animate the tray icon when doing a capture.</string>
@@ -449,9 +492,14 @@
         </widget>
        </item>
        <item>
-        <widget class="QGroupBox" name="m_pomodoroGroupBox">
-         <property name="styleSheet">
-          <string notr="true"> QGroupBox {
+        <layout class="QVBoxLayout" name="verticalLayout_3" stretch="1,0,0">
+         <property name="rightMargin">
+          <number>0</number>
+         </property>
+         <item>
+          <widget class="QGroupBox" name="m_pomodoroGroupBox">
+           <property name="styleSheet">
+            <string notr="true"> QGroupBox {
      border: 1px solid gray;
      border-radius: 5px;
      margin-top: 1ex; /* leave space at the top for the title */
@@ -462,350 +510,391 @@
      subcontrol-position: top center; /* position at the top center */
      padding: 0 3px;
  }</string>
-         </property>
-         <property name="title">
-          <string>Pomodoro Configuration</string>
-         </property>
-         <property name="flat">
-          <bool>false</bool>
-         </property>
-         <property name="checkable">
-          <bool>true</bool>
-         </property>
-         <layout class="QVBoxLayout" name="verticalLayout_4">
-          <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="1,0">
+           </property>
+           <property name="title">
+            <string>Pomodoro Configuration</string>
+           </property>
+           <property name="flat">
+            <bool>false</bool>
+           </property>
+           <property name="checkable">
+            <bool>true</bool>
+           </property>
+           <layout class="QVBoxLayout" name="verticalLayout_4">
             <item>
-             <widget class="QLabel" name="label_2">
+             <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="1,0">
+              <item>
+               <widget class="QLabel" name="label_2">
+                <property name="toolTip">
+                 <string>Pomodoro duration value</string>
+                </property>
+                <property name="text">
+                 <string>Pomodoro</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QTimeEdit" name="m_pomodoroTime">
+                <property name="toolTip">
+                 <string>Edit pomodoro duration value</string>
+                </property>
+                <property name="time">
+                 <time>
+                  <hour>0</hour>
+                  <minute>25</minute>
+                  <second>0</second>
+                 </time>
+                </property>
+                <property name="maximumTime">
+                 <time>
+                  <hour>0</hour>
+                  <minute>59</minute>
+                  <second>0</second>
+                 </time>
+                </property>
+                <property name="minimumTime">
+                 <time>
+                  <hour>0</hour>
+                  <minute>5</minute>
+                  <second>0</second>
+                 </time>
+                </property>
+                <property name="displayFormat">
+                 <string>mm:ss</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_5" stretch="1,0">
+              <item>
+               <widget class="QLabel" name="label_3">
+                <property name="toolTip">
+                 <string>Short break duration value</string>
+                </property>
+                <property name="text">
+                 <string>Short break</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QTimeEdit" name="m_shortBreakTime">
+                <property name="toolTip">
+                 <string>Edit short break duration value</string>
+                </property>
+                <property name="time">
+                 <time>
+                  <hour>0</hour>
+                  <minute>5</minute>
+                  <second>0</second>
+                 </time>
+                </property>
+                <property name="maximumTime">
+                 <time>
+                  <hour>0</hour>
+                  <minute>59</minute>
+                  <second>0</second>
+                 </time>
+                </property>
+                <property name="minimumTime">
+                 <time>
+                  <hour>0</hour>
+                  <minute>1</minute>
+                  <second>0</second>
+                 </time>
+                </property>
+                <property name="displayFormat">
+                 <string>mm:ss</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_6" stretch="1,0">
+              <item>
+               <widget class="QLabel" name="label_4">
+                <property name="toolTip">
+                 <string>Long break duration value</string>
+                </property>
+                <property name="text">
+                 <string>Long break</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QTimeEdit" name="m_longBreakTime">
+                <property name="toolTip">
+                 <string>Edit long break duration value</string>
+                </property>
+                <property name="time">
+                 <time>
+                  <hour>0</hour>
+                  <minute>15</minute>
+                  <second>0</second>
+                 </time>
+                </property>
+                <property name="maximumTime">
+                 <time>
+                  <hour>0</hour>
+                  <minute>59</minute>
+                  <second>0</second>
+                 </time>
+                </property>
+                <property name="minimumTime">
+                 <time>
+                  <hour>0</hour>
+                  <minute>1</minute>
+                  <second>0</second>
+                 </time>
+                </property>
+                <property name="currentSection">
+                 <enum>QDateTimeEdit::MinuteSection</enum>
+                </property>
+                <property name="displayFormat">
+                 <string>mm:ss</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_7" stretch="1,0">
+              <item>
+               <widget class="QLabel" name="m_pomodoroBreak">
+                <property name="toolTip">
+                 <string>Number of pomodoros before a long break</string>
+                </property>
+                <property name="text">
+                 <string>Pomodoros before a long break</string>
+                </property>
+                <property name="wordWrap">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QSpinBox" name="m_pomodorosBreakNumber">
+                <property name="toolTip">
+                 <string>Edit  the number of pomodoros before a long break</string>
+                </property>
+                <property name="minimum">
+                 <number>1</number>
+                </property>
+                <property name="maximum">
+                 <number>10</number>
+                </property>
+                <property name="value">
+                 <number>4</number>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <widget class="QCheckBox" name="m_pomodoroAnimateTray">
               <property name="toolTip">
-               <string>Pomodoro duration value</string>
+               <string>Animate tray icon with unit progression.</string>
               </property>
               <property name="text">
-               <string>Pomodoro</string>
+               <string>Animated tray icon</string>
               </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QTimeEdit" name="m_pomodoroTime">
-              <property name="toolTip">
-               <string>Edit pomodoro duration value</string>
-              </property>
-              <property name="time">
-               <time>
-                <hour>0</hour>
-                <minute>25</minute>
-                <second>0</second>
-               </time>
-              </property>
-              <property name="maximumTime">
-               <time>
-                <hour>0</hour>
-                <minute>59</minute>
-                <second>0</second>
-               </time>
-              </property>
-              <property name="minimumTime">
-               <time>
-                <hour>0</hour>
-                <minute>5</minute>
-                <second>0</second>
-               </time>
-              </property>
-              <property name="displayFormat">
-               <string>mm:ss</string>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </item>
-          <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_5" stretch="1,0">
-            <item>
-             <widget class="QLabel" name="label_3">
-              <property name="toolTip">
-               <string>Short break duration value</string>
-              </property>
-              <property name="text">
-               <string>Short break</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QTimeEdit" name="m_shortBreakTime">
-              <property name="toolTip">
-               <string>Edit short break duration value</string>
-              </property>
-              <property name="time">
-               <time>
-                <hour>0</hour>
-                <minute>5</minute>
-                <second>0</second>
-               </time>
-              </property>
-              <property name="maximumTime">
-               <time>
-                <hour>0</hour>
-                <minute>59</minute>
-                <second>0</second>
-               </time>
-              </property>
-              <property name="minimumTime">
-               <time>
-                <hour>0</hour>
-                <minute>1</minute>
-                <second>0</second>
-               </time>
-              </property>
-              <property name="displayFormat">
-               <string>mm:ss</string>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </item>
-          <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_6" stretch="1,0">
-            <item>
-             <widget class="QLabel" name="label_4">
-              <property name="toolTip">
-               <string>Long break duration value</string>
-              </property>
-              <property name="text">
-               <string>Long break</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QTimeEdit" name="m_longBreakTime">
-              <property name="toolTip">
-               <string>Edit long break duration value</string>
-              </property>
-              <property name="time">
-               <time>
-                <hour>0</hour>
-                <minute>15</minute>
-                <second>0</second>
-               </time>
-              </property>
-              <property name="maximumTime">
-               <time>
-                <hour>0</hour>
-                <minute>59</minute>
-                <second>0</second>
-               </time>
-              </property>
-              <property name="minimumTime">
-               <time>
-                <hour>0</hour>
-                <minute>1</minute>
-                <second>0</second>
-               </time>
-              </property>
-              <property name="currentSection">
-               <enum>QDateTimeEdit::MinuteSection</enum>
-              </property>
-              <property name="displayFormat">
-               <string>mm:ss</string>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </item>
-          <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_7" stretch="1,0">
-            <item>
-             <widget class="QLabel" name="m_pomodoroBreak">
-              <property name="toolTip">
-               <string>Number of pomodoros before a long break</string>
-              </property>
-              <property name="text">
-               <string>Pomodoros before a long break</string>
-              </property>
-              <property name="wordWrap">
+              <property name="checked">
                <bool>true</bool>
               </property>
              </widget>
             </item>
             <item>
-             <widget class="QSpinBox" name="m_pomodorosBreakNumber">
+             <widget class="QCheckBox" name="m_pomodoroUseSounds">
               <property name="toolTip">
-               <string>Edit  the number of pomodoros before a long break</string>
-              </property>
-              <property name="minimum">
-               <number>1</number>
-              </property>
-              <property name="maximum">
-               <number>10</number>
-              </property>
-              <property name="value">
-               <number>4</number>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="m_pomodoroAnimateTray">
-            <property name="toolTip">
-             <string>Animate tray icon with unit progression.</string>
-            </property>
-            <property name="text">
-             <string>Animated tray icon</string>
-            </property>
-            <property name="checked">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="m_pomodoroUseSounds">
-            <property name="toolTip">
-             <string>Use sounds.</string>
-            </property>
-            <property name="text">
-             <string>Use sounds</string>
-            </property>
-            <property name="checked">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="m_continuousTicTac">
-            <property name="toolTip">
-             <string>Use continuous tic-tac sound when in a unit.</string>
-            </property>
-            <property name="text">
-             <string>Continuous Tic-Tac</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_9" stretch="1,0">
-            <property name="topMargin">
-             <number>0</number>
-            </property>
-            <item>
-             <widget class="QLabel" name="label_9">
-              <property name="toolTip">
-               <string>Total number of pomodoros in a sesssion.</string>
+               <string>Use sounds.</string>
               </property>
               <property name="text">
-               <string>Number Of Pomodoros Per Session</string>
+               <string>Use sounds</string>
               </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QSpinBox" name="m_pomodorosNumber">
-              <property name="toolTip">
-               <string>Edit  the total number of pomodoros in a sesssion.</string>
-              </property>
-              <property name="minimum">
-               <number>1</number>
-              </property>
-              <property name="maximum">
-               <number>99</number>
-              </property>
-              <property name="value">
-               <number>12</number>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </item>
-          <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_15">
-            <item>
-             <widget class="QLabel" name="label_10">
-              <property name="toolTip">
-               <string>Task name of the pomodoro.</string>
-              </property>
-              <property name="text">
-               <string>Initial task</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QLabel" name="m_pomodoroTask">
-              <property name="toolTip">
-               <string>Task name of the pomodoro.</string>
-              </property>
-              <property name="text">
-               <string/>
-              </property>
-              <property name="alignment">
-               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QToolButton" name="m_taskEditButton">
-              <property name="minimumSize">
-               <size>
-                <width>20</width>
-                <height>20</height>
-               </size>
-              </property>
-              <property name="maximumSize">
-               <size>
-                <width>25</width>
-                <height>25</height>
-               </size>
-              </property>
-              <property name="toolTip">
-               <string>Edit the task name of the pomodoro.</string>
-              </property>
-              <property name="statusTip">
-               <string>Modify initial task name</string>
-              </property>
-              <property name="text">
-               <string/>
-              </property>
-              <property name="icon">
-               <iconset resource="rsc/resources.qrc">
-                <normaloff>:/DesktopCapture/pen.png</normaloff>:/DesktopCapture/pen.png</iconset>
-              </property>
-              <property name="popupMode">
-               <enum>QToolButton::InstantPopup</enum>
-              </property>
-              <property name="autoRaise">
+              <property name="checked">
                <bool>true</bool>
               </property>
              </widget>
             </item>
+            <item>
+             <widget class="QCheckBox" name="m_continuousTicTac">
+              <property name="toolTip">
+               <string>Use continuous tic-tac sound when in a unit.</string>
+              </property>
+              <property name="text">
+               <string>Continuous Tic-Tac</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_9" stretch="1,0">
+              <property name="topMargin">
+               <number>0</number>
+              </property>
+              <item>
+               <widget class="QLabel" name="label_9">
+                <property name="toolTip">
+                 <string>Total number of pomodoros in a sesssion.</string>
+                </property>
+                <property name="text">
+                 <string>Number Of Pomodoros Per Session</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QSpinBox" name="m_pomodorosNumber">
+                <property name="toolTip">
+                 <string>Edit  the total number of pomodoros in a sesssion.</string>
+                </property>
+                <property name="minimum">
+                 <number>1</number>
+                </property>
+                <property name="maximum">
+                 <number>99</number>
+                </property>
+                <property name="value">
+                 <number>12</number>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_15">
+              <item>
+               <widget class="QLabel" name="label_10">
+                <property name="toolTip">
+                 <string>Task name of the pomodoro.</string>
+                </property>
+                <property name="text">
+                 <string>Initial task</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLabel" name="m_pomodoroTask">
+                <property name="toolTip">
+                 <string>Task name of the pomodoro.</string>
+                </property>
+                <property name="text">
+                 <string/>
+                </property>
+                <property name="alignment">
+                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QToolButton" name="m_taskEditButton">
+                <property name="minimumSize">
+                 <size>
+                  <width>20</width>
+                  <height>20</height>
+                 </size>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>25</width>
+                  <height>25</height>
+                 </size>
+                </property>
+                <property name="toolTip">
+                 <string>Edit the task name of the pomodoro.</string>
+                </property>
+                <property name="statusTip">
+                 <string>Modify initial task name</string>
+                </property>
+                <property name="text">
+                 <string/>
+                </property>
+                <property name="icon">
+                 <iconset resource="rsc/resources.qrc">
+                  <normaloff>:/DesktopCapture/pen.png</normaloff>:/DesktopCapture/pen.png</iconset>
+                </property>
+                <property name="popupMode">
+                 <enum>QToolButton::InstantPopup</enum>
+                </property>
+                <property name="autoRaise">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
            </layout>
-          </item>
-         </layout>
-        </widget>
+          </widget>
+         </item>
+         <item>
+          <spacer name="verticalSpacer">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>20</width>
+             <height>40</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_10">
+           <property name="topMargin">
+            <number>0</number>
+           </property>
+           <item>
+            <spacer name="horizontalSpacer">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item>
+            <widget class="QPushButton" name="m_about">
+             <property name="maximumSize">
+              <size>
+               <width>100</width>
+               <height>100</height>
+              </size>
+             </property>
+             <property name="text">
+              <string>About</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="m_startButton">
+             <property name="maximumSize">
+              <size>
+               <width>100</width>
+               <height>100</height>
+              </size>
+             </property>
+             <property name="toolTip">
+              <string>Starts the captures.</string>
+             </property>
+             <property name="text">
+              <string>Start!</string>
+             </property>
+             <property name="flat">
+              <bool>false</bool>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+        </layout>
        </item>
       </layout>
      </widget>
-    </item>
-    <item>
-     <layout class="QHBoxLayout" name="horizontalLayout_10">
-      <property name="topMargin">
-       <number>0</number>
-      </property>
-      <item>
-       <widget class="QPushButton" name="m_startButton">
-        <property name="maximumSize">
-         <size>
-          <width>100</width>
-          <height>100</height>
-         </size>
-        </property>
-        <property name="toolTip">
-         <string>Starts the captures.</string>
-        </property>
-        <property name="text">
-         <string>Start!</string>
-        </property>
-        <property name="flat">
-         <bool>false</bool>
-        </property>
-       </widget>
-      </item>
-     </layout>
     </item>
    </layout>
   </widget>

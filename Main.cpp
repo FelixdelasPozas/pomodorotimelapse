@@ -22,6 +22,8 @@
 
 // Qt
 #include <QApplication>
+#include <QSharedMemory>
+#include <QMessageBox>
 
 int main(int argc, char *argv[])
 {
@@ -31,6 +33,21 @@ int main(int argc, char *argv[])
 	// but only on linux because of X11 architecture.
 	app.setAttribute(Qt::AA_X11InitThreads, true);
 	app.setQuitOnLastWindowClosed(false);
+
+	// allow only one instance
+  QSharedMemory guard;
+  guard.setKey("DesktopCapture");
+
+  if (!guard.create(1))
+  {
+    QMessageBox msgBox;
+    msgBox.setWindowIcon(QIcon(":/DesktopCapture/application.ico"));
+    msgBox.setIcon(QMessageBox::Warning);
+    msgBox.setText("DesktopCapture is already running!");
+    msgBox.setStandardButtons(QMessageBox::Ok);
+    msgBox.exec();
+    exit(0);
+  }
 
 	DesktopCapture desktopCapture;
 	desktopCapture.show();

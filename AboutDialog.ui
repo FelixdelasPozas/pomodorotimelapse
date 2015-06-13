@@ -26,8 +26,8 @@
    <string>About...</string>
   </property>
   <property name="windowIcon">
-   <iconset>
-    <normaloff>:/MusicTranscoder/application.ico</normaloff>:/MusicTranscoder/application.ico</iconset>
+   <iconset resource="rsc/resources.qrc">
+    <normaloff>:/DesktopCapture/application-shot.ico</normaloff>:/DesktopCapture/application-shot.ico</iconset>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>

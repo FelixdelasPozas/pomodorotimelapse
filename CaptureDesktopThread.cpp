@@ -33,6 +33,7 @@
 #include <dlib/opencv.h>
 #include <dlib/gui_widgets.h>
 
+
 const QList<QPainter::CompositionMode> CaptureDesktopThread::COMPOSITION_MODES_QT = { QPainter::CompositionMode_SourceOver,
 		                                                                                  QPainter::CompositionMode_Plus,
 		                                                                                  QPainter::CompositionMode_Multiply };
@@ -46,13 +47,16 @@ CaptureDesktopThread::CaptureDesktopThread(int monitor,
 		                                       COMPOSITION_MODE compositionMode,
 		                                       QPoint cameraOverlayPosition,
 		                                       QPoint statsOverlayPosition,
+		                                       MASK mask,
 		                                       QObject* parent)
 : QThread          {parent}
 , m_aborted        {false}
 , m_paused         {false}
 , m_cameraEnabled  {true}
 , m_compositionMode{compositionMode}
-, m_paintFrame     {false}
+, m_drawFrame     {false}
+, m_mask           {mask}
+, m_trackFace      {false}
 , m_pomodoro       {nullptr}
 , m_isTracking     {false}
 {
@@ -322,6 +326,132 @@ void CaptureDesktopThread::setStatsOverlayPosition(const QPoint& point)
 }
 
 //-----------------------------------------------------------------
+QPoint CaptureDesktopThread::getCameraOverlayPosition() const
+{
+  return m_cameraPosition;
+}
+
+//-----------------------------------------------------------------
+QPoint CaptureDesktopThread::getStatsOverlayPosition() const
+{
+  return m_statsPosition;
+}
+
+//-----------------------------------------------------------------
+void CaptureDesktopThread::setMask(MASK mask)
+{
+  QMutexLocker lock(&m_mutex);
+
+  m_mask = mask;
+}
+
+//-----------------------------------------------------------------
+void CaptureDesktopThread::setTrackFace(bool value)
+{
+  QMutexLocker lock(&m_mutex);
+
+  if(value != m_trackFace)
+  {
+    m_trackFace = value;
+  }
+}
+
+//-----------------------------------------------------------------
+void CaptureDesktopThread::drawMask(QImage& cameraImage, dlib::full_object_detection shapes)
+{
+  auto maskIndex = static_cast<int>(m_mask);
+
+  // left eye coordinate
+  int lx = 0, ly = 0;
+  for (int i = 36; i <= 41; ++i)
+  {
+    lx += shapes.part(i).x();
+    ly += shapes.part(i).y();
+  }
+  lx /= 6;
+  ly /= 6;
+
+  // right eye coordinate
+  int rx = 0, ry = 0;
+  for (int i = 42; i <= 47; ++i)
+  {
+    rx += shapes.part(i).x();
+    ry += shapes.part(i).y();
+  }
+  rx /= 6;
+  ry /= 6;
+
+  // mouth coordinate
+  int mx = shapes.part(51).x();
+  int my = shapes.part(51).y();
+
+  // Transform and paint the mask.
+  QImage mask;
+  mask.load(MASKS[maskIndex].resource);
+
+  QLineF line(QPoint(lx, ly), QPoint(rx, ry));
+  line.angle();
+
+  auto eyeDistance = std::sqrt(std::pow(rx - lx, 2) + std::pow(ry - ly, 2));
+  auto lipDistance = std::sqrt(std::pow(((lx + rx) / 2) - mx, 2) + std::pow(((ly + ry) / 2) - my, 2));
+  auto widthRatio = eyeDistance / MASKS[maskIndex].eyeDistance;
+  auto heightRatio = lipDistance / MASKS[maskIndex].lipDistance;
+
+  QTransform transform;
+  transform.scale(widthRatio, heightRatio);
+  mask = mask.transformed(transform, Qt::SmoothTransformation);
+  auto rotatedLeftEye = transform.map(MASKS[maskIndex].leftEye);
+
+  QPainter painter(&cameraImage);
+  painter.translate(QPoint(lx, ly));
+  painter.rotate(-line.angle());
+  painter.translate(-rotatedLeftEye.x(), -rotatedLeftEye.y());
+  painter.drawImage(QPoint(0, 0), mask);
+  painter.end();
+}
+
+//-----------------------------------------------------------------
+void CaptureDesktopThread::drawFrame(QImage &cameraImage)
+{
+  QPoint middle(m_cameraResolution.width/2, m_cameraResolution.height/2);
+  int minimum = ((middle.x() < middle.y()) ? middle.x()/4 : middle.y()/4);
+
+  QPolygon poly(5);
+  QPainter painter(&cameraImage);
+  painter.setPen(QColor(Qt::blue));
+
+  for (int i = 0; i < 5; ++i)
+  {
+    poly.setPoint(0, i, i);
+    poly.setPoint(1, m_cameraResolution.width-i, i);
+    poly.setPoint(2, m_cameraResolution.width-i, m_cameraResolution.height-i);
+    poly.setPoint(3, i, m_cameraResolution.height-i);
+    poly.setPoint(4, i, i);
+    painter.drawConvexPolygon(poly);
+    painter.drawLine(QPoint(middle.x() - minimum, middle.y() - 1+i), QPoint(middle.x() + minimum, middle.y() - 1+i));
+    painter.drawLine(QPoint(middle.x() - 1+i, middle.y() - minimum), QPoint(middle.x() - 1+i, middle.y() + minimum));
+  }
+
+  painter.end();
+}
+
+//-----------------------------------------------------------------
+void CaptureDesktopThread::centerFace(QImage& cameraImage, const dlib::drectangle &rectangle)
+{
+  auto width = rectangle.width() * 1.7;
+  auto height = rectangle.height() * 1.7;
+  auto widthRatio = width / static_cast<double>(cameraImage.width());
+  auto heightRatio = height / static_cast<double>(cameraImage.height());
+  auto higherRatio = std::max(widthRatio, heightRatio);
+  auto center = QPoint((rectangle.left()+rectangle.right()) / 2, (rectangle.top()+rectangle.bottom()) /2);
+  auto rect = QRect(center.x() - (cameraImage.width()/2 * higherRatio), center.y() - (cameraImage.height()/2 * higherRatio), cameraImage.width() * higherRatio, cameraImage.height() * higherRatio);
+  auto originalSize = cameraImage.size();
+
+  cameraImage = cameraImage.copy(rect);
+  cameraImage = cameraImage.scaled(originalSize, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+}
+
+//-----------------------------------------------------------------
 QImage CaptureDesktopThread::MatToQImage(const cv::Mat& mat)
 {
   if (mat.type() == CV_8UC1) // 8-bits unsigned, NO. OF CHANNELS=1
@@ -362,7 +492,7 @@ QImage CaptureDesktopThread::MatToQImage(const cv::Mat& mat)
 }
 
 //-----------------------------------------------------------------
-void CaptureDesktopThread::overlayCameraImage(QImage &baseImage, QImage &overlayImage, QList<dlib::full_object_detection> shapes)
+void CaptureDesktopThread::overlayCameraImage(QImage &baseImage, QImage &overlayImage)
 {
   QPainter painter(&baseImage);
 
@@ -372,111 +502,53 @@ void CaptureDesktopThread::overlayCameraImage(QImage &baseImage, QImage &overlay
   pen.setColor(Qt::white);
   facePainter.setPen(pen);
 
-  QImage cropped;
-  if(m_isTracking)
+  auto image = overlayImage;
+
+  if(m_mask != MASK::NONE || m_trackFace)
   {
-    for(auto shape: shapes)
+    dlib::cv_image<dlib::bgr_pixel> cimg(m_frame);
+
+    auto faces = m_faceDetector(cimg);
+
+    if(!faces.empty())
     {
-      // left eye coordinate
-      int lx = 0, ly = 0;
-      for(int i = 36; i <= 41; ++i)
+      auto trackFace = faces.front();
+      auto trackArea = trackFace.width() * trackFace.height();
+      for(auto face: faces)
       {
-        lx += shape.part(i).x();
-        ly += shape.part(i).y();
+        auto area = face.width() * face.height();
+        if(area > trackArea)
+        {
+          trackFace = face;
+          trackArea = area;
+        }
       }
-      lx /= 6;
-      ly /= 6;
 
-      // right eye coordinate
-      int rx = 0, ry = 0;
-      for(int i = 42; i <= 47; ++i)
+      auto shapes = m_faceShape(cimg, trackFace);
+
+      if(m_mask != MASK::NONE)
       {
-        rx += shape.part(i).x();
-        ry += shape.part(i).y();
+        drawMask(image, shapes);
       }
-      rx /= 6;
-      ry /= 6;
 
-      // mouth coordinate
-      int mx = shape.part(51).x();
-      int my = shape.part(51).y();
-
-      // Transform and paint the monocle.
-      QImage mask;
-      mask.load(MASKS[0].resource);
-
-      QLineF line(QPoint(lx,ly),QPoint(rx,ry));
-      line.angle();
-
-      auto eyeDistance = std::sqrt(std::pow(rx-lx,2)+std::pow(ry-ly, 2));
-      auto lipDistance = std::sqrt(std::pow(((lx+rx)/2) - mx, 2) + std::pow(((ly+ry)/2) - my, 2));
-      auto widthRatio = eyeDistance/MASKS[0].eyeDistance;
-      auto heightRatio = lipDistance/MASKS[0].lipDistance;
-
-      QTransform transform;
-      transform.scale(widthRatio, heightRatio);
-      mask = mask.transformed(transform, Qt::SmoothTransformation);
-      auto rotated = transform.map(MASKS[0].leftEye);
-
-      facePainter.translate(QPoint(lx,ly));
-      facePainter.rotate(-line.angle());
-      facePainter.translate(-rotated.x(), -rotated.y());
-      facePainter.drawImage(QPoint(0,0),mask);
-    }
-
-    auto rectangle = m_faceTracker.get_position();
-    QPoint center((rectangle.left()+rectangle.right()) / 2, (rectangle.top()+rectangle.bottom()) /2);
-
-    auto width = rectangle.width() * 1.6;
-    auto height = rectangle.height() * 1.6;
-    auto widthRatio = width / static_cast<double>(overlayImage.width());
-    auto heightRatio = height / static_cast<double>(overlayImage.height());
-
-    QRect rect;
-    if(widthRatio > heightRatio)
-    {
-      rect = QRect(center.x() - (overlayImage.width()/2 * widthRatio), center.y() - (overlayImage.height()/2 * widthRatio), overlayImage.width() * widthRatio, overlayImage.height() * widthRatio);
+      if(m_trackFace)
+      {
+        centerFace(image, shapes.get_rect());
+      }
     }
     else
     {
-      rect = QRect(center.x() - (overlayImage.width()/2 * heightRatio), center.y() - (overlayImage.height()/2 * heightRatio), overlayImage.width() * heightRatio, overlayImage.height() * heightRatio);
+      m_isTracking = false;
     }
+  }
 
-    cropped = overlayImage.copy(rect);
-    cropped = cropped.scaled(overlayImage.size(), Qt::KeepAspectRatio, Qt::SmoothTransformation);
+  if (m_drawFrame)
+  {
+    drawFrame(image);
   }
 
   painter.setCompositionMode(COMPOSITION_MODES_QT.at(static_cast<int>(m_compositionMode)));
-  if(m_isTracking)
-  {
-    painter.drawImage(m_cameraPosition.x(), m_cameraPosition.y(), cropped);
-  }
-  else
-  {
-    painter.drawImage(m_cameraPosition.x(), m_cameraPosition.y(), overlayImage);
-  }
-
-  if (m_paintFrame)
-  {
-  	QPoint middle(m_cameraResolution.width/2, m_cameraResolution.height/2);
-    int minimum = ((middle.x() < middle.y()) ? middle.x()/4 : middle.y()/4);
-
-  	QPolygon poly(5);
-    painter.setPen(QColor(Qt::blue));
-
-  	for (int i = 0; i < 3; ++i)
-  	{
-    	poly.setPoint(0, m_cameraPosition.x()+i, m_cameraPosition.y()+i);
-    	poly.setPoint(1, m_cameraPosition.x()+m_cameraResolution.width-i, m_cameraPosition.y()+i);
-    	poly.setPoint(2, m_cameraPosition.x()+m_cameraResolution.width-i, m_cameraPosition.y()+m_cameraResolution.height-i);
-    	poly.setPoint(3, m_cameraPosition.x()+i, m_cameraPosition.y()+m_cameraResolution.height-i);
-    	poly.setPoint(4, m_cameraPosition.x()+i, m_cameraPosition.y()+i);
-    	painter.drawConvexPolygon(poly);
-  		painter.drawLine(QPoint(m_cameraPosition.x() + middle.x() - minimum, m_cameraPosition.y() + middle.y() - 1+i), QPoint(m_cameraPosition.x() + middle.x() + minimum, m_cameraPosition.y() + middle.y() - 1+i));
-    	painter.drawLine(QPoint(m_cameraPosition.x() + middle.x() - 1+i, m_cameraPosition.y() + middle.y() - minimum), QPoint(m_cameraPosition.x() + middle.x() - 1+i, m_cameraPosition.y() + middle.y() + minimum));
-  	}
-  }
-
+  painter.drawImage(m_cameraPosition.x(), m_cameraPosition.y(), image);
   painter.end();
 }
 
@@ -516,11 +588,11 @@ void CaptureDesktopThread::overlayPomodoro(QImage &image)
 	color.setAlphaF(0.33);
 	painter.fillRect(m_statsPosition.x(), m_statsPosition.y(), POMODORO_UNIT_MAX_WIDTH, height, color);
 
-	if (m_paintFrame)
+	if (m_drawFrame)
 	{
 	 	QPolygon poly(5);
     painter.setPen(QColor(Qt::yellow));
-  	for (int i = 0; i < 3; ++i)
+  	for (int i = 0; i < 5; ++i)
   	{
     	poly.setPoint(0, m_statsPosition.x()+i, m_statsPosition.y()+i);
     	poly.setPoint(1, m_statsPosition.x()+ POMODORO_UNIT_MAX_WIDTH-i, m_statsPosition.y()+i);
@@ -613,15 +685,13 @@ void CaptureDesktopThread::setCameraOverlayCompositionMode(COMPOSITION_MODE mode
 //-----------------------------------------------------------------
 void CaptureDesktopThread::setPaintFrame(bool status)
 {
-	m_paintFrame = status;
+	m_drawFrame = status;
 }
 
 //-----------------------------------------------------------------
 void CaptureDesktopThread::takeScreenshot()
 {
 	m_mutex.lock();
-
-	static int frames = 0;
 
 	// capture desktop
 	auto desktopImage = QPixmap::grabWindow(QApplication::desktop()->winId(), m_geometry.x(), m_geometry.y(), m_geometry.width(), m_geometry.height());
@@ -635,42 +705,9 @@ void CaptureDesktopThread::takeScreenshot()
 		}
 		m_mutex.unlock();
 
-		dlib::cv_image<dlib::bgr_pixel> cimg(m_frame);
-		QList<dlib::full_object_detection> shapes;
-
-    auto faces = m_faceDetector(cimg);
-
-    if(!faces.empty())
-    {
-      auto trackFace = faces.front();
-      auto trackArea = trackFace.width() * trackFace.height();
-      for(auto face: faces)
-      {
-        auto area = face.width() * face.height();
-        if(area > trackArea)
-        {
-          trackFace = face;
-          trackArea = area;
-        }
-      }
-
-      if(!m_isTracking)
-      {
-        m_faceTracker.start_track(cimg, trackFace);
-        m_isTracking = true;
-      }
-      else
-      {
-        m_faceTracker.update(cimg);
-      }
-
-      shapes << m_faceShape(cimg, trackFace);
-    }
-
-		++frames;
 		auto image = desktopImage.toImage();
 		auto cameraImage = MatToQImage(m_frame);
-		overlayCameraImage(image, cameraImage, shapes);
+		overlayCameraImage(image, cameraImage);
 		overlayPomodoro(image);
 		desktopImage = QPixmap::fromImage(image);
 	}

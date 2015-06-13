@@ -22,6 +22,7 @@
 #include "ProbeResolutionsDialog.h"
 #include "CaptureDesktopThread.h"
 #include "PomodoroStatistics.h"
+#include "AboutDialog.h"
 
 // OpenCV
 #include <opencv2/highgui/highgui.hpp>
@@ -67,6 +68,8 @@ const QString DesktopCapture::CAMERA_ACTIVE_RESOLUTION        = QString("Active 
 const QString DesktopCapture::CAMERA_OVERLAY_POSITION         = QString("Camera Overlay Position");
 const QString DesktopCapture::CAMERA_OVERLAY_COMPOSITION_MODE = QString("Camera Overlay Composition Mode");
 const QString DesktopCapture::CAMERA_OVERLAY_FIXED_POSITION   = QString("Camera Overlay Fixed Position");
+const QString DesktopCapture::CAMERA_MASK                     = QString("Camera Mask");
+const QString DesktopCapture::CAMERA_TRACK_FACE               = QString("Center face in camera picture");
 const QString DesktopCapture::POMODORO_TIME                   = QString("Pomodoro Time");
 const QString DesktopCapture::POMODORO_SHORT_BREAK_TIME       = QString("Short Break Time");
 const QString DesktopCapture::POMODORO_LONG_BREAK_TIME        = QString("Long Break Time");
@@ -128,6 +131,9 @@ DesktopCapture::DesktopCapture()
 	connect(m_pomodorosNumber, SIGNAL(valueChanged(int)), this, SLOT(updatePomodoroValues()));
 	connect(m_captureVideo, SIGNAL(stateChanged(int)), this, SLOT(onCaptureVideoChanged(int)));
 	connect(m_scaleComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(onScaleIndexChanged(int)));
+	connect(m_cameraMaskComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(onMaskIndexChanged(int)));
+	connect(m_trackFace, SIGNAL(stateChanged(int)), this, SLOT(onFaceTrackingChanged(int)));
+	connect(m_about, SIGNAL(pressed()), this, SLOT(onAboutButtonPressed()));
 
 	m_screenshotImage->installEventFilter(this);
 
@@ -489,6 +495,29 @@ void DesktopCapture::loadConfiguration()
   m_cameraPositionComboBox->setCurrentIndex(cameraPosition);
   m_cameraPositionComboBox->setEnabled(enableCamera);
 
+  int cameraMaskIndex;
+  if(settings.contains(CAMERA_MASK))
+  {
+    cameraMaskIndex = settings.value(CAMERA_MASK, 2).toInt();
+  }
+  else
+  {
+    cameraMaskIndex = 2;
+    settings.setValue(CAMERA_MASK, cameraMaskIndex);
+  }
+  m_cameraMaskComboBox->setCurrentIndex(cameraMaskIndex);
+
+  bool trackFace;
+  if(settings.contains(CAMERA_TRACK_FACE))
+  {
+    trackFace = settings.value(CAMERA_TRACK_FACE, false).toBool();
+  }
+  else
+  {
+    trackFace = false;
+    settings.setValue(CAMERA_TRACK_FACE, trackFace);
+  }
+  m_trackFace->setChecked(trackFace);
 
   bool animateScreenshot;
   if (settings.contains(CAMERA_ANIMATED_TRAY_ENABLED))
@@ -559,6 +588,8 @@ void DesktopCapture::saveConfiguration()
   settings.setValue(CAPTURE_VIDEO, m_captureVideo->isChecked());
   settings.setValue(CAPTURE_VIDEO_FPS, m_fps->value());
   settings.setValue(CAMERA_OVERLAY_FIXED_POSITION, m_cameraPositionComboBox->currentIndex());
+  settings.setValue(CAMERA_MASK, m_cameraMaskComboBox->currentIndex());
+  settings.setValue(CAMERA_TRACK_FACE, m_trackFace->isChecked());
   settings.setValue(POMODOROS_LAST_TASK, m_pomodoroTask->text());
   settings.setValue(POMODOROS_OVERLAY, m_overlayStats->isChecked());
   settings.setValue(POMODOROS_OVERLAY_POSITION, m_statsPosition);
@@ -851,7 +882,9 @@ void DesktopCapture::setupCaptureThread()
 		resolution = m_cameraResolutions.at(m_cameraResolutionComboBox->currentIndex());
 	}
 
-	m_captureThread = new CaptureDesktopThread(monitor, resolution, m_compositionMode, m_PIPposition, m_statsPosition, this);
+	auto mask = static_cast<CaptureDesktopThread::MASK>(m_cameraMaskComboBox->currentIndex());
+	m_captureThread = new CaptureDesktopThread(monitor, resolution, m_compositionMode, m_PIPposition, m_statsPosition, mask, this);
+	m_captureThread->setTrackFace(m_trackFace->isChecked());
 
 	if (m_pomodoroGroupBox->isChecked())
 	{
@@ -1611,6 +1644,29 @@ void DesktopCapture::onCaptureVideoChanged(int status)
 
   m_fpsLabel      ->setEnabled(enabled);
   m_fps           ->setEnabled(enabled);
+}
+
+//-----------------------------------------------------------------
+void DesktopCapture::onMaskIndexChanged(int value)
+{
+  Q_ASSERT(m_captureThread);
+
+  m_captureThread->setMask(static_cast<CaptureDesktopThread::MASK>(value));
+}
+
+//-----------------------------------------------------------------
+void DesktopCapture::onFaceTrackingChanged(int status)
+{
+  Q_ASSERT(m_captureThread);
+
+  m_captureThread->setTrackFace(status);
+}
+
+//-----------------------------------------------------------------
+void DesktopCapture::onAboutButtonPressed()
+{
+  AboutDialog about;
+  about.exec();
 }
 
 //-----------------------------------------------------------------

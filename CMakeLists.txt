@@ -53,6 +53,7 @@ qt4_wrap_ui(CORE_UI
   MainWindow.ui
   ProbeResolutionsDialog.ui
   PomodoroStatistics.ui
+  AboutDialog.ui
   )
 	
 qt4_wrap_cpp(CORE_MOC
@@ -62,6 +63,7 @@ qt4_wrap_cpp(CORE_MOC
   CaptureDesktopThread.h
   Pomodoro.h
   PomodoroStatistics.h
+  AboutDialog.h
   )
 
 set (CORE_SOURCES
@@ -75,6 +77,7 @@ set (CORE_SOURCES
   CaptureDesktopThread.cpp
   Pomodoro.cpp
   PomodoroStatistics.cpp
+  AboutDialog.cpp
   VPXInterface.cpp
   webmEBMLwriter.cpp
   ${CMAKE_CURRENT_BINARY_DIR}/DesktopCapture.rc
