@@ -244,6 +244,12 @@ class DesktopCapture
      */
     void onAboutButtonPressed();
 
+    /** \brief Updates the position of the pomodoro overlay.
+     * \param[in] index combo box index.
+     *
+     */
+    void onPomodoroPositionChanged(int index);
+
 	private:
 	  static const QStringList COMPOSITION_MODES_NAMES;
 	  static const QStringList POSITION_NAMES;
@@ -278,6 +284,7 @@ class DesktopCapture
 	  static const QString POMODOROS_LAST_TASK;
 	  static const QString POMODOROS_OVERLAY;
 	  static const QString POMODOROS_OVERLAY_POSITION;
+	  static const QString POMODOROS_OVERLAY_FIXED_POSITION;
 
 	  static const QStringList CAPTURE_VIDEO_QUALITY_STRINGS;
 	  static const QString INI_FILENAME;
@@ -365,6 +372,7 @@ class DesktopCapture
 		QAction *m_menuShowStats;
 		QAction *m_menuStopCapture;
 		QAction *m_menuChangeTask;
+		QAction *m_menuAbout;
 		QAction *m_menuQuit;
 
 		bool m_paused;

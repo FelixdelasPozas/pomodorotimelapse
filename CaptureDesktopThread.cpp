@@ -39,7 +39,8 @@ const QList<QPainter::CompositionMode> CaptureDesktopThread::COMPOSITION_MODES_Q
 		                                                                                  QPainter::CompositionMode_Multiply };
 
 const QList<struct CaptureDesktopThread::Mask> CaptureDesktopThread::MASKS = { { QString(":/DesktopCapture/monocle.png"),   200, 285, QPoint(150,107) },
-                                                                               { QString(":/DesktopCapture/guyfawkes.png"), 275, 285, QPoint(167,292) } };
+                                                                               { QString(":/DesktopCapture/guyfawkes.png"), 275, 285, QPoint(167,292) },
+                                                                               { QString(":/DesktopCapture/pirate.png"),    110,  80, QPoint(142,216) } };
 
 //-----------------------------------------------------------------
 CaptureDesktopThread::CaptureDesktopThread(int monitor,
@@ -214,54 +215,13 @@ void CaptureDesktopThread::setCameraOverlayPosition(const QPoint &point)
 }
 
 //-----------------------------------------------------------------
-void CaptureDesktopThread::setCameraOverlayPosition(POSITION position)
+void CaptureDesktopThread::setCameraOverlayPosition(const POSITION position)
 {
 	QMutexLocker lock(&m_mutex);
 
-	auto width = m_geometry.width();
-	auto height = m_geometry.height();
-
-	switch (position)
+	if(position != POSITION::FREE)
 	{
-		case POSITION::TOP_LEFT:
-			m_cameraPosition.setX(0);
-			m_cameraPosition.setY(0);
-			break;
-		case POSITION::TOP_CENTER:
-			m_cameraPosition.setX(width/2 - m_cameraResolution.width/2);
-			m_cameraPosition.setY(0);
-			break;
-		case POSITION::TOP_RIGHT:
-			m_cameraPosition.setX(width - m_cameraResolution.width);
-			m_cameraPosition.setY(0);
-			break;
-		case POSITION::CENTER_LEFT:
-			m_cameraPosition.setX(0);
-			m_cameraPosition.setY(height/2-m_cameraResolution.height/2);
-			break;
-		case POSITION::CENTER:
-			m_cameraPosition.setX(width/2 - m_cameraResolution.width/2);
-			m_cameraPosition.setY(height/2-m_cameraResolution.height/2);
-			break;
-		case POSITION::CENTER_RIGHT:
-			m_cameraPosition.setX(width - m_cameraResolution.width);
-			m_cameraPosition.setY(height/2-m_cameraResolution.height/2);
-			break;
-		case POSITION::BOTTOM_LEFT:
-			m_cameraPosition.setX(0);
-			m_cameraPosition.setY(height - m_cameraResolution.height);
-			break;
-		case POSITION::BOTTOM_CENTER:
-			m_cameraPosition.setX(width/2 - m_cameraResolution.width/2);
-			m_cameraPosition.setY(height - m_cameraResolution.height);
-			break;
-		case POSITION::BOTTOM_RIGHT:
-			m_cameraPosition.setX(width - m_cameraResolution.width);
-			m_cameraPosition.setY(height - m_cameraResolution.height);
-			break;
-		case POSITION::FREE: // nothing to be done.
-		default:
-			break;
+	  m_cameraPosition = computePosition(position, QRect(0,0, m_cameraResolution.width, m_cameraResolution.height));
 	}
 }
 
@@ -311,7 +271,7 @@ void CaptureDesktopThread::setStatsOverlayPosition(const QPoint& point)
 		m_statsPosition.setY(0);
 	}
 
-  int xLimit = m_geometry.width() - 250;
+  int xLimit = m_geometry.width() - POMODORO_UNIT_MAX_WIDTH;
   int yLimit = m_geometry.height() - pomodoroOverlayHeight();
 
 	if (m_statsPosition.x() > xLimit)
@@ -323,6 +283,17 @@ void CaptureDesktopThread::setStatsOverlayPosition(const QPoint& point)
 	{
 		m_statsPosition.setY(yLimit);
 	}
+}
+
+//-----------------------------------------------------------------
+void CaptureDesktopThread::setStatsOverlayPosition(const POSITION position)
+{
+  QMutexLocker lock(&m_mutex);
+
+  if(position != POSITION::FREE)
+  {
+    m_statsPosition = computePosition(position, QRect(0,0,POMODORO_UNIT_MAX_WIDTH, pomodoroOverlayHeight()));
+  }
 }
 
 //-----------------------------------------------------------------
@@ -449,6 +420,59 @@ void CaptureDesktopThread::centerFace(QImage& cameraImage, const dlib::drectangl
 
   cameraImage = cameraImage.copy(rect);
   cameraImage = cameraImage.scaled(originalSize, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+}
+
+//-----------------------------------------------------------------
+QPoint CaptureDesktopThread::computePosition(const POSITION position, const QRect& area)
+{
+  QPoint point;
+  auto width = m_geometry.width();
+  auto height = m_geometry.height();
+
+  switch (position)
+  {
+    case POSITION::TOP_LEFT:
+      point.setX(0);
+      point.setY(0);
+      break;
+    case POSITION::TOP_CENTER:
+      point.setX(width/2 - area.width()/2);
+      point.setY(0);
+      break;
+    case POSITION::TOP_RIGHT:
+      point.setX(width - area.width());
+      point.setY(0);
+      break;
+    case POSITION::CENTER_LEFT:
+      point.setX(0);
+      point.setY(height/2 - area.height()/2);
+      break;
+    case POSITION::CENTER:
+      point.setX(width/2 - area.width()/2);
+      point.setY(height/2- area.height()/2);
+      break;
+    case POSITION::CENTER_RIGHT:
+      point.setX(width - area.width());
+      point.setY(height/2 - area.height()/2);
+      break;
+    case POSITION::BOTTOM_LEFT:
+      point.setX(0);
+      point.setY(height - area.height());
+      break;
+    case POSITION::BOTTOM_CENTER:
+      point.setX(width/2 - area.width()/2);
+      point.setY(height - area.height());
+      break;
+    case POSITION::BOTTOM_RIGHT:
+      point.setX(width - area.width());
+      point.setY(height - area.height());
+      break;
+    case POSITION::FREE: // nothing to be done.
+    default:
+      break;
+  }
+
+  return point;
 }
 
 //-----------------------------------------------------------------

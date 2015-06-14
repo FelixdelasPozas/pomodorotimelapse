@@ -48,7 +48,7 @@ class CaptureDesktopThread
 	public:
 	  enum class COMPOSITION_MODE: char { COPY, PLUS, MULTIPLY };
 	  enum class POSITION: char { FREE, TOP_LEFT, TOP_CENTER, TOP_RIGHT, CENTER_LEFT, CENTER, CENTER_RIGHT, BOTTOM_LEFT, BOTTOM_CENTER, BOTTOM_RIGHT };
-	  enum class MASK: char { GENTLEMAN, ANONYMOUS, NONE };
+	  enum class MASK: char { GENTLEMAN, ANONYMOUS, PIRATE, NONE };
 
   	/** \brief CaptureDesktopThread class constructor.
   	 * \param[in] monitor monitor index according to Qt or -1 to capture all monitors.
@@ -119,7 +119,7 @@ class CaptureDesktopThread
 		void setCameraOverlayPosition(const QPoint &point);
 
     /** \brief Sets the position where the camera picture will be placed in the captured desktop image.
-     * \param[in]
+     * \param[in] position
      *
      */
 		void setCameraOverlayPosition(const POSITION position);
@@ -134,6 +134,12 @@ class CaptureDesktopThread
      *
      */
 		void setStatsOverlayPosition(const QPoint &point);
+
+		/** \brief Sets the position where the statistics will be places in the captured desktop image.
+		 * \param[in] position
+		 *
+		 */
+		void setStatsOverlayPosition(const POSITION position);
 
     /** \brief Enables/disables the frame that shows the position of the camera and pomodoro overlays.
      *
@@ -198,6 +204,14 @@ class CaptureDesktopThread
 		static const QList<struct Mask> MASKS;
 
 		static const QList<QPainter::CompositionMode> COMPOSITION_MODES_QT;
+
+		/** \brief Computes the position of the top left corner given the size of the area and
+		 *         the POSITION to put it.
+		 * \param[in] position position of the area.
+		 * \param[in] area area to position.
+		 *
+		 */
+		QPoint computePosition(const POSITION position, const QRect &area);
 
     /** \brief Overlays the camera image over the desktop captured image.
      * \param[in/out] baseImage captured desktop image.

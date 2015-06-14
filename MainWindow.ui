@@ -79,7 +79,7 @@
  }</string>
          </property>
          <property name="title">
-          <string>Desktop Capture</string>
+          <string>Capture desktop</string>
          </property>
          <property name="flat">
           <bool>false</bool>
@@ -185,7 +185,7 @@
              <string>Capture camera images.</string>
             </property>
             <property name="text">
-             <string>Enable Camera</string>
+             <string>Enable camera</string>
             </property>
             <property name="checked">
              <bool>true</bool>
@@ -203,7 +203,7 @@
                <string>Resolution of the camera images.</string>
               </property>
               <property name="text">
-               <string>Camera Resolution</string>
+               <string>Camera resolution</string>
               </property>
              </widget>
             </item>
@@ -227,7 +227,7 @@
                <string>Composition of the camera image in the capture.</string>
               </property>
               <property name="text">
-               <string>Composition Mode</string>
+               <string>Composition mode</string>
               </property>
              </widget>
             </item>
@@ -251,7 +251,7 @@
                <string>Position of the camera image.</string>
               </property>
               <property name="text">
-               <string>Overlay Position</string>
+               <string>Overlay position</string>
               </property>
              </widget>
             </item>
@@ -266,6 +266,9 @@
           </item>
           <item>
            <widget class="QCheckBox" name="m_trackFace">
+            <property name="toolTip">
+             <string>Dectect the face and center the camera picture in it.</string>
+            </property>
             <property name="text">
              <string>Detect and center the face in the picture</string>
             </property>
@@ -278,6 +281,9 @@
            <layout class="QHBoxLayout" name="horizontalLayout_17">
             <item>
              <widget class="QLabel" name="label_11">
+              <property name="toolTip">
+               <string>Mask of the face.</string>
+              </property>
               <property name="text">
                <string>Mask</string>
               </property>
@@ -285,8 +291,11 @@
             </item>
             <item>
              <widget class="QComboBox" name="m_cameraMaskComboBox">
+              <property name="toolTip">
+               <string>Sets the mask of the face.</string>
+              </property>
               <property name="currentIndex">
-               <number>2</number>
+               <number>3</number>
               </property>
               <item>
                <property name="text">
@@ -296,6 +305,11 @@
               <item>
                <property name="text">
                 <string>Anonymous</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>With a bottle of rum</string>
                </property>
               </item>
               <item>
@@ -326,7 +340,7 @@
              <string>Capture video instead of individual images.</string>
             </property>
             <property name="text">
-             <string>Capture Video</string>
+             <string>Capture video</string>
             </property>
            </widget>
           </item>
@@ -341,7 +355,7 @@
                <string>Frame rate of the output video.</string>
               </property>
               <property name="text">
-               <string>Output Video Framerate</string>
+               <string>Output video framerate</string>
               </property>
              </widget>
             </item>
@@ -433,7 +447,7 @@
                <string>Directory of the output files.</string>
               </property>
               <property name="text">
-               <string>Output Directory</string>
+               <string>Output directory</string>
               </property>
              </widget>
             </item>
@@ -482,7 +496,7 @@
         </widget>
        </item>
        <item>
-        <layout class="QVBoxLayout" name="verticalLayout_3" stretch="1,0,0">
+        <layout class="QVBoxLayout" name="verticalLayout_3" stretch="1,0">
          <property name="rightMargin">
           <number>0</number>
          </property>
@@ -502,7 +516,7 @@
  }</string>
            </property>
            <property name="title">
-            <string>Pomodoro Configuration</string>
+            <string>Pomodoro</string>
            </property>
            <property name="flat">
             <bool>false</bool>
@@ -693,7 +707,7 @@
                  <string>Total number of pomodoros in a sesssion.</string>
                 </property>
                 <property name="text">
-                 <string>Pomodoros Per Session</string>
+                 <string>Pomodoros in a session</string>
                 </property>
                </widget>
               </item>
@@ -809,7 +823,7 @@
                <string>Use continuous tic-tac sound when in a unit.</string>
               </property>
               <property name="text">
-               <string>Continuous Tic-Tac</string>
+               <string>Continuous tic-tac sound</string>
               </property>
              </widget>
             </item>
@@ -823,21 +837,29 @@
               </property>
              </widget>
             </item>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_18">
+              <item>
+               <widget class="QLabel" name="m_pomodoroPositionLabel">
+                <property name="toolTip">
+                 <string>Position of the statistics.</string>
+                </property>
+                <property name="text">
+                 <string>Overlay position</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QComboBox" name="m_pomodoroPositionComboBox">
+                <property name="toolTip">
+                 <string>Sets the position of the statistics.</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
            </layout>
           </widget>
-         </item>
-         <item>
-          <spacer name="verticalSpacer">
-           <property name="orientation">
-            <enum>Qt::Vertical</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>20</width>
-             <height>40</height>
-            </size>
-           </property>
-          </spacer>
          </item>
          <item>
           <layout class="QHBoxLayout" name="horizontalLayout_10">
