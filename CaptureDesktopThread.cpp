@@ -40,7 +40,8 @@ const QList<QPainter::CompositionMode> CaptureDesktopThread::COMPOSITION_MODES_Q
 
 const QList<struct CaptureDesktopThread::Mask> CaptureDesktopThread::MASKS = { { QString(":/DesktopCapture/monocle.png"),   200, 285, QPoint(150,107) },
                                                                                { QString(":/DesktopCapture/guyfawkes.png"), 275, 285, QPoint(167,292) },
-                                                                               { QString(":/DesktopCapture/pirate.png"),    110,  80, QPoint(142,216) } };
+                                                                               { QString(":/DesktopCapture/pirate.png"),    110,  80, QPoint(142,216) },
+                                                                               { QString(":/DesktopCapture/awesome.png"),   110,  80, QPoint(94,152) }};
 
 //-----------------------------------------------------------------
 CaptureDesktopThread::CaptureDesktopThread(int monitor,

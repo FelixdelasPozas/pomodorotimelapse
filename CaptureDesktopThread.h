@@ -48,7 +48,7 @@ class CaptureDesktopThread
 	public:
 	  enum class COMPOSITION_MODE: char { COPY, PLUS, MULTIPLY };
 	  enum class POSITION: char { FREE, TOP_LEFT, TOP_CENTER, TOP_RIGHT, CENTER_LEFT, CENTER, CENTER_RIGHT, BOTTOM_LEFT, BOTTOM_CENTER, BOTTOM_RIGHT };
-	  enum class MASK: char { GENTLEMAN, ANONYMOUS, PIRATE, NONE };
+	  enum class MASK: char { GENTLEMAN, ANONYMOUS, PIRATE, AWESOME, NONE };
 
   	/** \brief CaptureDesktopThread class constructor.
   	 * \param[in] monitor monitor index according to Qt or -1 to capture all monitors.

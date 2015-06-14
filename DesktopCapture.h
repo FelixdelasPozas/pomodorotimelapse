@@ -77,36 +77,36 @@ class DesktopCapture
 	   * \param[in] index index of the monitor combo box.
 	   *
 	   */
-	  void updateMonitorsComboBox(int index);
+	  void onMonitorValueChanged(int index);
 
 	  /** \brief Updates the captured monitor to all monitors or the specified by the combobox.
 	   * \param[in] status check status value.
 	   *
 	   */
-	  void updateMonitorsCheckBox(int status);
+	  void onMonitorsStateChanged(int status);
 
 	  /** \brief Enables/disables the capture of the camera.
 	   * \param[in] status check status value.
 	   *
 	   */
-	  void updateCameraResolutionsComboBox(int status);
+	  void onCameraStateChanged(int status);
 
 	  /** \brief Updates the position of the camera in the captured image when the value of the combo box changes.
 	   * \param[in] index current index of the combo box.
 	   *
 	   */
-	  void updateCameraPositionComboBox(int status);
+	  void onCameraPositionChanged(int status);
 
 	  /** \brief Updates the output directory.
 	   *
 	   */
-	  void updateOutputDir();
+	  void onDirButtonPressed();
 
 	  /** \brief Enables/disables the desktop capture.
 	   * \param[in] status check status value.
 	   *
 	   */
-	  void updateCaptureDesktop(bool status);
+	  void onCaptureGroupChanged(bool status);
 
 	  /** \brief Activates the tray icon
 	   * \param[in] reason
@@ -123,18 +123,18 @@ class DesktopCapture
 	   * \param[in] index resolution combo box index.
 	   *
 	   */
-	  void updateCameraResolution(int index);
+	  void onCameraResolutionChanged(int index);
 
 	  /** \brief Updates the camera composition mode.
 	   * \param[in] index composition combo box index.
 	   *
 	   */
-	  void updateCameraCompositionMode(int index);
+	  void onCompositionModeChanged(int index);
 
 	  /** \brief Minimizes the app and starts the capture to disk.
 	   *
 	   */
-	  void startCapture();
+	  void onStartButtonPressed();
 
 	  /** \brief Captures the desktop and saves result to the video/picture.
 	   *
@@ -145,7 +145,7 @@ class DesktopCapture
 	   * \param[in] status check status value.
 	   *
 	   */
-	  void updatePomodoro(bool status);
+	  void onPomodoroGroupChanged(bool status);
 
 	  /** \brief Updates the tray icon with the progress of the pomodoro.
 	   *
@@ -161,13 +161,13 @@ class DesktopCapture
 	   * \param[in] status check status value.
 	   *
 	   */
-	  void updateContinuousTicTac(int status);
+	  void onTicTacStateChanged(int status);
 
     /** \brief Updates the sounds of the pomodoro.
      * \param[in] status check status value.
      *
      */
-	  void updateUseSounds(int status);
+	  void onPomodoroSoundsChanged(int status);
 
 	  /** \brief Handles the closing of the statistics dialog.
 	   *
@@ -177,12 +177,17 @@ class DesktopCapture
 	  /** \brief Updates the task name in the pomodoro.
 	   *
 	   */
-	  void updateTaskName();
+	  void onTaskButtonPressed();
 
 	  /** \brief Stops the capture thread and show the main window.
 	   *
 	   */
 	  void stopCaptureAction();
+
+	  /**  \brief Restores the aplication window from tray icon.
+	   *
+	   */
+	  void showAction();
 
 	  /** \brief Shows the statistics dialog.
 	   *
@@ -208,12 +213,12 @@ class DesktopCapture
 	   * \param[in] status check status value.
 	   *
 	   */
-	  void updatePomodoroOverlay(int status);
+	  void onStatisticsStateChanged(int status);
 
 	  /** \brief Updates the pomodoro values.
 	   *
 	   */
-	  void updatePomodoroValues();
+	  void onPomodoroValuesChanged();
 
 	  /** \brief updates the GUI when capture video check box changes.
 	   * * \param[in] status check status value.
@@ -350,6 +355,16 @@ class DesktopCapture
 	   */
 	  const QRect captureGeometry() const;
 
+	  /** \brief Connects the GUI signals to it's slots.
+	   *
+	   */
+	  void connectSignals() const;
+
+	  /** \brief Empties the menu actions of the tray menu.
+	   *
+	   */
+	  void clearTrayMenu();
+
 		QStringList                            m_cameraResolutionsNames;
 		ResolutionList                         m_cameraResolutions;
 		int                                    m_selectedResolution;
@@ -370,6 +385,7 @@ class DesktopCapture
 
 		QAction *m_menuPause;
 		QAction *m_menuShowStats;
+		QAction *m_show;
 		QAction *m_menuStopCapture;
 		QAction *m_menuChangeTask;
 		QAction *m_menuAbout;

@@ -53,5 +53,6 @@
 	<file>monocle.png</file>
 	<file>guyfawkes.png</file>
 	<file>pirate.png</file>
+	<file>awesome.png</file>
   </qresource>
 </RCC>

@@ -114,28 +114,7 @@ DesktopCapture::DesktopCapture()
 	  setupCaptureThread();
 	}
 
-	connect(m_cameraEnabled, SIGNAL(stateChanged(int)), this, SLOT(updateCameraResolutionsComboBox(int)));
-	connect(m_dirButton, SIGNAL(pressed()), this, SLOT(updateOutputDir()));
-	connect(m_cameraResolutionComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(updateCameraResolution(int)));
-	connect(m_compositionComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(updateCameraCompositionMode(int)));
-	connect(m_startButton, SIGNAL(pressed()), this, SLOT(startCapture()));
-	connect(m_captureGroupBox, SIGNAL(clicked(bool)), this, SLOT(updateCaptureDesktop(bool)));
-	connect(m_pomodoroGroupBox, SIGNAL(clicked(bool)), this, SLOT(updatePomodoro(bool)));
-	connect(m_cameraPositionComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(updateCameraPositionComboBox(int)));
-	connect(m_pomodoroPositionComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(onPomodoroPositionChanged(int)));
-	connect(m_continuousTicTac, SIGNAL(stateChanged(int)), this, SLOT(updateContinuousTicTac(int)));
-	connect(m_pomodoroUseSounds, SIGNAL(stateChanged(int)), this, SLOT(updateUseSounds(int)));
-	connect(m_captureAllMonitors, SIGNAL(stateChanged(int)), this, SLOT(updateMonitorsCheckBox(int)));
-	connect(m_captureMonitorComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(updateMonitorsComboBox(int)));
-	connect(m_taskEditButton, SIGNAL(pressed()), this, SLOT(updateTaskName()));
-	connect(m_overlayStats, SIGNAL(stateChanged(int)), this, SLOT(updatePomodoroOverlay(int)));
-	connect(m_pomodorosBreakNumber, SIGNAL(valueChanged(int)), this, SLOT(updatePomodoroValues()));
-	connect(m_pomodorosNumber, SIGNAL(valueChanged(int)), this, SLOT(updatePomodoroValues()));
-	connect(m_captureVideo, SIGNAL(stateChanged(int)), this, SLOT(onCaptureVideoChanged(int)));
-	connect(m_scaleComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(onScaleIndexChanged(int)));
-	connect(m_cameraMaskComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(onMaskIndexChanged(int)));
-	connect(m_trackFace, SIGNAL(stateChanged(int)), this, SLOT(onFaceTrackingChanged(int)));
-	connect(m_about, SIGNAL(pressed()), this, SLOT(onAboutButtonPressed()));
+	connectSignals();
 
 	m_screenshotImage->installEventFilter(this);
 
@@ -615,6 +594,76 @@ void DesktopCapture::saveConfiguration()
 }
 
 //-----------------------------------------------------------------
+void DesktopCapture::connectSignals() const
+{
+  connect(m_cameraEnabled, SIGNAL(stateChanged(int)),
+          this,            SLOT(onCameraStateChanged(int)));
+
+  connect(m_dirButton, SIGNAL(pressed()),
+          this,        SLOT(onDirButtonPressed()));
+
+  connect(m_cameraResolutionComboBox, SIGNAL(currentIndexChanged(int)),
+          this,                       SLOT(onCameraResolutionChanged(int)));
+
+  connect(m_compositionComboBox, SIGNAL(currentIndexChanged(int)),
+          this,                  SLOT(onCompositionModeChanged(int)));
+
+  connect(m_startButton, SIGNAL(pressed()),
+          this,          SLOT(onStartButtonPressed()));
+
+  connect(m_captureGroupBox, SIGNAL(clicked(bool)),
+          this,              SLOT(onCaptureGroupChanged(bool)));
+
+  connect(m_pomodoroGroupBox, SIGNAL(clicked(bool)),
+          this,               SLOT(onPomodoroGroupChanged(bool)));
+
+  connect(m_cameraPositionComboBox, SIGNAL(currentIndexChanged(int)),
+          this,                     SLOT(onCameraPositionChanged(int)));
+
+  connect(m_pomodoroPositionComboBox, SIGNAL(currentIndexChanged(int)),
+          this,                       SLOT(onPomodoroPositionChanged(int)));
+
+  connect(m_continuousTicTac, SIGNAL(stateChanged(int)),
+          this,               SLOT(onTicTacStateChanged(int)));
+
+  connect(m_pomodoroUseSounds, SIGNAL(stateChanged(int)),
+          this,                SLOT(onPomodoroSoundsChanged(int)));
+
+  connect(m_captureAllMonitors, SIGNAL(stateChanged(int)),
+          this,                 SLOT(onMonitorsStateChanged(int)));
+
+  connect(m_captureMonitorComboBox, SIGNAL(currentIndexChanged(int)),
+          this,                     SLOT(onMonitorValueChanged(int)));
+
+  connect(m_taskEditButton, SIGNAL(pressed()),
+          this,             SLOT(onTaskButtonPressed()));
+
+  connect(m_overlayStats, SIGNAL(stateChanged(int)),
+          this,           SLOT(onStatisticsStateChanged(int)));
+
+  connect(m_pomodorosBreakNumber, SIGNAL(valueChanged(int)),
+          this,                   SLOT(onPomodoroValuesChanged()));
+
+  connect(m_pomodorosNumber, SIGNAL(valueChanged(int)),
+          this,              SLOT(onPomodoroValuesChanged()));
+
+  connect(m_captureVideo, SIGNAL(stateChanged(int)),
+          this,           SLOT(onCaptureVideoChanged(int)));
+
+  connect(m_scaleComboBox, SIGNAL(currentIndexChanged(int)),
+          this,            SLOT(onScaleIndexChanged(int)));
+
+  connect(m_cameraMaskComboBox, SIGNAL(currentIndexChanged(int)),
+          this,                 SLOT(onMaskIndexChanged(int)));
+
+  connect(m_trackFace, SIGNAL(stateChanged(int)),
+          this,        SLOT(onFaceTrackingChanged(int)));
+
+  connect(m_about, SIGNAL(pressed()),
+          this,    SLOT(onAboutButtonPressed()));
+}
+
+//-----------------------------------------------------------------
 void DesktopCapture::setupCameraResolutions()
 {
 	if (m_captureThread)
@@ -711,7 +760,7 @@ void DesktopCapture::setupCameraResolutions()
 }
 
 //-----------------------------------------------------------------
-void DesktopCapture::updateMonitorsCheckBox(int status)
+void DesktopCapture::onMonitorsStateChanged(int status)
 {
 	bool checked = (status == Qt::Checked);
 	m_captureMonitorComboBox->setEnabled(!checked);
@@ -742,7 +791,7 @@ void DesktopCapture::updateMonitorsCheckBox(int status)
 }
 
 //-----------------------------------------------------------------
-void DesktopCapture::updateMonitorsComboBox(int index)
+void DesktopCapture::onMonitorValueChanged(int index)
 {
 	if (m_captureThread)
 	{
@@ -758,7 +807,7 @@ void DesktopCapture::updateMonitorsComboBox(int index)
 }
 
 //-----------------------------------------------------------------
-void DesktopCapture::updateCameraResolutionsComboBox(int status)
+void DesktopCapture::onCameraStateChanged(int status)
 {
 	bool enabled = (status == Qt::Checked);
 
@@ -810,6 +859,10 @@ void DesktopCapture::setupTrayIcon()
 	connect(m_menuPause, SIGNAL(triggered()),
 	        this,        SLOT(pausePomodoro()), Qt::QueuedConnection);
 
+  m_show = new QAction(QString("Restore"), menu);
+  connect(m_show, SIGNAL(triggered()),
+          this,   SLOT(showAction()), Qt::QueuedConnection);
+
 	m_menuStopCapture = new QAction(QString("Stop"), menu);
 	connect(m_menuStopCapture, SIGNAL(triggered()),
 	        this,              SLOT(stopCaptureAction()), Qt::QueuedConnection);
@@ -840,7 +893,17 @@ void DesktopCapture::changeEvent(QEvent* e)
 			if ((windowState() & Qt::WindowMinimized) && (m_trayIcon != nullptr))
 			{
 				QMetaObject::invokeMethod(this, "hide", Qt::QueuedConnection);
+
+		    QMenu *menu = m_trayIcon->contextMenu();
+		    m_menuStopCapture->setText("Show");
+		    menu->addAction(m_show);
+		    menu->addSeparator();
+		    menu->addAction(m_menuAbout);
+		    menu->addSeparator();
+		    menu->addAction(m_menuQuit);
+
 				m_trayIcon->show();
+
 				e->ignore();
 
 				if (m_captureThread != nullptr)
@@ -865,14 +928,9 @@ void DesktopCapture::activateTrayIcon(QSystemTrayIcon::ActivationReason reason)
 	{
 		m_trayIcon->hide();
 
-		if (m_captureThread != nullptr)
-		{
-			m_captureThread->resume();
-		}
+		clearTrayMenu();
 
-		show();
-		raise();
-		setWindowState(windowState() & (~Qt::WindowMinimized | Qt::WindowActive));
+		showAction();
 	}
 	else
 	{
@@ -927,7 +985,7 @@ void DesktopCapture::renderImage()
 }
 
 //-----------------------------------------------------------------
-void DesktopCapture::updateOutputDir()
+void DesktopCapture::onDirButtonPressed()
 {
 	if (m_captureThread)
 	{
@@ -950,7 +1008,7 @@ void DesktopCapture::updateOutputDir()
 }
 
 //-----------------------------------------------------------------
-void DesktopCapture::updateCameraResolution(int index)
+void DesktopCapture::onCameraResolutionChanged(int index)
 {
 	if (m_captureThread)
 	{
@@ -958,7 +1016,7 @@ void DesktopCapture::updateCameraResolution(int index)
 		auto position = m_cameraPositionComboBox->currentIndex();
 		if(position != 0)
 		{
-		  updateCameraPositionComboBox(position);
+		  onCameraPositionChanged(position);
 		}
 		else
 		{
@@ -969,7 +1027,7 @@ void DesktopCapture::updateCameraResolution(int index)
 }
 
 //-----------------------------------------------------------------
-void DesktopCapture::updateCameraCompositionMode(int index)
+void DesktopCapture::onCompositionModeChanged(int index)
 {
 	m_compositionMode = static_cast<CaptureDesktopThread::COMPOSITION_MODE>(index);
 	if (m_captureThread)
@@ -1211,7 +1269,7 @@ void DesktopCapture::closeEvent(QCloseEvent *event)
 }
 
 //-----------------------------------------------------------------
-void DesktopCapture::startCapture()
+void DesktopCapture::onStartButtonPressed()
 {
 	if (!m_captureGroupBox->isChecked() && !m_pomodoroGroupBox->isChecked()) return;
 
@@ -1264,7 +1322,7 @@ void DesktopCapture::startCapture()
 			m_trayIcon->setIcon(QIcon(":/DesktopCapture/0-red.ico"));
 		}
 
-		updatePomodoroValues();
+		onPomodoroValuesChanged();
 
 		connect(m_pomodoro.get(), SIGNAL(progress(unsigned int)),
 		        this,             SLOT(updateTrayProgress()), Qt::DirectConnection);
@@ -1354,7 +1412,7 @@ void DesktopCapture::capture()
 }
 
 //-----------------------------------------------------------------
-void DesktopCapture::updateCaptureDesktop(bool status)
+void DesktopCapture::onCaptureGroupChanged(bool status)
 {
 	switch(status)
 	{
@@ -1393,7 +1451,7 @@ void DesktopCapture::updateCaptureDesktop(bool status)
 }
 
 //-----------------------------------------------------------------
-void DesktopCapture::updatePomodoro(bool status)
+void DesktopCapture::onPomodoroGroupChanged(bool status)
 {
 	m_startButton->setEnabled(m_captureGroupBox->isChecked() || status);
 	m_continuousTicTac->setEnabled(status && m_pomodoroUseSounds->isChecked());
@@ -1411,7 +1469,7 @@ void DesktopCapture::updatePomodoro(bool status)
 }
 
 //-----------------------------------------------------------------
-void DesktopCapture::updateCameraPositionComboBox(int index)
+void DesktopCapture::onCameraPositionChanged(int index)
 {
 	if (m_captureThread)
 	{
@@ -1490,14 +1548,14 @@ void DesktopCapture::trayMessage()
 }
 
 //-----------------------------------------------------------------
-void DesktopCapture::updateContinuousTicTac(int status)
+void DesktopCapture::onTicTacStateChanged(int status)
 {
 	bool value = (status == Qt::Checked);
 	m_pomodoro->setContinuousTicTac(value);
 }
 
 //-----------------------------------------------------------------
-void DesktopCapture::updateUseSounds(int status)
+void DesktopCapture::onPomodoroSoundsChanged(int status)
 {
 	bool value = (status == Qt::Checked);
 	m_pomodoro->setUseSounds(value);
@@ -1522,7 +1580,7 @@ void DesktopCapture::statisticsDialogClosed()
 }
 
 //-----------------------------------------------------------------
-void DesktopCapture::updateTaskName()
+void DesktopCapture::onTaskButtonPressed()
 {
 	 changeTask();
 
@@ -1530,12 +1588,23 @@ void DesktopCapture::updateTaskName()
 }
 
 //-----------------------------------------------------------------
+void DesktopCapture::showAction()
+{
+  if (m_captureThread != nullptr)
+  {
+    m_captureThread->resume();
+  }
+
+  show();
+  setWindowState(windowState() & (~Qt::WindowMinimized | Qt::WindowActive));
+}
+
+//-----------------------------------------------------------------
 void DesktopCapture::stopCaptureAction()
 {
 	stopCapture();
 
-	show();
-	setWindowState(windowState() & (~Qt::WindowMinimized | Qt::WindowActive));
+	showAction();
 }
 
 //-----------------------------------------------------------------
@@ -1578,16 +1647,22 @@ void DesktopCapture::stopCapture()
 	m_trayIcon->hide();
 	m_trayIcon->setIcon(QIcon(":/DesktopCapture/application.ico"));
 
-	QMenu *menu = m_trayIcon->contextMenu();
-	for(auto action: menu->actions())
-	{
-		menu->removeAction(action);
+	clearTrayMenu();
+}
 
-		if(action->isSeparator())
-		{
-			delete action;
-		}
-	}
+//-----------------------------------------------------------------
+void DesktopCapture::clearTrayMenu()
+{
+  QMenu *menu = m_trayIcon->contextMenu();
+  for(auto action: menu->actions())
+  {
+    menu->removeAction(action);
+
+    if(action->isSeparator())
+    {
+      delete action;
+    }
+  }
 }
 
 //-----------------------------------------------------------------
@@ -1639,7 +1714,7 @@ void DesktopCapture::quitApplication()
 }
 
 //-----------------------------------------------------------------
-void DesktopCapture::updatePomodoroOverlay(int status)
+void DesktopCapture::onStatisticsStateChanged(int status)
 {
 	if(m_captureThread)
 	{
@@ -1649,7 +1724,7 @@ void DesktopCapture::updatePomodoroOverlay(int status)
 }
 
 //-----------------------------------------------------------------
-void DesktopCapture::updatePomodoroValues()
+void DesktopCapture::onPomodoroValuesChanged()
 {
 	m_pomodoro->setPomodoroDuration(m_pomodoroTime->time());
 	m_pomodoro->setShortBreakDuration(m_shortBreakTime->time());
