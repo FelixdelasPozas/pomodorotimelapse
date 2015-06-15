@@ -1,8 +1,20 @@
 /*
- * Pomodoro.cpp
- *
- *  Created on: 13/02/2014
- *      Author: Felix de las Pozas Alvarez
+    File: Pomodoro.cpp
+    Created on: 13/02/2014
+    Author: Felix de las Pozas Alvarez
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 // Project
@@ -14,11 +26,7 @@
 #include <QFile>
 #include <QSound>
 #include <QTemporaryFile>
-
-// Length of sounds
-static const int LENGTH_CRANK  = 530;
-static const int LENGTH_TICTAC = 450;
-static const int LENGTH_RING   = 1300;
+#include <QTimerEvent>
 
 //-----------------------------------------------------------------
 Pomodoro::Pomodoro()
@@ -43,11 +51,10 @@ Pomodoro::Pomodoro()
 	connect(&m_progressTimer, SIGNAL(timeout()),
 	        this,             SLOT(updateProgress()), Qt::QueuedConnection);
 
-
-	// NOTE: Load sound files. QSound can´t play a file from the qt resource file
-	// so we will dump them first to the temporal directory, then load the resources
-	// and delete them.
-	m_tictac_file = QTemporaryFile::createLocalFile(":/DesktopCapture/sounds/tictac.wav");
+  // NOTE: Load sound files. QSound can´t play a file from the qt resource file
+  // so we will dump them first to the temporal directory, then load the resources
+  // and delete them.
+  m_tictac_file = QTemporaryFile::createLocalFile(":/DesktopCapture/sounds/tictac.wav");
   m_tictac = new QSound(m_tictac_file->fileName(), this);
 
   m_crank_file = QTemporaryFile::createLocalFile(":/DesktopCapture/sounds/crank.wav");
@@ -65,10 +72,10 @@ Pomodoro::~Pomodoro()
 		stop();
 	}
 
-	// delete sounds and temporal files
-	delete m_tictac;
-	delete m_crank;
-	delete m_ring;
+  // delete sounds and temporal files
+  delete m_tictac;
+  delete m_crank;
+  delete m_ring;
   delete m_tictac_file;
   delete m_crank_file;
   delete m_ring_file;
@@ -96,9 +103,8 @@ void Pomodoro::startTimers()
 
 	if (m_useSounds)
 	{
-		m_crank->play();
-		Sleeper::msleep(LENGTH_CRANK);
-		m_tictac->play();
+	  queueSound(Sound::CRANK);
+	  queueSound(Sound::TICTAC);
 	}
 }
 
@@ -129,20 +135,18 @@ QTime Pomodoro::getLongBreakDuration() const
 //-----------------------------------------------------------------
 void Pomodoro::stopTimers()
 {
+	// disconnect respective signals in the caller of this one.
 	m_timer.stop();
 	m_progressTimer.stop();
 
-	// disconnect respective signals in the caller.
 	bool noSounds = (m_status == Status::Stopped || m_status == Status::Paused);
 	if (m_useSounds && !noSounds)
 	{
 		if (m_continuousTicTac)
 		{
-			m_tictac->stop();
-			Sleeper::msleep(LENGTH_TICTAC);
+		  queueSound(Sound::NONE);
 		}
-		m_ring->play();
-		Sleeper::msleep(LENGTH_RING);
+		queueSound(Sound::RING);
 	}
 }
 
@@ -156,7 +160,6 @@ void Pomodoro::startPomodoro()
 
 	m_progressTimer.setInterval(m_pomodoroTime / 8);
 	m_status = Status::Pomodoro;
-	m_progress = 0;
 
 	emit beginPomodoro();
 
@@ -173,7 +176,6 @@ void Pomodoro::startShortBreak()
 
 	m_progressTimer.setInterval(m_shortBreakTime / 8);
 	m_status = Status::ShortBreak;
-	m_progress = 0;
 
 	emit beginShortBreak();
 
@@ -190,7 +192,6 @@ void Pomodoro::startLongBreak()
 
 	m_progressTimer.setInterval(m_longBreakTime / 8);
 	m_status = Status::LongBreak;
-	m_progress = 0;
 
 	emit beginLongBreak();
 
@@ -228,8 +229,7 @@ void Pomodoro::pause()
 		m_progressTimer.stop();
 		if (m_continuousTicTac)
 		{
-			m_tictac->stop();
-			Sleeper::msleep(100);
+		  queueSound(Sound::NONE);
 		}
 	}
 	else
@@ -275,7 +275,7 @@ void Pomodoro::pause()
 
 		if (m_continuousTicTac)
 		{
-			m_tictac->play();
+		  queueSound(Sound::TICTAC);
 		}
 	}
 }
@@ -301,13 +301,16 @@ void Pomodoro::stop()
 	switch(m_status)
 	{
 		case Status::Pomodoro:
-			m_timer.disconnect(&m_timer, SIGNAL(timeout()), this, SLOT(endPomodoro()));
+			m_timer.disconnect(&m_timer, SIGNAL(timeout()),
+			                   this,     SLOT(endPomodoro()));
 			break;
 		case Status::ShortBreak:
-			m_timer.disconnect(&m_timer, SIGNAL(timeout()), this, SLOT(endShortBreak()));
+			m_timer.disconnect(&m_timer, SIGNAL(timeout()),
+			                   this,     SLOT(endShortBreak()));
 			break;
 		case Status::LongBreak:
-			m_timer.disconnect(&m_timer, SIGNAL(timeout()), this, SLOT(endLongBreak()));
+			m_timer.disconnect(&m_timer, SIGNAL(timeout()),
+			                   this,     SLOT(endLongBreak()));
 			break;
 		case Status::Paused:
 			pause();
@@ -456,7 +459,8 @@ void Pomodoro::endShortBreak()
 	++m_numShortBreaks;
 
 	stopTimers();
-	disconnect(&m_timer, SIGNAL(timeout()), this, SLOT(endShortBreak()));
+	disconnect(&m_timer, SIGNAL(timeout()),
+	           this,     SLOT(endShortBreak()));
 
 	emit shortBreakEnded();
 	startPomodoro();
@@ -468,7 +472,8 @@ void Pomodoro::endLongBreak()
 	++m_numLongBreaks;
 
 	stopTimers();
-	disconnect(&m_timer, SIGNAL(timeout()), this, SLOT(endLongBreak()));
+	disconnect(&m_timer, SIGNAL(timeout()),
+	           this,     SLOT(endLongBreak()));
 
 	emit longBreakEnded();
 	startPomodoro();
@@ -480,7 +485,7 @@ void Pomodoro::setContinuousTicTac(bool value)
 	if (m_status == Status::Stopped)
 	{
 		m_continuousTicTac = value;
-		m_tictac->setLoops(((value == true) ? -1 : 1));
+		m_tictac->setLoops((value ? -1 : 1));
 	}
 }
 
@@ -499,6 +504,7 @@ void Pomodoro::setSessionPodomodos(unsigned int value)
 	}
 }
 
+//-----------------------------------------------------------------
 void Pomodoro::setPomodorosBeforeBreak(unsigned int value)
 {
 	if (m_status == Status::Stopped)
@@ -572,4 +578,56 @@ QString Pomodoro::statusMessage()
 	}
 
 	return returnVal;
+}
+
+//-----------------------------------------------------------------
+void Pomodoro::queueSound(Sound sound)
+{
+  m_playList << sound;
+
+  if(m_playList.size() == 1)
+  {
+    playNextSound();
+  }
+}
+
+//-----------------------------------------------------------------
+void Pomodoro::playNextSound()
+{
+  switch(m_playList.first())
+  {
+    case Sound::CRANK:
+      startTimer(LENGTH_CRANK);
+      m_crank->play();
+      break;
+    case Sound::RING:
+      startTimer(LENGTH_RING);
+      m_ring->play();
+      break;
+    case Sound::TICTAC:
+      startTimer(LENGTH_TICTAC);
+      m_tictac->play();
+      break;
+    case Sound::NONE:
+      if(m_tictac->loops() == -1)
+      {
+        startTimer(LENGTH_TICTAC);
+        m_tictac->stop();
+      }
+      break;
+    default:
+      break;
+  }
+}
+
+//-----------------------------------------------------------------
+void Pomodoro::timerEvent(QTimerEvent *e)
+{
+  killTimer(e->timerId());
+  m_playList.removeFirst();
+
+  if(!m_playList.empty())
+  {
+    playNextSound();
+  }
 }

@@ -32,25 +32,10 @@
 
 class QSound;
 class QTemporaryFile;
+class QTimerEvent;
 
 // C++11
 #include <cstdint>
-
-/** \class Sleeper
- *  \brief A class to make the thread sleep a given interval.
- *
- */
-class Sleeper
-: public QThread
-{
-	public:
-    static void usleep(unsigned long usecs)
-    { QThread::usleep(usecs); }
-    static void msleep(unsigned long msecs)
-    { QThread::msleep(msecs); }
-    static void sleep(unsigned long secs)
-    { QThread::sleep(secs); }
-};
 
 /** \class Pomodoro
  *  \brief Implements the pomodoro technique using Qt timers
@@ -244,6 +229,9 @@ class Pomodoro
 		void progress(unsigned int);
 		void sessionEnded();
 
+	protected:
+		void timerEvent(QTimerEvent *e);
+
 	private slots:
     /** \brief Updates the pomodoro icon for the completed unit intervals.
      *
@@ -266,6 +254,22 @@ class Pomodoro
 	  void endLongBreak();
 
 	private:
+    enum class Sound { CRANK, TICTAC, RING, NONE };
+    static const int LENGTH_CRANK  = 530;
+    static const int LENGTH_TICTAC = 450;
+    static const int LENGTH_RING   = 1300;
+
+    /** \brief Queues the sound to play.
+     * \param[in] sound.
+     *
+     */
+    void queueSound(Sound sound);
+
+    /** \brief Plays a queued sound.
+     *
+     */
+    void playNextSound();
+
     /** \brief Starts a pomodoro.
      *
      */
@@ -291,33 +295,35 @@ class Pomodoro
      */
 	  void stopTimers();
 
-		unsigned long m_pomodoroTime;        /** Duration of a pomodoro.                                   */
-		unsigned long m_shortBreakTime;      /** Duration of a short break.                                */
-		unsigned long m_longBreakTime;       /** Duration of a long break.                                 */
-		unsigned long m_numBeforeBreak;      /** Number of pomodoros before a long break.                  */
-		unsigned long m_numPomodoros;        /** Number of pomodoros completed in the session session.     */
-		unsigned long m_numShortBreaks;      /** Number of short breaks in the session.                    */
-		unsigned int  m_numLongBreaks;       /** Number of long breaks in the session.                     */
-		QString       m_task;                /** Title of the task.                                        */
-		QTimer        m_timer;               /** Timer.                                                    */
-		QTimer        m_progressTimer;       /** Timer used for progress notifications in 1/8 of the time. */
-		unsigned int  m_progress;            /** Progress counter.                                         */
-		QIcon         m_icon;                /** Icon of actual situation.                                 */
-		Status        m_status;              /** Actual status of the pomodoro.                            */
-		bool          m_continuousTicTac;    /** Continuous tic-tac sound.                                 */
-		unsigned int  m_sessionPomodoros;    /** Number of pomodoros in a session.                         */
-		bool          m_useSounds;           /** Use sounds.                                               */
-		QTime         m_startTime;           /** Start time of the last interval, used for pausing.        */
-		unsigned int  m_elapsedMSeconds;     /** Elapsed seconds since the last time m_timer started.      */
-		QMap<int, QString> m_completedTasks; /** Task names of completed pomodoros.                        */
+    unsigned long m_pomodoroTime;        /** Duration of a pomodoro.                                        */
+    unsigned long m_shortBreakTime;      /** Duration of a short break.                                     */
+    unsigned long m_longBreakTime;       /** Duration of a long break.                                      */
+    unsigned long m_numBeforeBreak;      /** Number of pomodoros before a long break.                       */
+    unsigned long m_numPomodoros;        /** Number of pomodoros completed in the session session.          */
+    unsigned long m_numShortBreaks;      /** Number of short breaks in the session.                         */
+    unsigned int  m_numLongBreaks;       /** Number of long breaks in the session.                          */
+    QString       m_task;                /** Title of the task.                                             */
+    QTimer        m_timer;               /** Timer.                                                         */
+    QTimer        m_progressTimer;       /** Timer used for progress notifications in 1/8 of the unit time. */
+    unsigned int  m_progress;            /** Progress counter.                                              */
+    QIcon         m_icon;                /** Icon of actual situation.                                      */
+    Status        m_status;              /** Actual status of the pomodoro.                                 */
+    bool          m_continuousTicTac;    /** Continuous tic-tac sound.                                      */
+    unsigned int  m_sessionPomodoros;    /** Number of pomodoros in a session.                              */
+    bool          m_useSounds;           /** Use sounds.                                                    */
+    QTime         m_startTime;           /** Start time of the last interval, used for pausing.             */
+    unsigned int  m_elapsedMSeconds;     /** Elapsed seconds since the last time m_timer started.           */
+    QMap<int, QString> m_completedTasks; /** Task names of completed pomodoros.                             */
 
-		QSound       *m_crank;  /** Crank sound      */
-		QSound       *m_tictac; /** Tic-tac sound    */
-		QSound       *m_ring;   /** Alarm ring sound */
+    QSound *m_crank;  /** Crank sound      */
+    QSound *m_tictac; /** Tic-tac sound    */
+    QSound *m_ring;   /** Alarm ring sound */
 
-		QTemporaryFile *m_tictac_file; /** Crank temporary file      */
-		QTemporaryFile *m_crank_file;  /** Tic-tac temporary file    */
-		QTemporaryFile *m_ring_file;   /** Alarm ring temporary file */
+    QTemporaryFile *m_tictac_file; /** Crank temporary file      */
+    QTemporaryFile *m_crank_file;  /** Tic-tac temporary file    */
+    QTemporaryFile *m_ring_file;   /** Alarm ring temporary file */
+
+    QList<Sound> m_playList;
 };
 
 
