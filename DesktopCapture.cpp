@@ -51,38 +51,39 @@ const QStringList DesktopCapture::POSITION_NAMES = { QString("Free"),
                                                      QString("Bottom Center"),
                                                      QString("Bottom Right") };
 
-const QString DesktopCapture::CAPTURE_TIME                     = QString("Time Between Captures");
-const QString DesktopCapture::CAPTURE_ENABLED                  = QString("Enable Desktop Capture");
-const QString DesktopCapture::CAPTURE_VIDEO                    = QString("Capture Video");
-const QString DesktopCapture::CAPTURE_VIDEO_FPS                = QString("Capture Video FPS");
-const QString DesktopCapture::CAPTURED_MONITOR                 = QString("Captured Desktop Monitor");
-const QString DesktopCapture::MONITORS_LIST                    = QString("Monitor Resolutions");
-const QString DesktopCapture::OUTPUT_DIR                       = QString("Output Directory");
-const QString DesktopCapture::OUTPUT_SCALE                     = QString("Output Scale");
-const QString DesktopCapture::APPLICATION_GEOMETRY             = QString("Application Geometry");
-const QString DesktopCapture::APPLICATION_STATE                = QString("Application State");
-const QString DesktopCapture::CAMERA_ENABLED                   = QString("Camera Enabled");
-const QString DesktopCapture::CAMERA_ANIMATED_TRAY_ENABLED     = QString("Camera Animated Tray Icon");
-const QString DesktopCapture::CAMERA_RESOLUTIONS               = QString("Available Camera Resolutions");
-const QString DesktopCapture::CAMERA_ACTIVE_RESOLUTION         = QString("Active Resolution");
-const QString DesktopCapture::CAMERA_OVERLAY_POSITION          = QString("Camera Overlay Position");
-const QString DesktopCapture::CAMERA_OVERLAY_COMPOSITION_MODE  = QString("Camera Overlay Composition Mode");
-const QString DesktopCapture::CAMERA_OVERLAY_FIXED_POSITION    = QString("Camera Overlay Fixed Position");
-const QString DesktopCapture::CAMERA_MASK                      = QString("Camera Mask");
-const QString DesktopCapture::CAMERA_TRACK_FACE                = QString("Center face in camera picture");
-const QString DesktopCapture::POMODORO_TIME                    = QString("Pomodoro Time");
-const QString DesktopCapture::POMODORO_SHORT_BREAK_TIME        = QString("Short Break Time");
-const QString DesktopCapture::POMODORO_LONG_BREAK_TIME         = QString("Long Break Time");
-const QString DesktopCapture::POMODOROS_BEFORE_BREAK           = QString("Pomodoros Before A Long Break");
-const QString DesktopCapture::POMODOROS_ANIMATED_TRAY_ENABLED  = QString("Pomodoro Animated Tray Icon");
-const QString DesktopCapture::POMODOROS_USE_SOUNDS             = QString("Pomodoro Use Sounds");
-const QString DesktopCapture::POMODORO_ENABLED                 = QString("Enable Pomodoro");
-const QString DesktopCapture::POMODOROS_CONTINUOUS_TICTAC      = QString("Continuous Tic-Tac");
-const QString DesktopCapture::POMODOROS_SESSION_NUMBER         = QString("Pomodoros In Session");
-const QString DesktopCapture::POMODOROS_LAST_TASK              = QString("Last task");
-const QString DesktopCapture::POMODOROS_OVERLAY                = QString("Overlay Pomodoro Statistics In Capture");
-const QString DesktopCapture::POMODOROS_OVERLAY_POSITION       = QString("Pomodoro Overlay Position");
-const QString DesktopCapture::POMODOROS_OVERLAY_FIXED_POSITION = QString("Pomodoro Overlay Fixed Position");
+const QString DesktopCapture::CAPTURE_TIME                       = QString("Time Between Captures");
+const QString DesktopCapture::CAPTURE_ENABLED                    = QString("Enable Desktop Capture");
+const QString DesktopCapture::CAPTURE_VIDEO                      = QString("Capture Video");
+const QString DesktopCapture::CAPTURE_VIDEO_FPS                  = QString("Capture Video FPS");
+const QString DesktopCapture::CAPTURED_MONITOR                   = QString("Captured Desktop Monitor");
+const QString DesktopCapture::MONITORS_LIST                      = QString("Monitor Resolutions");
+const QString DesktopCapture::OUTPUT_DIR                         = QString("Output Directory");
+const QString DesktopCapture::OUTPUT_SCALE                       = QString("Output Scale");
+const QString DesktopCapture::APPLICATION_GEOMETRY               = QString("Application Geometry");
+const QString DesktopCapture::APPLICATION_STATE                  = QString("Application State");
+const QString DesktopCapture::CAMERA_ENABLED                     = QString("Camera Enabled");
+const QString DesktopCapture::CAMERA_ANIMATED_TRAY_ENABLED       = QString("Camera Animated Tray Icon");
+const QString DesktopCapture::CAMERA_RESOLUTIONS                 = QString("Available Camera Resolutions");
+const QString DesktopCapture::CAMERA_ACTIVE_RESOLUTION           = QString("Active Resolution");
+const QString DesktopCapture::CAMERA_OVERLAY_POSITION            = QString("Camera Overlay Position");
+const QString DesktopCapture::CAMERA_OVERLAY_COMPOSITION_MODE    = QString("Camera Overlay Composition Mode");
+const QString DesktopCapture::CAMERA_OVERLAY_FIXED_POSITION      = QString("Camera Overlay Fixed Position");
+const QString DesktopCapture::CAMERA_MASK                        = QString("Camera Mask");
+const QString DesktopCapture::CAMERA_TRACK_FACE                  = QString("Center face in camera picture");
+const QString DesktopCapture::POMODORO_TIME                      = QString("Pomodoro Time");
+const QString DesktopCapture::POMODORO_SHORT_BREAK_TIME          = QString("Short Break Time");
+const QString DesktopCapture::POMODORO_LONG_BREAK_TIME           = QString("Long Break Time");
+const QString DesktopCapture::POMODOROS_BEFORE_BREAK             = QString("Pomodoros Before A Long Break");
+const QString DesktopCapture::POMODOROS_ANIMATED_TRAY_ENABLED    = QString("Pomodoro Animated Tray Icon");
+const QString DesktopCapture::POMODOROS_USE_SOUNDS               = QString("Pomodoro Use Sounds");
+const QString DesktopCapture::POMODORO_ENABLED                   = QString("Enable Pomodoro");
+const QString DesktopCapture::POMODOROS_CONTINUOUS_TICTAC        = QString("Continuous Tic-Tac");
+const QString DesktopCapture::POMODOROS_SESSION_NUMBER           = QString("Pomodoros In Session");
+const QString DesktopCapture::POMODOROS_LAST_TASK                = QString("Last task");
+const QString DesktopCapture::POMODOROS_OVERLAY                  = QString("Overlay Pomodoro Statistics In Capture");
+const QString DesktopCapture::POMODOROS_OVERLAY_POSITION         = QString("Pomodoro Overlay Position");
+const QString DesktopCapture::POMODOROS_OVERLAY_FIXED_POSITION   = QString("Pomodoro Overlay Fixed Position");
+const QString DesktopCapture::POMODOROS_OVERLAY_COMPOSITION_MODE = QString("Pomodoro Overlay Composition Mode");
 
 //-----------------------------------------------------------------
 DesktopCapture::DesktopCapture()
@@ -375,7 +376,22 @@ void DesktopCapture::loadConfiguration()
   }
   m_pomodoroPositionComboBox->insertItems(0, POSITION_NAMES);
   m_pomodoroPositionComboBox->setCurrentIndex(statsPosition);
-  m_pomodoroPositionComboBox->setEnabled(pomodoroEnabled);
+  m_pomodoroPositionComboBox->setEnabled(m_overlayStats->isChecked());
+  m_pomodoroPositionLabel->setEnabled(m_overlayStats->isChecked());
+
+  int modeIndex;
+  if (settings.contains(POMODOROS_OVERLAY_COMPOSITION_MODE))
+  {
+    modeIndex = settings.value(POMODOROS_OVERLAY_COMPOSITION_MODE, 0).toInt();
+  }
+  else
+  {
+    modeIndex = 0;
+  }
+  m_pomodoroCompositionComboBox->insertItems(0, COMPOSITION_MODES_NAMES);
+  m_pomodoroCompositionComboBox->setCurrentIndex(modeIndex);
+  m_pomodoroCompositionComboBox->setEnabled(m_overlayStats->isChecked());
+  m_pomodoroCompositionLabel->setEnabled(m_overlayStats->isChecked());
 
 	QTime timeBetweenCaptures;
 	if (settings.contains(CAPTURE_TIME))
@@ -462,7 +478,6 @@ void DesktopCapture::loadConfiguration()
   }
   m_cameraEnabled->setChecked(enableCamera);
 
-  int modeIndex;
   if (settings.contains(CAMERA_OVERLAY_COMPOSITION_MODE))
   {
     modeIndex = settings.value(CAMERA_OVERLAY_COMPOSITION_MODE, 0).toInt();
@@ -471,7 +486,7 @@ void DesktopCapture::loadConfiguration()
   {
     modeIndex = 0;
   }
-  m_compositionMode = static_cast<CaptureDesktopThread::COMPOSITION_MODE>(modeIndex);
+//  m_compositionMode = static_cast<CaptureDesktopThread::COMPOSITION_MODE>(modeIndex);
   m_compositionComboBox->insertItems(0, COMPOSITION_MODES_NAMES);
   m_compositionComboBox->setCurrentIndex(modeIndex);
   m_compositionComboBox->setEnabled(enableCamera);
@@ -606,7 +621,7 @@ void DesktopCapture::connectSignals() const
           this,                       SLOT(onCameraResolutionChanged(int)));
 
   connect(m_compositionComboBox, SIGNAL(currentIndexChanged(int)),
-          this,                  SLOT(onCompositionModeChanged(int)));
+          this,                  SLOT(onCameraCompositionModeChanged(int)));
 
   connect(m_startButton, SIGNAL(pressed()),
           this,          SLOT(onStartButtonPressed()));
@@ -655,6 +670,9 @@ void DesktopCapture::connectSignals() const
 
   connect(m_cameraMaskComboBox, SIGNAL(currentIndexChanged(int)),
           this,                 SLOT(onMaskIndexChanged(int)));
+
+  connect(m_pomodoroCompositionComboBox, SIGNAL(currentIndexChanged(int)),
+          this,                          SLOT(onPomodoroCompositionModeChanged(int)));
 
   connect(m_trackFace, SIGNAL(stateChanged(int)),
           this,        SLOT(onFaceTrackingChanged(int)));
@@ -963,8 +981,12 @@ void DesktopCapture::setupCaptureThread()
 	}
 
 	auto mask = static_cast<CaptureDesktopThread::MASK>(m_cameraMaskComboBox->currentIndex());
-	m_captureThread = new CaptureDesktopThread(monitor, resolution, m_compositionMode, m_PIPposition, m_statsPosition, mask, this);
+	auto cameraCompositionMode = static_cast<CaptureDesktopThread::COMPOSITION_MODE>(m_compositionComboBox->currentIndex());
+	auto statisticsCompositonMode = static_cast<CaptureDesktopThread::COMPOSITION_MODE>(m_pomodoroCompositionComboBox->currentIndex());
+
+	m_captureThread = new CaptureDesktopThread(monitor, resolution, cameraCompositionMode, m_PIPposition, m_statsPosition, mask, this);
 	m_captureThread->setTrackFace(m_trackFace->isChecked());
+	m_captureThread->setStatisticsOverlayCompositionMode(statisticsCompositonMode);
 
 	if (m_pomodoroGroupBox->isChecked())
 	{
@@ -1027,13 +1049,23 @@ void DesktopCapture::onCameraResolutionChanged(int index)
 }
 
 //-----------------------------------------------------------------
-void DesktopCapture::onCompositionModeChanged(int index)
+void DesktopCapture::onCameraCompositionModeChanged(int index)
 {
-	m_compositionMode = static_cast<CaptureDesktopThread::COMPOSITION_MODE>(index);
 	if (m_captureThread)
 	{
-		m_captureThread->setCameraOverlayCompositionMode(m_compositionMode);
+	  auto mode = static_cast<CaptureDesktopThread::COMPOSITION_MODE>(m_compositionComboBox->currentIndex());
+		m_captureThread->setCameraOverlayCompositionMode(mode);
 	}
+}
+
+//-----------------------------------------------------------------
+void DesktopCapture::onPomodoroCompositionModeChanged(int index)
+{
+  if (m_captureThread)
+  {
+    auto mode = static_cast<CaptureDesktopThread::COMPOSITION_MODE>(m_pomodoroCompositionComboBox->currentIndex());
+    m_captureThread->setStatisticsOverlayCompositionMode(mode);
+  }
 }
 
 //-----------------------------------------------------------------
@@ -1458,6 +1490,8 @@ void DesktopCapture::onPomodoroGroupChanged(bool status)
 	m_overlayStats->setEnabled(status);
 	m_pomodoroPositionComboBox->setEnabled(status);
 	m_pomodoroPositionLabel->setEnabled(status);
+	m_pomodoroCompositionComboBox->setEnabled(status);
+	m_pomodoroCompositionLabel->setEnabled(status);
 
 	if (m_captureThread)
 	{
@@ -1716,11 +1750,17 @@ void DesktopCapture::quitApplication()
 //-----------------------------------------------------------------
 void DesktopCapture::onStatisticsStateChanged(int status)
 {
+  auto enabled = status == Qt::Checked;
 	if(m_captureThread)
 	{
-	  std::shared_ptr<Pomodoro> pomodoro = status ? m_pomodoro : nullptr;
+	  std::shared_ptr<Pomodoro> pomodoro = enabled ? m_pomodoro : nullptr;
 		m_captureThread->setPomodoro(pomodoro);
 	}
+
+	m_pomodoroPositionComboBox->setEnabled(enabled);
+	m_pomodoroPositionLabel->setEnabled(enabled);
+	m_pomodoroCompositionComboBox->setEnabled(enabled);
+	m_pomodoroCompositionLabel->setEnabled(enabled);
 }
 
 //-----------------------------------------------------------------

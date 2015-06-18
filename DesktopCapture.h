@@ -129,7 +129,7 @@ class DesktopCapture
 	   * \param[in] index composition combo box index.
 	   *
 	   */
-	  void onCompositionModeChanged(int index);
+	  void onCameraCompositionModeChanged(int index);
 
 	  /** \brief Minimizes the app and starts the capture to disk.
 	   *
@@ -255,6 +255,13 @@ class DesktopCapture
      */
     void onPomodoroPositionChanged(int index);
 
+    /** \brief Updates the camera composition mode.
+     * \param[in] index composition combo box index.
+     *
+     */
+    void onPomodoroCompositionModeChanged(int index);
+
+
 	private:
 	  static const QStringList COMPOSITION_MODES_NAMES;
 	  static const QStringList POSITION_NAMES;
@@ -290,6 +297,7 @@ class DesktopCapture
 	  static const QString POMODOROS_OVERLAY;
 	  static const QString POMODOROS_OVERLAY_POSITION;
 	  static const QString POMODOROS_OVERLAY_FIXED_POSITION;
+	  static const QString POMODOROS_OVERLAY_COMPOSITION_MODE;
 
 	  static const QStringList CAPTURE_VIDEO_QUALITY_STRINGS;
 	  static const QString INI_FILENAME;
@@ -375,7 +383,7 @@ class DesktopCapture
 		QMutex                                 m_mutex;
 		QPoint                                 m_PIPposition;
 		QPoint                                 m_statsPosition;
-		CaptureDesktopThread::COMPOSITION_MODE m_compositionMode;
+//		CaptureDesktopThread::COMPOSITION_MODE m_compositionMode;
 		QTimer                                 m_timer;
 		unsigned long                          m_secuentialNumber;
 		bool                                   m_started;

@@ -75,7 +75,11 @@ VPX_Interface::VPX_Interface(const QString fileName, const int height, const int
 	  m_vp8_config.g_h = m_height;
 	}
 
-  m_vp8_config.rc_target_bitrate = 2 * m_vp8_config.g_w * m_vp8_config.g_h / 1024;
+  m_vp8_config.rc_target_bitrate = 12 * m_vp8_config.g_w * m_vp8_config.g_h / 1024;
+	m_vp8_config.rc_dropframe_thresh = 0;
+	m_vp8_config.rc_resize_allowed = 0;
+	m_vp8_config.rc_end_usage = VPX_VBR;
+  m_vp8_config.g_bit_depth = VPX_BITS_12;
 	m_vp8_config.g_timebase.num = 1;
 	m_vp8_config.g_timebase.den = m_fps;
 	m_vp8_config.g_threads = 4;

@@ -141,6 +141,11 @@ class CaptureDesktopThread
 		 */
 		void setStatsOverlayPosition(const POSITION position);
 
+    /** \brief Sets the composition mode of the statistics.
+     *
+     */
+    void setStatisticsOverlayCompositionMode(const COMPOSITION_MODE mode);
+
     /** \brief Enables/disables the frame that shows the position of the camera and pomodoro overlays.
      *
      */
@@ -284,6 +289,7 @@ class CaptureDesktopThread
 		bool             m_drawFrame;            /** true to paint a frame of the overlayed camera and statistics. */
 		MASK             m_mask;                 /** mask to paint in the camera image.                            */
 		bool             m_trackFace;            /** true to track and center the face in the camera picture.      */
+		COMPOSITION_MODE m_statisticsMode;       /** composition mode for the statistics overlay.                  */
 
 		std::shared_ptr<Pomodoro> m_pomodoro;    /** pomodoro shared pointer */
 

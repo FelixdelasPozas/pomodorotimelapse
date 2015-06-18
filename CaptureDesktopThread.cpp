@@ -59,6 +59,7 @@ CaptureDesktopThread::CaptureDesktopThread(int monitor,
 , m_drawFrame     {false}
 , m_mask           {mask}
 , m_trackFace      {false}
+, m_statisticsMode {COMPOSITION_MODE::COPY}
 , m_pomodoro       {nullptr}
 , m_isTracking     {false}
 {
@@ -383,22 +384,23 @@ void CaptureDesktopThread::drawMask(QImage& cameraImage, dlib::full_object_detec
 }
 
 //-----------------------------------------------------------------
-void CaptureDesktopThread::drawFrame(QImage &cameraImage)
+void CaptureDesktopThread::drawFrame(QImage &image)
 {
-  QPoint middle(m_cameraResolution.width/2, m_cameraResolution.height/2);
-  int minimum = ((middle.x() < middle.y()) ? middle.x()/4 : middle.y()/4);
+  QPoint middle(m_cameraPosition.x() + m_cameraResolution.width/2, m_cameraPosition.y() + m_cameraResolution.height/2);
+  int minimum = ((m_cameraResolution.width/2 < m_cameraResolution.height/2) ? m_cameraResolution.width/8 : m_cameraResolution.height/8);
 
   QPolygon poly(5);
-  QPainter painter(&cameraImage);
+  QPainter painter(&image);
   painter.setPen(QColor(Qt::blue));
+  painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
 
   for (int i = 0; i < 5; ++i)
   {
-    poly.setPoint(0, i, i);
-    poly.setPoint(1, m_cameraResolution.width-i, i);
-    poly.setPoint(2, m_cameraResolution.width-i, m_cameraResolution.height-i);
-    poly.setPoint(3, i, m_cameraResolution.height-i);
-    poly.setPoint(4, i, i);
+    poly.setPoint(0, m_cameraPosition.x() + i, m_cameraPosition.y() + i);
+    poly.setPoint(1, m_cameraPosition.x() + m_cameraResolution.width-i, m_cameraPosition.y() + i);
+    poly.setPoint(2, m_cameraPosition.x() + m_cameraResolution.width-i, m_cameraPosition.y() + m_cameraResolution.height-i);
+    poly.setPoint(3, m_cameraPosition.x() + i, m_cameraPosition.y() + m_cameraResolution.height-i);
+    poly.setPoint(4, m_cameraPosition.x() + i, m_cameraPosition.y() + i);
     painter.drawConvexPolygon(poly);
     painter.drawLine(QPoint(middle.x() - minimum, middle.y() - 1+i), QPoint(middle.x() + minimum, middle.y() - 1+i));
     painter.drawLine(QPoint(middle.x() - 1+i, middle.y() - minimum), QPoint(middle.x() - 1+i, middle.y() + minimum));
@@ -474,6 +476,12 @@ QPoint CaptureDesktopThread::computePosition(const POSITION position, const QRec
   }
 
   return point;
+}
+
+//-----------------------------------------------------------------
+void CaptureDesktopThread::setStatisticsOverlayCompositionMode(const COMPOSITION_MODE mode)
+{
+  m_statisticsMode = mode;
 }
 
 //-----------------------------------------------------------------
@@ -567,14 +575,14 @@ void CaptureDesktopThread::overlayCameraImage(QImage &baseImage, QImage &overlay
     }
   }
 
-  if (m_drawFrame)
-  {
-    drawFrame(image);
-  }
-
   painter.setCompositionMode(COMPOSITION_MODES_QT.at(static_cast<int>(m_compositionMode)));
   painter.drawImage(m_cameraPosition.x(), m_cameraPosition.y(), image);
   painter.end();
+
+  if (m_drawFrame)
+  {
+    drawFrame(baseImage);
+  }
 }
 
 //-----------------------------------------------------------------
@@ -604,8 +612,11 @@ void CaptureDesktopThread::overlayPomodoro(QImage &image)
 	if (m_pomodoro == nullptr) return;
 
 	static unsigned long total = 0;
+	auto compositionMode = COMPOSITION_MODES_QT.at(static_cast<int>(m_statisticsMode));
 
 	QPainter painter(&image);
+	painter.setCompositionMode(compositionMode);
+
 	QFont font = painter.font();
 	font.setBold(true);
 	int height = pomodoroOverlayHeight();
@@ -617,6 +628,7 @@ void CaptureDesktopThread::overlayPomodoro(QImage &image)
 	{
 	 	QPolygon poly(5);
     painter.setPen(QColor(Qt::yellow));
+    painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
   	for (int i = 0; i < 5; ++i)
   	{
     	poly.setPoint(0, m_statsPosition.x()+i, m_statsPosition.y()+i);
@@ -699,6 +711,8 @@ void CaptureDesktopThread::overlayPomodoro(QImage &image)
 		int pixels = static_cast<double>(mSec) / static_cast<double>(total) * 250;
 		drawPomodoroUnit(painter, color, position, text, pixels);
 	}
+
+	painter.end();
 }
 
 //-----------------------------------------------------------------

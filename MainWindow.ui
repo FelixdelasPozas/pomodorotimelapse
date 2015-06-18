@@ -62,7 +62,7 @@
         <verstretch>0</verstretch>
        </sizepolicy>
       </property>
-      <layout class="QHBoxLayout" name="horizontalLayout" stretch="0,0,0">
+      <layout class="QHBoxLayout" name="horizontalLayout" stretch="1,0,1">
        <item>
         <widget class="QGroupBox" name="m_captureGroupBox">
          <property name="styleSheet">
@@ -227,7 +227,7 @@
                <string>Composition of the camera image in the capture.</string>
               </property>
               <property name="text">
-               <string>Composition mode</string>
+               <string>Overlay composition mode</string>
               </property>
              </widget>
             </item>
@@ -860,6 +860,20 @@
                  <string>Sets the position of the statistics.</string>
                 </property>
                </widget>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_19">
+              <item>
+               <widget class="QLabel" name="m_pomodoroCompositionLabel">
+                <property name="text">
+                 <string>Overlay composition mode</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QComboBox" name="m_pomodoroCompositionComboBox"/>
               </item>
              </layout>
             </item>
