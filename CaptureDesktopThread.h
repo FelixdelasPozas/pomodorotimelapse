@@ -48,23 +48,16 @@ class CaptureDesktopThread
 	public:
 	  enum class COMPOSITION_MODE: char { COPY, PLUS, MULTIPLY };
 	  enum class POSITION: char { FREE, TOP_LEFT, TOP_CENTER, TOP_RIGHT, CENTER_LEFT, CENTER, CENTER_RIGHT, BOTTOM_LEFT, BOTTOM_CENTER, BOTTOM_RIGHT };
-	  enum class MASK: char { GENTLEMAN, ANONYMOUS, PIRATE, AWESOME, NONE };
+	  enum class MASK: char { GENTLEMAN, ANONYMOUS, PIRATE, AWESOME, UMAD, AWESOMEFACE, DEALWITHIT, NONE };
 
   	/** \brief CaptureDesktopThread class constructor.
   	 * \param[in] monitor monitor index according to Qt or -1 to capture all monitors.
   	 * \param[in] cameraResolution resolution of the picture captured by the camera.
-  	 * \param[in] compositionMode composition mode for the camera picture.
-  	 * \param[in] cameraOverlayPosition camera overlay top left point.
-  	 * \param[in] pomodoroOverlayPosition pomodoro statistics overlay top left point.
   	 * \param[in] parent raw pointer of the parent of this object.
   	 *
   	 */
 		explicit CaptureDesktopThread(int              monitor,
 				                          Resolution       cameraResolution,
-				                          COMPOSITION_MODE compositionMode,
-				                          QPoint           cameraOverlayPosition,
-				                          QPoint           pomodoroOverlayPosition,
-				                          MASK             mask = MASK::NONE,
 				                          QObject         *parent = nullptr);
 
 		/** \brief CaptureDesktopThread class virtual destructor.
@@ -104,13 +97,13 @@ class CaptureDesktopThread
      * \param[in] enabled boolean value.
      *
      */
-		bool setCameraEnabled(bool enabled);
+		void setCameraEnabled(bool enabled);
 
     /** \brief Sets the resolution of the camera picture.
      * \param[in] resolution struct Resolution reference.
      *
      */
-		bool setResolution(const Resolution &resolution);
+		void setResolution(const Resolution &resolution);
 
     /** \brief Sets the position where the camera picture will be placed in the captured desktop image.
      * \param[in] point top-left point of the area to put the picture.

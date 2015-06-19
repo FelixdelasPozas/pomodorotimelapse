@@ -373,6 +373,11 @@ class DesktopCapture
 	   */
 	  void clearTrayMenu();
 
+	  /** \brief Computes new positions for the overlays.
+	   *
+	   */
+	  void recomputeOverlaysPositions();
+
 		QStringList                            m_cameraResolutionsNames;
 		ResolutionList                         m_cameraResolutions;
 		int                                    m_selectedResolution;
@@ -383,7 +388,6 @@ class DesktopCapture
 		QMutex                                 m_mutex;
 		QPoint                                 m_PIPposition;
 		QPoint                                 m_statsPosition;
-//		CaptureDesktopThread::COMPOSITION_MODE m_compositionMode;
 		QTimer                                 m_timer;
 		unsigned long                          m_secuentialNumber;
 		bool                                   m_started;
@@ -393,7 +397,7 @@ class DesktopCapture
 
 		QAction *m_menuPause;
 		QAction *m_menuShowStats;
-		QAction *m_show;
+		QAction *m_menuShow;
 		QAction *m_menuStopCapture;
 		QAction *m_menuChangeTask;
 		QAction *m_menuAbout;

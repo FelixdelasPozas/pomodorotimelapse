@@ -40,7 +40,6 @@
 	<file>7-green.ico</file>
 	<file>8-green.ico</file>
 	<file>config.ico</file>
-	<file>alarm.ico</file>
 	<file>striped-background.png</file>
 	<file>sounds/crank.wav</file>
 	<file>sounds/deskbell.wav</file>
@@ -50,9 +49,12 @@
 	<file>qt.ico</file>
 	<file>opencv.ico</file>
 	<file>dlib.ico</file>
-	<file>monocle.png</file>
-	<file>guyfawkes.png</file>
-	<file>pirate.png</file>
-	<file>awesome.png</file>
+	<file>masks/monocle.png</file>
+	<file>masks/guyfawkes.png</file>
+	<file>masks/pirate.png</file>
+	<file>masks/awesome.png</file>
+	<file>masks/problem.png</file>
+	<file>masks/awesome-face.png</file>
+	<file>masks/dealwithit.png</file>
   </qresource>
 </RCC>

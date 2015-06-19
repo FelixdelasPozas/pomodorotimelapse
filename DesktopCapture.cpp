@@ -164,19 +164,6 @@ void DesktopCapture::loadConfiguration()
 		restoreState(settings.value(APPLICATION_STATE).toByteArray());
 	}
 
-	int capturedMonitor;
-	if (settings.contains(CAPTURED_MONITOR))
-	{
-		capturedMonitor = settings.value(CAPTURED_MONITOR, -1).toInt();
-	}
-	else
-	{
-		capturedMonitor = -1;
-		settings.setValue(CAPTURED_MONITOR, capturedMonitor);
-	}
-	m_captureAllMonitors->setChecked(capturedMonitor == -1);
-	m_captureMonitorComboBox->setEnabled(!this->m_captureAllMonitors->isChecked());
-
 	QStringList monitors;
 	if (settings.contains(MONITORS_LIST))
 	{
@@ -201,10 +188,23 @@ void DesktopCapture::loadConfiguration()
 	}
 	m_captureMonitorComboBox->insertItems(0, monitors);
 
-	QPoint position(0,0);
+  int capturedMonitor = -1;
+  if (settings.contains(CAPTURED_MONITOR))
+  {
+    capturedMonitor = settings.value(CAPTURED_MONITOR, capturedMonitor).toInt();
+  }
+  else
+  {
+    settings.setValue(CAPTURED_MONITOR, capturedMonitor);
+  }
+  m_captureAllMonitors->setChecked(capturedMonitor == -1);
+  m_captureMonitorComboBox->setCurrentIndex((capturedMonitor != -1) ? capturedMonitor : 0);
+  m_captureMonitorComboBox->setEnabled(!this->m_captureAllMonitors->isChecked());
+
+  QPoint position(0,0);
 	if (settings.contains(CAMERA_OVERLAY_POSITION))
 	{
-		position = settings.value(CAMERA_OVERLAY_POSITION, QPoint(0,0)).toPoint();
+		position = settings.value(CAMERA_OVERLAY_POSITION, position).toPoint();
 	}
 	else
 	{
@@ -212,166 +212,154 @@ void DesktopCapture::loadConfiguration()
 	}
 	m_PIPposition = position;
 
-	bool pomodoroEnabled;
+	bool pomodoroEnabled = true;
 	if (settings.contains(POMODORO_ENABLED))
 	{
-		pomodoroEnabled = settings.value(POMODORO_ENABLED, true).toBool();
+		pomodoroEnabled = settings.value(POMODORO_ENABLED, pomodoroEnabled).toBool();
 	}
 	else
 	{
-		pomodoroEnabled = true;
 		settings.setValue(POMODORO_ENABLED, pomodoroEnabled);
 	}
 	m_pomodoroGroupBox->setChecked(pomodoroEnabled);
 
-	QTime pomodoroTime;
+	auto pomodoroTime = QTime(0,25,0);
 	if (settings.contains(POMODORO_TIME))
 	{
-		pomodoroTime = settings.value(POMODORO_TIME).toTime();
+		pomodoroTime = settings.value(POMODORO_TIME, pomodoroTime).toTime();
 	}
 	else
 	{
-		pomodoroTime = QTime(0,25,0);
 		settings.setValue(POMODORO_TIME, pomodoroTime);
 	}
 	m_pomodoroTime->setTime(pomodoroTime);
 	m_pomodoro->setPomodoroDuration(pomodoroTime);
 
-	QTime shortBreak;
+	auto shortBreak = QTime(0,5,0);
 	if (settings.contains(POMODORO_SHORT_BREAK_TIME))
 	{
-		shortBreak = settings.value(POMODORO_SHORT_BREAK_TIME, QTime(0,5,0)).toTime();
+		shortBreak = settings.value(POMODORO_SHORT_BREAK_TIME, shortBreak).toTime();
 	}
 	else
 	{
-		shortBreak = QTime(0,5,0);
 		settings.setValue(POMODORO_SHORT_BREAK_TIME, shortBreak);
 	}
 	m_shortBreakTime->setTime(shortBreak);
 	m_pomodoro->setShortBreakDuration(shortBreak);
 
-	QTime longBreak;
+	QTime longBreak = QTime(0,15,0);
 	if (settings.contains(POMODORO_LONG_BREAK_TIME))
 	{
-		longBreak = settings.value(POMODORO_LONG_BREAK_TIME, QTime(0,15,0)).toTime();
+		longBreak = settings.value(POMODORO_LONG_BREAK_TIME, longBreak).toTime();
 	}
 	else
 	{
-		longBreak = QTime(0,15,0);
 		settings.setValue(POMODORO_LONG_BREAK_TIME, longBreak);
 	}
 	m_longBreakTime->setTime(longBreak);
 	m_pomodoro->setLongBreakDuration(longBreak);
 
-	int pomodorosBeforeBreak;
+	int pomodorosBeforeBreak = 4;
 	if (settings.contains(POMODOROS_BEFORE_BREAK))
 	{
-		pomodorosBeforeBreak = settings.value(POMODOROS_BEFORE_BREAK, 4).toInt();
+		pomodorosBeforeBreak = settings.value(POMODOROS_BEFORE_BREAK, pomodorosBeforeBreak).toInt();
 	}
 	else
 	{
-		pomodorosBeforeBreak = 4;
 		settings.setValue(POMODOROS_BEFORE_BREAK, pomodorosBeforeBreak);
 	}
 	m_pomodorosBreakNumber->setValue(pomodorosBeforeBreak);
 	m_pomodoro->setPomodorosBeforeBreak(pomodorosBeforeBreak);
 
-	bool animatePomodoro;
+	auto animatePomodoro = true;
 	if (settings.contains(POMODOROS_ANIMATED_TRAY_ENABLED))
 	{
-		animatePomodoro = settings.value(POMODOROS_ANIMATED_TRAY_ENABLED, true).toBool();
+		animatePomodoro = settings.value(POMODOROS_ANIMATED_TRAY_ENABLED, animatePomodoro).toBool();
 	}
 	else
 	{
-		animatePomodoro = true;
 		settings.setValue(POMODOROS_ANIMATED_TRAY_ENABLED, animatePomodoro);
 	}
 	m_pomodoroAnimateTray->setChecked(animatePomodoro);
 
-	bool pomodoroUseSounds;
+	auto pomodoroUseSounds = true;
 	if (settings.contains(POMODOROS_USE_SOUNDS))
 	{
-		pomodoroUseSounds = settings.value(POMODOROS_USE_SOUNDS, true).toBool();
+		pomodoroUseSounds = settings.value(POMODOROS_USE_SOUNDS, pomodoroUseSounds).toBool();
 	}
 	else
 	{
-		pomodoroUseSounds = true;
 		settings.setValue(POMODOROS_USE_SOUNDS, pomodoroUseSounds);
 	}
 	m_pomodoroUseSounds->setChecked(pomodoroUseSounds);
 	m_pomodoro->setUseSounds(pomodoroUseSounds);
 
-	bool pomodoroContinuousTicTac;
+	auto pomodoroContinuousTicTac = false;
 	if (settings.contains(POMODOROS_CONTINUOUS_TICTAC))
 	{
-		pomodoroContinuousTicTac = settings.value(POMODOROS_CONTINUOUS_TICTAC, false).toBool();
+		pomodoroContinuousTicTac = settings.value(POMODOROS_CONTINUOUS_TICTAC, pomodoroContinuousTicTac).toBool();
 	}
 	else
 	{
-		pomodoroContinuousTicTac = false;
 		settings.setValue(POMODOROS_CONTINUOUS_TICTAC, pomodoroContinuousTicTac);
 	}
 	m_continuousTicTac->setChecked(pomodoroContinuousTicTac);
 	m_continuousTicTac->setEnabled(pomodoroUseSounds && this->m_pomodoroGroupBox->isChecked());
 	m_pomodoro->setContinuousTicTac(pomodoroContinuousTicTac);
 
-	unsigned int pomodorosInSession;
+	unsigned int pomodorosInSession = 12;
 	if (settings.contains(POMODOROS_SESSION_NUMBER))
 	{
-		pomodorosInSession = settings.value(POMODOROS_SESSION_NUMBER, 12).toUInt();
+		pomodorosInSession = settings.value(POMODOROS_SESSION_NUMBER, pomodorosInSession).toUInt();
 	}
 	else
 	{
-		pomodorosInSession = 12;
 		settings.setValue(POMODOROS_SESSION_NUMBER, pomodorosInSession);
 	}
 	m_pomodorosNumber->setValue(pomodorosInSession);
 	m_pomodoro->setSessionPodomodos(pomodorosInSession);
 
-	QString task;
+	auto task = QString("Undefined task");
 	if (settings.contains(POMODOROS_LAST_TASK))
 	{
-		task = settings.value(POMODOROS_LAST_TASK, QString("Undefined task")).toString();
+		task = settings.value(POMODOROS_LAST_TASK, task).toString();
 	}
 	else
 	{
-		task = QString("Undefined task");
 		settings.setValue(POMODOROS_LAST_TASK, task);
 	}
 	m_pomodoroTask->setText(task);
 	m_pomodoro->setTask(task);
 
-	bool overlayPomodoro;
+	auto overlayPomodoro = true;
 	if (settings.contains(POMODOROS_OVERLAY))
 	{
-		overlayPomodoro = settings.value(POMODOROS_OVERLAY, true).toBool();
+		overlayPomodoro = settings.value(POMODOROS_OVERLAY, overlayPomodoro).toBool();
 	}
 	else
 	{
-		overlayPomodoro = true;
 		settings.setValue(POMODOROS_OVERLAY, true);
 	}
 	m_overlayStats->setChecked(overlayPomodoro);
 	m_overlayStats->setEnabled(m_pomodoroGroupBox->isChecked());
 
+  m_statsPosition = QPoint(0,0);
 	if (settings.contains(POMODOROS_OVERLAY_POSITION))
 	{
-		m_statsPosition = settings.value(POMODOROS_OVERLAY_POSITION, QPoint(0,0)).toPoint();
+		m_statsPosition = settings.value(POMODOROS_OVERLAY_POSITION, m_statsPosition).toPoint();
 	}
 	else
 	{
-		m_statsPosition = QPoint(0,0);
 		settings.setValue(POMODOROS_OVERLAY_POSITION, m_statsPosition);
 	}
 
-  int statsPosition;
+  int statsPosition = 0;
   if (settings.contains(POMODOROS_OVERLAY_FIXED_POSITION))
   {
-    statsPosition = settings.value(POMODOROS_OVERLAY_FIXED_POSITION, 0).toInt();
+    statsPosition = settings.value(POMODOROS_OVERLAY_FIXED_POSITION, statsPosition).toInt();
   }
   else
   {
-    statsPosition = 0;
     settings.setValue(POMODOROS_OVERLAY_FIXED_POSITION, statsPosition);
   }
   m_pomodoroPositionComboBox->insertItems(0, POSITION_NAMES);
@@ -379,175 +367,156 @@ void DesktopCapture::loadConfiguration()
   m_pomodoroPositionComboBox->setEnabled(m_overlayStats->isChecked());
   m_pomodoroPositionLabel->setEnabled(m_overlayStats->isChecked());
 
-  int modeIndex;
+  int modeIndex = 0;
   if (settings.contains(POMODOROS_OVERLAY_COMPOSITION_MODE))
   {
-    modeIndex = settings.value(POMODOROS_OVERLAY_COMPOSITION_MODE, 0).toInt();
-  }
-  else
-  {
-    modeIndex = 0;
+    modeIndex = settings.value(POMODOROS_OVERLAY_COMPOSITION_MODE, modeIndex).toInt();
   }
   m_pomodoroCompositionComboBox->insertItems(0, COMPOSITION_MODES_NAMES);
   m_pomodoroCompositionComboBox->setCurrentIndex(modeIndex);
   m_pomodoroCompositionComboBox->setEnabled(m_overlayStats->isChecked());
   m_pomodoroCompositionLabel->setEnabled(m_overlayStats->isChecked());
 
-	QTime timeBetweenCaptures;
+	auto timeBetweenCaptures = QTime(0,0,30);
 	if (settings.contains(CAPTURE_TIME))
 	{
-		timeBetweenCaptures = settings.value(CAPTURE_TIME, QTime(0,0,30)).toTime();
+		timeBetweenCaptures = settings.value(CAPTURE_TIME, timeBetweenCaptures).toTime();
 	}
 	else
 	{
-		timeBetweenCaptures = QTime(0,0,30);
 		settings.setValue(CAPTURE_TIME, timeBetweenCaptures);
 	}
 	m_screeshotTime->setTime(timeBetweenCaptures);
 
-	bool captureVideo;
+	auto captureVideo = true;
 	if (settings.contains(CAPTURE_VIDEO))
 	{
-		captureVideo = settings.value(CAPTURE_VIDEO, true).toBool();
+		captureVideo = settings.value(CAPTURE_VIDEO, captureVideo).toBool();
 	}
 	else
 	{
-		captureVideo = true;
 		settings.setValue(CAPTURE_VIDEO, captureVideo);
 	}
 	m_captureVideo->setChecked(captureVideo);
 
-	int videoFps;
+	int videoFps = 15;
 	if (settings.contains(CAPTURE_VIDEO_FPS))
 	{
-		videoFps = settings.value(CAPTURE_VIDEO_FPS, 15).toInt();
+		videoFps = settings.value(CAPTURE_VIDEO_FPS, videoFps).toInt();
 	}
 	else
 	{
-		videoFps = 15;
 		settings.setValue(CAPTURE_VIDEO_FPS, videoFps);
 	}
 	m_fps->setEnabled(captureVideo);
 	m_fps->setValue(videoFps);
 
-	QString outputDir;
+	auto outputDir = QDir::currentPath();
 	if (settings.contains(OUTPUT_DIR))
 	{
-		outputDir = settings.value(OUTPUT_DIR, QString()).toString();
+		outputDir = settings.value(OUTPUT_DIR, outputDir).toString();
 	}
 	else
 	{
-		outputDir = QDir::currentPath();
 		settings.setValue(OUTPUT_DIR, outputDir);
 	}
 	m_dirEditLabel->setText(outputDir);
 
-	int scale;
+	int scale = 1;
 	if(settings.contains(OUTPUT_SCALE))
 	{
-	  scale = settings.value(OUTPUT_SCALE, 1).toInt();
+	  scale = settings.value(OUTPUT_SCALE, scale).toInt();
 	}
 	else
 	{
-	  scale = 1;
 	  settings.setValue(OUTPUT_SCALE, 1);
 	}
 	onScaleIndexChanged(scale);
 
-	bool captureEnabled;
+	auto captureEnabled = true;
 	if (settings.contains(CAPTURE_ENABLED))
 	{
-		captureEnabled = settings.value(CAPTURE_ENABLED, true).toBool();
+		captureEnabled = settings.value(CAPTURE_ENABLED, captureEnabled).toBool();
 	}
 	else
 	{
-		captureEnabled = true;
 		settings.setValue(CAPTURE_ENABLED, true);
 	}
 	m_captureGroupBox->setChecked(captureEnabled);
 
-  bool enableCamera;
+  bool enableCamera = true;
   if (settings.contains(CAMERA_ENABLED))
   {
-    enableCamera = settings.value(CAMERA_ENABLED, true).toBool();
+    enableCamera = settings.value(CAMERA_ENABLED, enableCamera).toBool();
   }
   else
   {
-    enableCamera = true;
     settings.setValue(CAMERA_ENABLED, true);
   }
   m_cameraEnabled->setChecked(enableCamera);
 
+  modeIndex = 0;
   if (settings.contains(CAMERA_OVERLAY_COMPOSITION_MODE))
   {
-    modeIndex = settings.value(CAMERA_OVERLAY_COMPOSITION_MODE, 0).toInt();
+    modeIndex = settings.value(CAMERA_OVERLAY_COMPOSITION_MODE, modeIndex).toInt();
   }
-  else
-  {
-    modeIndex = 0;
-  }
-//  m_compositionMode = static_cast<CaptureDesktopThread::COMPOSITION_MODE>(modeIndex);
   m_compositionComboBox->insertItems(0, COMPOSITION_MODES_NAMES);
   m_compositionComboBox->setCurrentIndex(modeIndex);
   m_compositionComboBox->setEnabled(enableCamera);
 
-  int cameraPosition;
+  int cameraPosition = 0;
   if (settings.contains(CAMERA_OVERLAY_FIXED_POSITION))
   {
-    cameraPosition = settings.value(CAMERA_OVERLAY_FIXED_POSITION, 0).toInt();
+    cameraPosition = settings.value(CAMERA_OVERLAY_FIXED_POSITION, cameraPosition).toInt();
   }
   else
   {
-    cameraPosition = 0;
     settings.setValue(CAMERA_OVERLAY_FIXED_POSITION, cameraPosition);
   }
   m_cameraPositionComboBox->insertItems(0, POSITION_NAMES);
   m_cameraPositionComboBox->setCurrentIndex(cameraPosition);
   m_cameraPositionComboBox->setEnabled(enableCamera);
 
-  int cameraMaskIndex;
+  int cameraMaskIndex = m_cameraMaskComboBox->actions().size()-1;
   if(settings.contains(CAMERA_MASK))
   {
-    cameraMaskIndex = settings.value(CAMERA_MASK, 2).toInt();
+    cameraMaskIndex = settings.value(CAMERA_MASK, cameraMaskIndex).toInt();
   }
   else
   {
-    cameraMaskIndex = 2;
     settings.setValue(CAMERA_MASK, cameraMaskIndex);
   }
   m_cameraMaskComboBox->setCurrentIndex(cameraMaskIndex);
 
-  bool trackFace;
+  auto trackFace = false;
   if(settings.contains(CAMERA_TRACK_FACE))
   {
-    trackFace = settings.value(CAMERA_TRACK_FACE, false).toBool();
+    trackFace = settings.value(CAMERA_TRACK_FACE, trackFace).toBool();
   }
   else
   {
-    trackFace = false;
     settings.setValue(CAMERA_TRACK_FACE, trackFace);
   }
   m_trackFace->setChecked(trackFace);
 
-  bool animateScreenshot;
+  bool animateScreenshot = true;
   if (settings.contains(CAMERA_ANIMATED_TRAY_ENABLED))
   {
-    animateScreenshot = settings.value(CAMERA_ANIMATED_TRAY_ENABLED, true).toBool();
+    animateScreenshot = settings.value(CAMERA_ANIMATED_TRAY_ENABLED, animateScreenshot).toBool();
   }
   else
   {
-    animateScreenshot = true;
     settings.setValue(CAMERA_ANIMATED_TRAY_ENABLED, true);
   }
   m_screenshotAnimateTray->setEnabled(animateScreenshot && m_captureGroupBox->isChecked());
 
+  m_selectedResolution = 0;
   if (settings.contains(CAMERA_ACTIVE_RESOLUTION))
   {
-    m_selectedResolution = settings.value(CAMERA_ACTIVE_RESOLUTION, 0).toInt();
+    m_selectedResolution = settings.value(CAMERA_ACTIVE_RESOLUTION, m_selectedResolution).toInt();
   }
   else
   {
-    m_selectedResolution = 0;
     settings.setValue(CAMERA_ACTIVE_RESOLUTION, m_selectedResolution);
   }
 
@@ -783,11 +752,6 @@ void DesktopCapture::onMonitorsStateChanged(int status)
 	bool checked = (status == Qt::Checked);
 	m_captureMonitorComboBox->setEnabled(!checked);
 
-	if (m_cameraEnabled)
-	{
-		m_cameraPositionComboBox->setCurrentIndex(0);
-	}
-
 	if (m_captureThread)
 	{
 		if (checked)
@@ -796,15 +760,10 @@ void DesktopCapture::onMonitorsStateChanged(int status)
 		}
 		else
 		{
-			if (m_cameraEnabled)
-			{
-				computeNewPIPPosition();
-				computeNewStatsPosition();
-				m_captureThread->setCameraOverlayPosition(m_PIPposition);
-				m_captureThread->setStatsOverlayPosition(m_statsPosition);
-			}
 			m_captureThread->setMonitor(m_captureMonitorComboBox->currentIndex());
 		}
+
+    recomputeOverlaysPositions();
 	}
 }
 
@@ -815,13 +774,39 @@ void DesktopCapture::onMonitorValueChanged(int index)
 	{
 		m_captureThread->setMonitor(index);
 
-		if (m_cameraEnabled)
-		{
-			computeNewPIPPosition();
-			m_captureThread->setCameraOverlayPosition(m_PIPposition);
-			m_cameraPositionComboBox->setCurrentIndex(0);
-		}
+		recomputeOverlaysPositions();
 	}
+}
+
+//-----------------------------------------------------------------
+void DesktopCapture::recomputeOverlaysPositions()
+{
+  if (m_cameraEnabled)
+  {
+    if(m_cameraPositionComboBox->currentIndex() != 0)
+    {
+      auto position = static_cast<CaptureDesktopThread::POSITION>(m_cameraPositionComboBox->currentIndex());
+      m_captureThread->setCameraOverlayPosition(position);
+      m_PIPposition = m_captureThread->getCameraOverlayPosition();
+    }
+    else
+    {
+      computeNewPIPPosition();
+      m_captureThread->setCameraOverlayPosition(m_PIPposition);
+    }
+
+    if(m_pomodoroPositionComboBox->currentIndex() != 0)
+    {
+      auto position = static_cast<CaptureDesktopThread::POSITION>(m_pomodoroPositionComboBox->currentIndex());
+      m_captureThread->setStatsOverlayPosition(position);
+      m_statsPosition = m_captureThread->getStatsOverlayPosition();
+    }
+    else
+    {
+      computeNewStatsPosition();
+      m_captureThread->setStatsOverlayPosition(m_statsPosition);
+    }
+  }
 }
 
 //-----------------------------------------------------------------
@@ -877,8 +862,8 @@ void DesktopCapture::setupTrayIcon()
 	connect(m_menuPause, SIGNAL(triggered()),
 	        this,        SLOT(pausePomodoro()), Qt::QueuedConnection);
 
-  m_show = new QAction(QString("Restore"), menu);
-  connect(m_show, SIGNAL(triggered()),
+  m_menuShow = new QAction(QString("Restore"), menu);
+  connect(m_menuShow, SIGNAL(triggered()),
           this,   SLOT(showAction()), Qt::QueuedConnection);
 
 	m_menuStopCapture = new QAction(QString("Stop"), menu);
@@ -908,26 +893,29 @@ void DesktopCapture::changeEvent(QEvent* e)
 	switch (e->type())
 	{
 		case QEvent::WindowStateChange:
+
 			if ((windowState() & Qt::WindowMinimized) && (m_trayIcon != nullptr))
 			{
 				QMetaObject::invokeMethod(this, "hide", Qt::QueuedConnection);
 
-		    QMenu *menu = m_trayIcon->contextMenu();
-		    m_menuStopCapture->setText("Show");
-		    menu->addAction(m_show);
-		    menu->addSeparator();
-		    menu->addAction(m_menuAbout);
-		    menu->addSeparator();
-		    menu->addAction(m_menuQuit);
-
-				m_trayIcon->show();
-
-				e->ignore();
-
-				if (m_captureThread != nullptr)
+				if(!m_started)
 				{
-					m_captureThread->pause();
+          QMenu *menu = m_trayIcon->contextMenu();
+          menu->addAction(m_menuShow);
+          menu->addSeparator();
+          menu->addAction(m_menuAbout);
+          menu->addSeparator();
+          menu->addAction(m_menuQuit);
+
+          m_trayIcon->show();
 				}
+
+        e->ignore();
+
+        if (m_captureThread != nullptr)
+        {
+          m_captureThread->pause();
+        }
 			}
 			break;
 		default:
@@ -982,15 +970,40 @@ void DesktopCapture::setupCaptureThread()
 
 	auto mask = static_cast<CaptureDesktopThread::MASK>(m_cameraMaskComboBox->currentIndex());
 	auto cameraCompositionMode = static_cast<CaptureDesktopThread::COMPOSITION_MODE>(m_compositionComboBox->currentIndex());
-	auto statisticsCompositonMode = static_cast<CaptureDesktopThread::COMPOSITION_MODE>(m_pomodoroCompositionComboBox->currentIndex());
 
-	m_captureThread = new CaptureDesktopThread(monitor, resolution, cameraCompositionMode, m_PIPposition, m_statsPosition, mask, this);
-	m_captureThread->setTrackFace(m_trackFace->isChecked());
-	m_captureThread->setStatisticsOverlayCompositionMode(statisticsCompositonMode);
+	m_captureThread = new CaptureDesktopThread(monitor, resolution, this);
+	m_captureThread->setCameraOverlayCompositionMode(cameraCompositionMode);
+  m_captureThread->setTrackFace(m_trackFace->isChecked());
+	m_captureThread->setMask(mask);
+
+	if(m_cameraPositionComboBox->currentIndex() != 0)
+	{
+	  auto position = static_cast<CaptureDesktopThread::POSITION>(m_cameraPositionComboBox->currentIndex());
+	  m_captureThread->setCameraOverlayPosition(position);
+	  m_PIPposition = m_captureThread->getCameraOverlayPosition();
+	}
+	else
+	{
+	  m_captureThread->setCameraOverlayPosition(m_PIPposition);
+	}
 
 	if (m_pomodoroGroupBox->isChecked())
 	{
+    auto statisticsCompositonMode = static_cast<CaptureDesktopThread::COMPOSITION_MODE>(m_pomodoroCompositionComboBox->currentIndex());
+
 		m_captureThread->setPomodoro(m_pomodoro);
+	  m_captureThread->setStatisticsOverlayCompositionMode(statisticsCompositonMode);
+
+	  if(m_pomodoroPositionComboBox->currentIndex() != 0)
+	  {
+	    auto position = static_cast<CaptureDesktopThread::POSITION>(m_pomodoroPositionComboBox->currentIndex());
+	    m_captureThread->setStatsOverlayPosition(position);
+	    m_statsPosition = m_captureThread->getStatsOverlayPosition();
+	  }
+	  else
+	  {
+	    m_captureThread->setStatsOverlayPosition(m_PIPposition);
+	  }
 	}
 
 	connect(m_captureThread, SIGNAL(imageAvailable()),
@@ -1009,11 +1022,6 @@ void DesktopCapture::renderImage()
 //-----------------------------------------------------------------
 void DesktopCapture::onDirButtonPressed()
 {
-	if (m_captureThread)
-	{
-		m_captureThread->pause();
-	}
-
 	QDir dir(m_dirEditLabel->text());
 	if (!dir.exists())
 	{
@@ -1022,11 +1030,6 @@ void DesktopCapture::onDirButtonPressed()
 
 	QString dirText = QFileDialog::getExistingDirectory(this, tr("Open Directory"), m_dirEditLabel->text(), QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
 	m_dirEditLabel->setText(dirText);
-
-	if (m_captureThread)
-	{
-		m_captureThread->resume();
-	}
 }
 
 //-----------------------------------------------------------------
@@ -1499,6 +1502,18 @@ void DesktopCapture::onPomodoroGroupChanged(bool status)
 	  std::shared_ptr<Pomodoro> pomodoro = (enabled ? m_pomodoro : nullptr);
 
 		m_captureThread->setPomodoro(pomodoro);
+		auto compositionMode = static_cast<CaptureDesktopThread::COMPOSITION_MODE>(m_pomodoroCompositionComboBox->currentIndex());
+		m_captureThread->setStatisticsOverlayCompositionMode(compositionMode);
+
+		if(m_pomodoroPositionComboBox->currentIndex() != 0)
+		{
+		  auto position = static_cast<CaptureDesktopThread::POSITION>(m_pomodoroPositionComboBox->currentIndex());
+		  m_captureThread->setStatsOverlayPosition(position);
+		}
+		else
+		{
+		  m_captureThread->setStatsOverlayPosition(m_statsPosition);
+		}
 	}
 }
 
@@ -1629,6 +1644,12 @@ void DesktopCapture::showAction()
     m_captureThread->resume();
   }
 
+  if(m_trayIcon != nullptr)
+  {
+    clearTrayMenu();
+    m_trayIcon->hide();
+  }
+
   show();
   setWindowState(windowState() & (~Qt::WindowMinimized | Qt::WindowActive));
 }
@@ -1680,8 +1701,6 @@ void DesktopCapture::stopCapture()
 
 	m_trayIcon->hide();
 	m_trayIcon->setIcon(QIcon(":/DesktopCapture/application.ico"));
-
-	clearTrayMenu();
 }
 
 //-----------------------------------------------------------------

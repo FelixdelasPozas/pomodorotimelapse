@@ -38,34 +38,29 @@ const QList<QPainter::CompositionMode> CaptureDesktopThread::COMPOSITION_MODES_Q
 		                                                                                  QPainter::CompositionMode_Plus,
 		                                                                                  QPainter::CompositionMode_Multiply };
 
-const QList<struct CaptureDesktopThread::Mask> CaptureDesktopThread::MASKS = { { QString(":/DesktopCapture/monocle.png"),   200, 285, QPoint(150,107) },
-                                                                               { QString(":/DesktopCapture/guyfawkes.png"), 275, 285, QPoint(167,292) },
-                                                                               { QString(":/DesktopCapture/pirate.png"),    110,  80, QPoint(142,216) },
-                                                                               { QString(":/DesktopCapture/awesome.png"),   110,  80, QPoint(94,152) }};
+const QList<struct CaptureDesktopThread::Mask> CaptureDesktopThread::MASKS = { { QString(":/DesktopCapture/masks/monocle.png"),      200, 285, QPoint(150,107) },
+                                                                               { QString(":/DesktopCapture/masks/guyfawkes.png"),    275, 285, QPoint(167,292) },
+                                                                               { QString(":/DesktopCapture/masks/pirate.png"),       110,  80, QPoint(142,216) },
+                                                                               { QString(":/DesktopCapture/masks/awesome.png"),      110,  80, QPoint( 94,152) },
+                                                                               { QString(":/DesktopCapture/masks/problem.png"),      110,  80, QPoint(124,120) },
+                                                                               { QString(":/DesktopCapture/masks/awesome-face.png"),  74,  65, QPoint( 80, 85) },
+                                                                               { QString(":/DesktopCapture/masks/dealwithit.png"),   100, 109, QPoint(105, 28) } };
 
 //-----------------------------------------------------------------
-CaptureDesktopThread::CaptureDesktopThread(int monitor,
-		                                       Resolution cameraResolution,
-		                                       COMPOSITION_MODE compositionMode,
-		                                       QPoint cameraOverlayPosition,
-		                                       QPoint statsOverlayPosition,
-		                                       MASK mask,
-		                                       QObject* parent)
+CaptureDesktopThread::CaptureDesktopThread(int monitor, Resolution cameraResolution, QObject* parent)
 : QThread          {parent}
 , m_aborted        {false}
 , m_paused         {false}
-, m_cameraEnabled  {true}
-, m_compositionMode{compositionMode}
-, m_drawFrame     {false}
-, m_mask           {mask}
+, m_cameraEnabled  {false}
+, m_compositionMode{COMPOSITION_MODE::COPY}
+, m_drawFrame      {false}
+, m_mask           {MASK::NONE}
 , m_trackFace      {false}
 , m_statisticsMode {COMPOSITION_MODE::COPY}
 , m_pomodoro       {nullptr}
 , m_isTracking     {false}
 {
 	setMonitor(monitor);
-	setCameraOverlayPosition(cameraOverlayPosition);
-	setStatsOverlayPosition(statsOverlayPosition);
 
 	if (cameraResolution.name != QString())
 	{
@@ -91,10 +86,8 @@ CaptureDesktopThread::~CaptureDesktopThread()
 }
 
 //-----------------------------------------------------------------
-bool CaptureDesktopThread::setResolution(const Resolution &resolution)
+void CaptureDesktopThread::setResolution(const Resolution &resolution)
 {
-	bool result = false;
-
 	QMutexLocker lock(&m_mutex);
 
 	m_cameraResolution = resolution;
@@ -102,11 +95,9 @@ bool CaptureDesktopThread::setResolution(const Resolution &resolution)
 
 	if (m_camera.isOpened())
 	{
-		result  = m_camera.set(CV_CAP_PROP_FRAME_WIDTH, resolution.width);
-		result &= m_camera.set(CV_CAP_PROP_FRAME_HEIGHT, resolution.height);
+		m_camera.set(CV_CAP_PROP_FRAME_WIDTH, resolution.width);
+		m_camera.set(CV_CAP_PROP_FRAME_HEIGHT, resolution.height);
 	}
-
-	return result;
 }
 
 //-----------------------------------------------------------------
@@ -125,10 +116,8 @@ void CaptureDesktopThread::setMonitor(int monitor)
 }
 
 //-----------------------------------------------------------------
-bool CaptureDesktopThread::setCameraEnabled(bool enabled)
+void CaptureDesktopThread::setCameraEnabled(bool enabled)
 {
-	bool result = true;
-
 	QMutexLocker lock(&m_mutex);
 
 	m_cameraEnabled = enabled;
@@ -138,9 +127,9 @@ bool CaptureDesktopThread::setCameraEnabled(bool enabled)
 		case true:
 			if (!m_camera.isOpened())
 			{
-				result  = m_camera.open(0);
-				result &= m_camera.set(CV_CAP_PROP_FRAME_WIDTH, m_cameraResolution.width);
-				result &= m_camera.set(CV_CAP_PROP_FRAME_HEIGHT, m_cameraResolution.height);
+				m_camera.open(0);
+				m_camera.set(CV_CAP_PROP_FRAME_WIDTH, m_cameraResolution.width);
+				m_camera.set(CV_CAP_PROP_FRAME_HEIGHT, m_cameraResolution.height);
 			}
 			break;
 		case false:
@@ -148,12 +137,10 @@ bool CaptureDesktopThread::setCameraEnabled(bool enabled)
 			{
 				m_camera.release();
 			}
-			result = true;
 			break;
 		default:
 			break;
 	}
-	return result;
 }
 
 //-----------------------------------------------------------------
@@ -192,28 +179,13 @@ void CaptureDesktopThread::setCameraOverlayPosition(const QPoint &point)
 
 	m_cameraPosition = point;
 
-	if (m_cameraPosition.x() < 0)
-	{
-		m_cameraPosition.setX(0);
-	}
-
-	if (m_cameraPosition.y() < 0)
-	{
-		m_cameraPosition.setY(0);
-	}
-
   int xLimit = m_geometry.width() - m_cameraResolution.width;
   int yLimit = m_geometry.height() - m_cameraResolution.height;
 
-	if (m_cameraPosition.x() > xLimit)
-	{
-		m_cameraPosition.setX(xLimit);
-	}
-
-	if (m_cameraPosition.y() > yLimit)
-	{
-		m_cameraPosition.setY(yLimit);
-	}
+	if (m_cameraPosition.x() < 0)      m_cameraPosition.setX(0);
+	if (m_cameraPosition.x() > xLimit) m_cameraPosition.setX(xLimit);
+	if (m_cameraPosition.y() < 0)      m_cameraPosition.setY(0);
+	if (m_cameraPosition.y() > yLimit) m_cameraPosition.setY(yLimit);
 }
 
 //-----------------------------------------------------------------
@@ -263,28 +235,14 @@ void CaptureDesktopThread::setStatsOverlayPosition(const QPoint& point)
 
 	m_statsPosition = point;
 
-	if (m_statsPosition.x() < 0)
-	{
-		m_statsPosition.setX(0);
-	}
-
-	if (m_statsPosition.y() < 0)
-	{
-		m_statsPosition.setY(0);
-	}
-
   int xLimit = m_geometry.width() - POMODORO_UNIT_MAX_WIDTH;
   int yLimit = m_geometry.height() - pomodoroOverlayHeight();
 
-	if (m_statsPosition.x() > xLimit)
-	{
-		m_statsPosition.setX(xLimit);
-	}
+	if (m_statsPosition.x() < 0) m_statsPosition.setX(0);
+	if (m_statsPosition.y() < 0) m_statsPosition.setY(0);
 
-	if (m_statsPosition.y() > yLimit)
-	{
-		m_statsPosition.setY(yLimit);
-	}
+	if (m_statsPosition.x() > xLimit) m_statsPosition.setX(xLimit);
+	if (m_statsPosition.y() > yLimit) m_statsPosition.setY(yLimit);
 }
 
 //-----------------------------------------------------------------
