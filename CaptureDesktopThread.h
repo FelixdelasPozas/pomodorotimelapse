@@ -203,6 +203,9 @@ class CaptureDesktopThread
 
 		static const QList<QPainter::CompositionMode> COMPOSITION_MODES_QT;
 
+		static const QString CHAR_RAMP_SHORT;
+		static const QString CHAR_RAMP_LONG;
+
 		/** \brief Computes the position of the top left corner given the size of the area and
 		 *         the POSITION to put it.
 		 * \param[in] position position of the area.
@@ -264,6 +267,12 @@ class CaptureDesktopThread
      *
      */
 		QImage MatToQImage(const cv::Mat& mat);
+
+		/** \brief Converts the given image into an ASCII image.
+		 * \param[in/out] image QImage reference.
+		 *
+		 */
+		void imageToASCII(QImage &image);
 
 		bool             m_aborted;              /** true if the thread has been aborted.                          */
 		bool             m_paused;               /** true to stop capturing.                                       */
