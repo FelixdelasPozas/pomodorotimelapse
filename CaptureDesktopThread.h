@@ -178,9 +178,15 @@ class CaptureDesktopThread
 		void setMask(MASK mask);
 
 		/** \brief Enables/disables face tracking and centering.
+		 * \param[in] enabled boolean value.
+		 */
+		void setTrackFace(bool enabled);
+
+		/** \brief Enable/disable the conversion of the camera picture to ASCII art.
+		 * \param[in] enabled boolean value.
 		 *
 		 */
-		void setTrackFace(bool value);
+		void setCameraAsASCII(bool enabled);
 
 		static constexpr int   POMODORO_UNIT_MAX_WIDTH = 250;
 		static constexpr int   POMODORO_UNIT_HEIGHT    = 15;
@@ -292,12 +298,12 @@ class CaptureDesktopThread
 		MASK             m_mask;                 /** mask to paint in the camera image.                            */
 		bool             m_trackFace;            /** true to track and center the face in the camera picture.      */
 		COMPOSITION_MODE m_statisticsMode;       /** composition mode for the statistics overlay.                  */
+		bool             m_ASCII_Art;            /** true to convert the camera image to ASCII art.                */
 
 		std::shared_ptr<Pomodoro> m_pomodoro;    /** pomodoro shared pointer */
 
 		dlib::frontal_face_detector m_faceDetector; /** dlib face deterctor                           */
 		dlib::shape_predictor       m_faceShape;    /** dlib face poser                               */
-		bool m_isTracking;                          /** true if the object tracker is tracking a face */
 };
 
 #endif // CAPTURE_DESKTOP_THREAD_H_

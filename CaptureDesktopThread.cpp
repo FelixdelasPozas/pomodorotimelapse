@@ -63,8 +63,8 @@ CaptureDesktopThread::CaptureDesktopThread(int monitor, Resolution cameraResolut
 , m_mask           {MASK::NONE}
 , m_trackFace      {false}
 , m_statisticsMode {COMPOSITION_MODE::COPY}
+, m_ASCII_Art      {false}
 , m_pomodoro       {nullptr}
-, m_isTracking     {false}
 {
 	setMonitor(monitor);
 
@@ -97,7 +97,6 @@ void CaptureDesktopThread::setResolution(const Resolution &resolution)
 	QMutexLocker lock(&m_mutex);
 
 	m_cameraResolution = resolution;
-	m_isTracking = false;
 
 	if (m_camera.isOpened())
 	{
@@ -216,7 +215,6 @@ void CaptureDesktopThread::run()
 		if (m_paused)
 		{
 			m_pauseWaitCondition.wait(&m_mutex);
-			m_isTracking = false;
 		}
 		m_mutex.unlock();
 
@@ -283,13 +281,24 @@ void CaptureDesktopThread::setMask(MASK mask)
 }
 
 //-----------------------------------------------------------------
-void CaptureDesktopThread::setTrackFace(bool value)
+void CaptureDesktopThread::setTrackFace(bool enabled)
 {
   QMutexLocker lock(&m_mutex);
 
-  if(value != m_trackFace)
+  if(enabled != m_trackFace)
   {
-    m_trackFace = value;
+    m_trackFace = enabled;
+  }
+}
+
+//-----------------------------------------------------------------
+void CaptureDesktopThread::setCameraAsASCII(bool enabled)
+{
+  QMutexLocker lock(&m_mutex);
+
+  if(enabled != m_ASCII_Art)
+  {
+    m_ASCII_Art = enabled;
   }
 }
 
@@ -491,58 +500,49 @@ QImage CaptureDesktopThread::MatToQImage(const cv::Mat& mat)
 //-----------------------------------------------------------------
 void CaptureDesktopThread::overlayCameraImage(QImage &baseImage, QImage &overlayImage)
 {
+  dlib::full_object_detection shapes;
+
+  if(m_mask != MASK::NONE || m_trackFace)
+  {
+    dlib::cv_image<dlib::bgr_pixel> cimg(m_frame);
+    auto faces = m_faceDetector(cimg);
+
+    if(!faces.empty())
+    {
+      auto trackFace = faces.front();
+      auto trackArea = trackFace.width() * trackFace.height();
+      for(auto face: faces)
+      {
+        auto area = face.width() * face.height();
+        if(area > trackArea)
+        {
+          trackFace = face;
+          trackArea = area;
+        }
+      }
+
+      shapes = m_faceShape(cimg, trackFace);
+
+      if (m_mask != MASK::NONE)
+      {
+        drawMask(overlayImage, shapes);
+      }
+
+      if (m_trackFace)
+      {
+        centerFace(overlayImage, shapes.get_rect());
+      }
+    }
+  }
+
+  if(m_ASCII_Art)
+  {
+    imageToASCII(overlayImage);
+  }
+
   QPainter painter(&baseImage);
-
-  imageToASCII(overlayImage);
-
-  auto image = overlayImage;
-
-  QPainter facePainter(&overlayImage);
-  QPen pen;
-  pen.setWidth(2);
-  pen.setColor(Qt::white);
-  facePainter.setPen(pen);
-
-//  if(m_mask != MASK::NONE || m_trackFace)
-//  {
-//    dlib::cv_image<dlib::bgr_pixel> cimg(m_frame);
-//
-//    auto faces = m_faceDetector(cimg);
-//
-//    if(!faces.empty())
-//    {
-//      auto trackFace = faces.front();
-//      auto trackArea = trackFace.width() * trackFace.height();
-//      for(auto face: faces)
-//      {
-//        auto area = face.width() * face.height();
-//        if(area > trackArea)
-//        {
-//          trackFace = face;
-//          trackArea = area;
-//        }
-//      }
-//
-//      auto shapes = m_faceShape(cimg, trackFace);
-//
-//      if(m_mask != MASK::NONE)
-//      {
-//        drawMask(image, shapes);
-//      }
-//
-//      if(m_trackFace)
-//      {
-//        centerFace(image, shapes.get_rect());
-//      }
-//    }
-//    else
-//    {
-//      m_isTracking = false;
-//    }
-//  }
-
   painter.setCompositionMode(COMPOSITION_MODES_QT.at(static_cast<int>(m_compositionMode)));
-  painter.drawImage(m_cameraPosition.x(), m_cameraPosition.y(), image);
+  painter.drawImage(m_cameraPosition.x(), m_cameraPosition.y(), overlayImage);
   painter.end();
 
   if (m_drawFrame)
@@ -576,8 +576,9 @@ int CaptureDesktopThread::pomodoroOverlayHeight()
 //-----------------------------------------------------------------
 void CaptureDesktopThread::imageToASCII(QImage &image)
 {
-  auto ramp = CHAR_RAMP_LONG;
-  auto length = CHAR_RAMP_LONG.length();
+  // change ramp if desired. short ramp gives better pictures in my opinion.
+  auto ramp = CHAR_RAMP_SHORT;
+  auto length = CHAR_RAMP_SHORT.length();
 
   auto intensityToLetter = [ramp, length](unsigned int value) { return QString(ramp.at((value * (length-1)) / 255)); };
 
@@ -590,31 +591,31 @@ void CaptureDesktopThread::imageToASCII(QImage &image)
   font.setPixelSize(8);
 
   QFontMetrics fm(font);
-  int textWidthInPixels = fm.width("A");
-  int textHeightInPixels = fm.height();
+  int textWidth  = fm.width("A");
+  int textHeight = fm.height();
 
   painter.setFont(font);
 
-  for(int x = 0; x < image.width() / textWidthInPixels; ++x)
+  for(int x = 0; x < image.width() / textWidth; ++x)
   {
-    for(int y = 0; y < image.height() / textHeightInPixels; ++y)
+    for(int y = 0; y < image.height() / textHeight; ++y)
     {
-      auto charX = x * textWidthInPixels;
-      auto charY = y * textHeightInPixels;
+      auto charX = x * textWidth;
+      auto charY = y * textHeight;
 
       unsigned int value = 0;
-      for(int i = 0; i < textWidthInPixels; ++i)
+      for(int i = 0; i < textWidth; ++i)
       {
-        for(int j = 0; j < textHeightInPixels; ++j)
+        for(int j = 0; j < textHeight; ++j)
         {
           auto rgb = image.pixel(charX + i, charY + +j);
           value += qGray(rgb);
         }
       }
 
-      value /= textWidthInPixels * textHeightInPixels;
+      value /= textWidth * textHeight;
       auto background = image.pixel(charX, charY);
-      painter.fillRect(charX, charY, textWidthInPixels, textHeightInPixels, Qt::black);
+      painter.fillRect(charX, charY, textWidth, textHeight, Qt::black);
       painter.setPen(background);
       painter.drawText(charX, charY, intensityToLetter(value));
     }

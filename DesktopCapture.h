@@ -86,10 +86,10 @@ class DesktopCapture
 	  void onMonitorsStateChanged(int status);
 
 	  /** \brief Enables/disables the capture of the camera.
-	   * \param[in] status check status value.
+	   * \param[in] enabled boolean value.
 	   *
 	   */
-	  void onCameraStateChanged(int status);
+	  void onCameraStateChanged(bool enabled);
 
 	  /** \brief Updates the position of the camera in the captured image when the value of the combo box changes.
 	   * \param[in] index current index of the combo box.
@@ -220,11 +220,11 @@ class DesktopCapture
 	   */
 	  void onPomodoroValuesChanged();
 
-	  /** \brief updates the GUI when capture video check box changes.
-	   * * \param[in] status check status value.
-	   *
+	  /** \brief updates the GUI when capture video radio button or screenshots radio button changes state.
+     * \param[in] unused check status value.
+     *
 	   */
-	  void onCaptureVideoChanged(int status);
+	  void onCaptureVideoChanged(bool unused);
 
 	  /** \brief sets the internal scale value.
      * \param[in] value combo box index.
@@ -243,6 +243,12 @@ class DesktopCapture
      *
      */
     void onFaceTrackingChanged(int status);
+
+    /** \brief Updates the conversion to ASCII art of the camera picture.
+     * \param[in] status check status value.
+     *
+     */
+    void onConvertToASCIIChanged(int status);
 
     /** \brief Shows the about dialog.
      *
@@ -284,6 +290,7 @@ class DesktopCapture
 	  static const QString CAMERA_OVERLAY_FIXED_POSITION;
 	  static const QString CAMERA_MASK;
 	  static const QString CAMERA_TRACK_FACE;
+	  static const QString CAMERA_ASCII_ART;
 	  static const QString POMODORO_ENABLED;
 	  static const QString POMODORO_TIME;
 	  static const QString POMODORO_SHORT_BREAK_TIME;

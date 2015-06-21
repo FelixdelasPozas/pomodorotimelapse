@@ -97,7 +97,6 @@ void Ebml_Write(EbmlGlobal *global, const void *, unsigned long);
 
 void Ebml_WriteLen(EbmlGlobal *global, int64_t val);
 void Ebml_WriteString(EbmlGlobal *global, const char *str);
-void Ebml_WriteUTF8(EbmlGlobal *global, const wchar_t *wstr);
 void Ebml_WriteID(EbmlGlobal *global, unsigned long class_id);
 void Ebml_SerializeUnsigned64(EbmlGlobal *global, unsigned long class_id, uint64_t ui);
 void Ebml_SerializeUnsigned32(EbmlGlobal *global, unsigned int class_id, uint64_t ui);
@@ -105,11 +104,7 @@ void Ebml_SerializeUnsigned(EbmlGlobal *global, unsigned long class_id, unsigned
 void Ebml_SerializeBinary(EbmlGlobal *global, unsigned long class_id, unsigned long ui);
 void Ebml_SerializeFloat(EbmlGlobal *global, unsigned long class_id, double d);
 
-void Ebml_WriteSigned16(EbmlGlobal *global, short val);
 void Ebml_SerializeString(EbmlGlobal *global, unsigned long class_id, const char *s);
-void Ebml_SerializeUTF8(EbmlGlobal *global, unsigned long class_id, wchar_t *s);
-void Ebml_SerializeData(EbmlGlobal *global, unsigned long class_id, unsigned char *data, unsigned long data_length);
-void Ebml_WriteVoid(EbmlGlobal *global, unsigned long vSize);
 
 void Ebml_StartSubElement(EbmlGlobal *global, off_t *ebmlLoc, unsigned int class_id);
 void Ebml_EndSubElement(EbmlGlobal *global, off_t *ebmlLoc);

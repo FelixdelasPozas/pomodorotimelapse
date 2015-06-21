@@ -70,6 +70,7 @@ const QString DesktopCapture::CAMERA_OVERLAY_COMPOSITION_MODE    = QString("Came
 const QString DesktopCapture::CAMERA_OVERLAY_FIXED_POSITION      = QString("Camera Overlay Fixed Position");
 const QString DesktopCapture::CAMERA_MASK                        = QString("Camera Mask");
 const QString DesktopCapture::CAMERA_TRACK_FACE                  = QString("Center face in camera picture");
+const QString DesktopCapture::CAMERA_ASCII_ART                   = QString("Convert camera picture to ASCII art");
 const QString DesktopCapture::POMODORO_TIME                      = QString("Pomodoro Time");
 const QString DesktopCapture::POMODORO_SHORT_BREAK_TIME          = QString("Short Break Time");
 const QString DesktopCapture::POMODORO_LONG_BREAK_TIME           = QString("Long Break Time");
@@ -397,7 +398,8 @@ void DesktopCapture::loadConfiguration()
 	{
 		settings.setValue(CAPTURE_VIDEO, captureVideo);
 	}
-	m_captureVideo->setChecked(captureVideo);
+	m_videoRadioButton->setChecked(captureVideo);
+	m_screenshotsRadioButton->setChecked(!captureVideo);
 
 	int videoFps = 15;
 	if (settings.contains(CAPTURE_VIDEO_FPS))
@@ -420,7 +422,7 @@ void DesktopCapture::loadConfiguration()
 	{
 		settings.setValue(OUTPUT_DIR, outputDir);
 	}
-	m_dirEditLabel->setText(outputDir);
+	m_dirEditLabel->setText(outputDir.replace('/', QDir::separator()));
 
 	int scale = 1;
 	if(settings.contains(OUTPUT_SCALE))
@@ -499,6 +501,17 @@ void DesktopCapture::loadConfiguration()
   }
   m_trackFace->setChecked(trackFace);
 
+  auto convertToASCII = false;
+  if(settings.contains(CAMERA_ASCII_ART))
+  {
+    trackFace = settings.value(CAMERA_ASCII_ART, convertToASCII).toBool();
+  }
+  else
+  {
+    settings.setValue(CAMERA_ASCII_ART, convertToASCII);
+  }
+  m_ASCIIart->setChecked(convertToASCII);
+
   bool animateScreenshot = true;
   if (settings.contains(CAMERA_ANIMATED_TRAY_ENABLED))
   {
@@ -564,7 +577,7 @@ void DesktopCapture::saveConfiguration()
 	settings.setValue(POMODOROS_SESSION_NUMBER, m_pomodorosNumber->value());
   settings.setValue(CAPTURE_TIME, m_screeshotTime->time());
   settings.setValue(CAPTURE_ENABLED, m_captureGroupBox->isChecked());
-  settings.setValue(CAPTURE_VIDEO, m_captureVideo->isChecked());
+  settings.setValue(CAPTURE_VIDEO, m_videoRadioButton->isChecked());
   settings.setValue(CAPTURE_VIDEO_FPS, m_fps->value());
   settings.setValue(CAMERA_OVERLAY_FIXED_POSITION, m_cameraPositionComboBox->currentIndex());
   settings.setValue(CAMERA_MASK, m_cameraMaskComboBox->currentIndex());
@@ -580,8 +593,8 @@ void DesktopCapture::saveConfiguration()
 //-----------------------------------------------------------------
 void DesktopCapture::connectSignals() const
 {
-  connect(m_cameraEnabled, SIGNAL(stateChanged(int)),
-          this,            SLOT(onCameraStateChanged(int)));
+  connect(m_cameraEnabled, SIGNAL(clicked(bool)),
+          this,            SLOT(onCameraStateChanged(bool)));
 
   connect(m_dirButton, SIGNAL(pressed()),
           this,        SLOT(onDirButtonPressed()));
@@ -631,8 +644,11 @@ void DesktopCapture::connectSignals() const
   connect(m_pomodorosNumber, SIGNAL(valueChanged(int)),
           this,              SLOT(onPomodoroValuesChanged()));
 
-  connect(m_captureVideo, SIGNAL(stateChanged(int)),
-          this,           SLOT(onCaptureVideoChanged(int)));
+  connect(m_videoRadioButton, SIGNAL(toggled(bool)),
+          this,               SLOT(onCaptureVideoChanged(bool)));
+
+  connect(m_screenshotsRadioButton, SIGNAL(toggled(bool)),
+          this,                     SLOT(onCaptureVideoChanged(bool)));
 
   connect(m_scaleComboBox, SIGNAL(currentIndexChanged(int)),
           this,            SLOT(onScaleIndexChanged(int)));
@@ -645,6 +661,9 @@ void DesktopCapture::connectSignals() const
 
   connect(m_trackFace, SIGNAL(stateChanged(int)),
           this,        SLOT(onFaceTrackingChanged(int)));
+
+  connect(m_ASCIIart, SIGNAL(stateChanged(int)),
+          this,       SLOT(onConvertToASCIIChanged(int)));
 
   connect(m_about, SIGNAL(pressed()),
           this,    SLOT(onAboutButtonPressed()));
@@ -810,10 +829,8 @@ void DesktopCapture::recomputeOverlaysPositions()
 }
 
 //-----------------------------------------------------------------
-void DesktopCapture::onCameraStateChanged(int status)
+void DesktopCapture::onCameraStateChanged(bool enabled)
 {
-	bool enabled = (status == Qt::Checked);
-
 	if (m_cameraResolutions.isEmpty() && enabled)
 	{
 		setupCameraResolutions();
@@ -1029,7 +1046,11 @@ void DesktopCapture::onDirButtonPressed()
 	}
 
 	QString dirText = QFileDialog::getExistingDirectory(this, tr("Open Directory"), m_dirEditLabel->text(), QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
-	m_dirEditLabel->setText(dirText);
+
+	if(!dirText.isEmpty())
+	{
+	  m_dirEditLabel->setText(dirText.replace('/', QDir::separator()));
+	}
 }
 
 //-----------------------------------------------------------------
@@ -1419,7 +1440,7 @@ void DesktopCapture::capture()
 		m_captureThread->takeScreenshot();
 		auto pixmap = m_captureThread->getImage();
 
-		if(!m_captureVideo->isChecked())
+		if(!m_videoRadioButton->isChecked())
 		{
 			saveCapture(pixmap);
 		}
@@ -1690,7 +1711,7 @@ void DesktopCapture::stopCapture()
 
 	if (m_captureThread)
 	{
-		if(m_captureVideo->isChecked())
+		if(m_videoRadioButton->isChecked())
 		{
 			m_vp8_interface = nullptr;
 		}
@@ -1799,9 +1820,9 @@ void DesktopCapture::onPomodoroValuesChanged()
 }
 
 //-----------------------------------------------------------------
-void DesktopCapture::onCaptureVideoChanged(int status)
+void DesktopCapture::onCaptureVideoChanged(bool unused)
 {
-  auto enabled = (status == Qt::Checked);
+  auto enabled = (m_videoRadioButton->isChecked());
 
   m_fpsLabel      ->setEnabled(enabled);
   m_fps           ->setEnabled(enabled);
@@ -1820,7 +1841,17 @@ void DesktopCapture::onFaceTrackingChanged(int status)
 {
   Q_ASSERT(m_captureThread);
 
-  m_captureThread->setTrackFace(status);
+  auto enabled = (status == Qt::Checked);
+  m_captureThread->setTrackFace(enabled);
+}
+
+//-----------------------------------------------------------------
+void DesktopCapture::onConvertToASCIIChanged(int status)
+{
+  Q_ASSERT(m_captureThread);
+
+  auto enabled = (status == Qt::Checked);
+  m_captureThread->setCameraAsASCII(enabled);
 }
 
 //-----------------------------------------------------------------

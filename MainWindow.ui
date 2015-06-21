@@ -180,330 +180,359 @@
            </layout>
           </item>
           <item>
-           <widget class="QCheckBox" name="m_cameraEnabled">
-            <property name="toolTip">
-             <string>Capture camera images.</string>
+           <widget class="QGroupBox" name="m_cameraEnabled">
+            <property name="title">
+             <string>Camera</string>
             </property>
-            <property name="text">
-             <string>Enable camera</string>
-            </property>
-            <property name="checked">
+            <property name="checkable">
              <bool>true</bool>
             </property>
+            <layout class="QVBoxLayout" name="verticalLayout_6">
+             <item>
+              <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="1,1">
+               <property name="topMargin">
+                <number>0</number>
+               </property>
+               <item>
+                <widget class="QLabel" name="label">
+                 <property name="toolTip">
+                  <string>Resolution of the camera images.</string>
+                 </property>
+                 <property name="text">
+                  <string>Camera resolution</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QComboBox" name="m_cameraResolutionComboBox">
+                 <property name="toolTip">
+                  <string>Sets the resolution of the camera images.</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+             <item>
+              <layout class="QHBoxLayout" name="horizontalLayout_8">
+               <property name="topMargin">
+                <number>0</number>
+               </property>
+               <item>
+                <widget class="QLabel" name="label_5">
+                 <property name="toolTip">
+                  <string>Composition of the camera image in the capture.</string>
+                 </property>
+                 <property name="text">
+                  <string>Overlay composition mode</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QComboBox" name="m_compositionComboBox">
+                 <property name="toolTip">
+                  <string>Sets the composition of the camera image in the capture.</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+             <item>
+              <layout class="QHBoxLayout" name="horizontalLayout_11">
+               <property name="topMargin">
+                <number>0</number>
+               </property>
+               <item>
+                <widget class="QLabel" name="label_8">
+                 <property name="toolTip">
+                  <string>Position of the camera image.</string>
+                 </property>
+                 <property name="text">
+                  <string>Overlay position</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QComboBox" name="m_cameraPositionComboBox">
+                 <property name="toolTip">
+                  <string>Sets the position of the camera image.</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+             <item>
+              <widget class="QCheckBox" name="m_trackFace">
+               <property name="toolTip">
+                <string>Dectect the face and center the camera picture in it.</string>
+               </property>
+               <property name="text">
+                <string>Detect and center the face in the picture</string>
+               </property>
+               <property name="checked">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <layout class="QHBoxLayout" name="horizontalLayout_17">
+               <item>
+                <widget class="QLabel" name="label_11">
+                 <property name="toolTip">
+                  <string>Mask of the face.</string>
+                 </property>
+                 <property name="text">
+                  <string>Mask</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QComboBox" name="m_cameraMaskComboBox">
+                 <property name="toolTip">
+                  <string>Sets the mask of the face.</string>
+                 </property>
+                 <property name="currentIndex">
+                  <number>7</number>
+                 </property>
+                 <item>
+                  <property name="text">
+                   <string>I feel like a sir</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>Anonymous</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>With a bottle of rum</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>Everything is awesome!!!</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>U mad?</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>Awesome face</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>Deal with it</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>None</string>
+                  </property>
+                 </item>
+                </widget>
+               </item>
+              </layout>
+             </item>
+             <item>
+              <widget class="QCheckBox" name="m_ASCIIart">
+               <property name="text">
+                <string>ASCII art</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QCheckBox" name="m_screenshotAnimateTray">
+               <property name="toolTip">
+                <string>Animate the tray icon when doing a capture.</string>
+               </property>
+               <property name="text">
+                <string>Animated tray icon</string>
+               </property>
+               <property name="checked">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+            </layout>
            </widget>
           </item>
           <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="1,1">
-            <property name="topMargin">
-             <number>0</number>
+           <widget class="QGroupBox" name="groupBox">
+            <property name="title">
+             <string>Output</string>
             </property>
-            <item>
-             <widget class="QLabel" name="label">
-              <property name="toolTip">
-               <string>Resolution of the camera images.</string>
-              </property>
-              <property name="text">
-               <string>Camera resolution</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QComboBox" name="m_cameraResolutionComboBox">
-              <property name="toolTip">
-               <string>Sets the resolution of the camera images.</string>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </item>
-          <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_8">
-            <property name="topMargin">
-             <number>0</number>
-            </property>
-            <item>
-             <widget class="QLabel" name="label_5">
-              <property name="toolTip">
-               <string>Composition of the camera image in the capture.</string>
-              </property>
-              <property name="text">
-               <string>Overlay composition mode</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QComboBox" name="m_compositionComboBox">
-              <property name="toolTip">
-               <string>Sets the composition of the camera image in the capture.</string>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </item>
-          <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_11">
-            <property name="topMargin">
-             <number>0</number>
-            </property>
-            <item>
-             <widget class="QLabel" name="label_8">
-              <property name="toolTip">
-               <string>Position of the camera image.</string>
-              </property>
-              <property name="text">
-               <string>Overlay position</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QComboBox" name="m_cameraPositionComboBox">
-              <property name="toolTip">
-               <string>Sets the position of the camera image.</string>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="m_trackFace">
-            <property name="toolTip">
-             <string>Dectect the face and center the camera picture in it.</string>
-            </property>
-            <property name="text">
-             <string>Detect and center the face in the picture</string>
-            </property>
-            <property name="checked">
-             <bool>true</bool>
-            </property>
+            <layout class="QVBoxLayout" name="verticalLayout_5">
+             <item>
+              <layout class="QHBoxLayout" name="horizontalLayout_20">
+               <property name="topMargin">
+                <number>0</number>
+               </property>
+               <item>
+                <widget class="QRadioButton" name="m_videoRadioButton">
+                 <property name="text">
+                  <string>Video</string>
+                 </property>
+                 <property name="checked">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QRadioButton" name="m_screenshotsRadioButton">
+                 <property name="text">
+                  <string>Screenshots</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+             <item>
+              <layout class="QHBoxLayout" name="horizontalLayout_16" stretch="1,0">
+               <property name="topMargin">
+                <number>0</number>
+               </property>
+               <item>
+                <widget class="QLabel" name="m_fpsLabel">
+                 <property name="toolTip">
+                  <string>Frame rate of the output video.</string>
+                 </property>
+                 <property name="text">
+                  <string>Video framerate</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QSpinBox" name="m_fps">
+                 <property name="toolTip">
+                  <string>Sets the frame rate of the output video.</string>
+                 </property>
+                 <property name="suffix">
+                  <string> fps</string>
+                 </property>
+                 <property name="minimum">
+                  <number>5</number>
+                 </property>
+                 <property name="maximum">
+                  <number>30</number>
+                 </property>
+                 <property name="singleStep">
+                  <number>5</number>
+                 </property>
+                 <property name="value">
+                  <number>15</number>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+             <item>
+              <layout class="QHBoxLayout" name="horizontalLayout_14">
+               <property name="topMargin">
+                <number>0</number>
+               </property>
+               <item>
+                <widget class="QLabel" name="label_6">
+                 <property name="toolTip">
+                  <string>Scale modification of the output</string>
+                 </property>
+                 <property name="text">
+                  <string>Scale</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QComboBox" name="m_scaleComboBox">
+                 <property name="toolTip">
+                  <string>Sets the scale modification of the output.</string>
+                 </property>
+                 <property name="currentIndex">
+                  <number>0</number>
+                 </property>
+                 <property name="sizeAdjustPolicy">
+                  <enum>QComboBox::AdjustToContents</enum>
+                 </property>
+                 <property name="frame">
+                  <bool>true</bool>
+                 </property>
+                 <item>
+                  <property name="text">
+                   <string>Half (x0.5)</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>Original (x1.0)</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>Original and a half (x1.5)</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>Double (x2.0)</string>
+                  </property>
+                 </item>
+                </widget>
+               </item>
+              </layout>
+             </item>
+             <item>
+              <layout class="QHBoxLayout" name="horizontalLayout_13">
+               <property name="topMargin">
+                <number>0</number>
+               </property>
+               <item>
+                <widget class="QLabel" name="m_outputDirLabel">
+                 <property name="toolTip">
+                  <string>Directory of the output files.</string>
+                 </property>
+                 <property name="text">
+                  <string>Output directory</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QLineEdit" name="m_dirEditLabel">
+                 <property name="toolTip">
+                  <string>Directory of the output files.</string>
+                 </property>
+                 <property name="readOnly">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QToolButton" name="m_dirButton">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="maximumSize">
+                  <size>
+                   <width>20</width>
+                   <height>20</height>
+                  </size>
+                 </property>
+                 <property name="toolTip">
+                  <string>Sets the directory of the output files.</string>
+                 </property>
+                 <property name="text">
+                  <string>...</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+            </layout>
            </widget>
-          </item>
-          <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_17">
-            <item>
-             <widget class="QLabel" name="label_11">
-              <property name="toolTip">
-               <string>Mask of the face.</string>
-              </property>
-              <property name="text">
-               <string>Mask</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QComboBox" name="m_cameraMaskComboBox">
-              <property name="toolTip">
-               <string>Sets the mask of the face.</string>
-              </property>
-              <property name="currentIndex">
-               <number>7</number>
-              </property>
-              <item>
-               <property name="text">
-                <string>I feel like a sir</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>Anonymous</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>With a bottle of rum</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>Everything is awesome!!!</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>U mad?</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>Awesome face</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>Deal with it</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>None</string>
-               </property>
-              </item>
-             </widget>
-            </item>
-           </layout>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="m_screenshotAnimateTray">
-            <property name="toolTip">
-             <string>Animate the tray icon when doing a capture.</string>
-            </property>
-            <property name="text">
-             <string>Animated tray icon</string>
-            </property>
-            <property name="checked">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="m_captureVideo">
-            <property name="toolTip">
-             <string>Capture video instead of individual images.</string>
-            </property>
-            <property name="text">
-             <string>Capture video</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_16" stretch="1,0">
-            <property name="topMargin">
-             <number>0</number>
-            </property>
-            <item>
-             <widget class="QLabel" name="m_fpsLabel">
-              <property name="toolTip">
-               <string>Frame rate of the output video.</string>
-              </property>
-              <property name="text">
-               <string>Output video framerate</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QSpinBox" name="m_fps">
-              <property name="toolTip">
-               <string>Sets the frame rate of the output video.</string>
-              </property>
-              <property name="suffix">
-               <string> fps</string>
-              </property>
-              <property name="minimum">
-               <number>5</number>
-              </property>
-              <property name="maximum">
-               <number>30</number>
-              </property>
-              <property name="singleStep">
-               <number>5</number>
-              </property>
-              <property name="value">
-               <number>15</number>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </item>
-          <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_14">
-            <property name="topMargin">
-             <number>0</number>
-            </property>
-            <item>
-             <widget class="QLabel" name="label_6">
-              <property name="toolTip">
-               <string>Scale modification of the output</string>
-              </property>
-              <property name="text">
-               <string>Scale output</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QComboBox" name="m_scaleComboBox">
-              <property name="toolTip">
-               <string>Sets the scale modification of the output.</string>
-              </property>
-              <property name="currentIndex">
-               <number>0</number>
-              </property>
-              <property name="sizeAdjustPolicy">
-               <enum>QComboBox::AdjustToContents</enum>
-              </property>
-              <property name="frame">
-               <bool>true</bool>
-              </property>
-              <item>
-               <property name="text">
-                <string>Half (x0.5)</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>Original (x1.0)</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>Original and a half (x1.5)</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>Double (x2.0)</string>
-               </property>
-              </item>
-             </widget>
-            </item>
-           </layout>
-          </item>
-          <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_13">
-            <property name="topMargin">
-             <number>0</number>
-            </property>
-            <item>
-             <widget class="QLabel" name="m_outputDirLabel">
-              <property name="toolTip">
-               <string>Directory of the output files.</string>
-              </property>
-              <property name="text">
-               <string>Output directory</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QLineEdit" name="m_dirEditLabel">
-              <property name="toolTip">
-               <string>Directory of the output files.</string>
-              </property>
-              <property name="readOnly">
-               <bool>true</bool>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QToolButton" name="m_dirButton">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="maximumSize">
-               <size>
-                <width>20</width>
-                <height>20</height>
-               </size>
-              </property>
-              <property name="toolTip">
-               <string>Sets the directory of the output files.</string>
-              </property>
-              <property name="text">
-               <string>...</string>
-              </property>
-             </widget>
-            </item>
-           </layout>
           </item>
          </layout>
         </widget>

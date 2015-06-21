@@ -159,20 +159,6 @@ void Ebml_WriteString(EbmlGlobal *global, const char *str)
 }
 
 //------------------------------------------------------------------
-void Ebml_WriteUTF8(EbmlGlobal *global, const wchar_t *wstr)
-{
-	const size_t strlen = wcslen(wstr);
-
-	/* TODO: it's not clear from the spec whether the nul terminator
-	 * should be serialized too.  For now we include it.
-	 */
-	const uint64_t size = strlen;
-
-	Ebml_WriteLen(global, size);
-	Ebml_Write(global, wstr, (unsigned long) size);
-}
-
-//------------------------------------------------------------------
 void Ebml_WriteID(EbmlGlobal *global, unsigned long class_id)
 {
 	int len;
@@ -273,47 +259,10 @@ void Ebml_SerializeFloat(EbmlGlobal *global, unsigned long class_id, double d)
 }
 
 //------------------------------------------------------------------
-void Ebml_WriteSigned16(EbmlGlobal *global, short val)
-{
-	signed long out = ((val & 0x003FFFFF) | 0x00200000) << 8;
-	Ebml_Serialize(global, &out, sizeof(out), 3);
-}
-
-//------------------------------------------------------------------
 void Ebml_SerializeString(EbmlGlobal *global, unsigned long class_id, const char *s)
 {
 	Ebml_WriteID(global, class_id);
 	Ebml_WriteString(global, s);
-}
-
-//------------------------------------------------------------------
-void Ebml_SerializeUTF8(EbmlGlobal *global, unsigned long class_id, wchar_t *s)
-{
-	Ebml_WriteID(global, class_id);
-	Ebml_WriteUTF8(global, s);
-}
-
-//------------------------------------------------------------------
-void Ebml_SerializeData(EbmlGlobal *global, unsigned long class_id, unsigned char *data, unsigned long data_length)
-{
-	Ebml_WriteID(global, class_id);
-	Ebml_WriteLen(global, data_length);
-	Ebml_Write(global, data, data_length);
-}
-
-//------------------------------------------------------------------
-void Ebml_WriteVoid(EbmlGlobal *global, unsigned long vSize)
-{
-	unsigned char tmp = 0;
-	unsigned long i = 0;
-
-	Ebml_WriteID(global, Void);
-	Ebml_WriteLen(global, vSize);
-
-	for (i = 0; i < vSize; i++)
-	{
-		Ebml_Write(global, &tmp, 1);
-	}
 }
 
 //------------------------------------------------------------------
