@@ -31,7 +31,6 @@ set(DLIB_LIBRARY "D:/Desarrollo/Bibliotecas/dlib-build/libdlib.a")
 
 include_directories(
   ${CMAKE_SOURCE_DIR}
-  ${CMAKE_SOURCE_DIR}/Camera
   ${PROJECT_BINARY_DIR}
   ${CMAKE_CURRENT_SOURCE_DIR}
   ${CMAKE_BINARY_DIR}          # Generated .h files
