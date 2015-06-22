@@ -831,14 +831,14 @@ void DesktopCapture::recomputeOverlaysPositions()
 //-----------------------------------------------------------------
 void DesktopCapture::onCameraStateChanged(bool enabled)
 {
+	m_cameraResolutionComboBox->setEnabled(enabled);
+	m_cameraPositionComboBox  ->setEnabled(enabled);
+	m_compositionComboBox     ->setEnabled(enabled);
+
 	if (m_cameraResolutions.isEmpty() && enabled)
 	{
 		setupCameraResolutions();
 	}
-
-	m_cameraResolutionComboBox->setEnabled(enabled);
-	m_cameraPositionComboBox  ->setEnabled(enabled);
-	m_compositionComboBox     ->setEnabled(enabled);
 
 	if (m_captureThread)
 	{
@@ -1032,7 +1032,9 @@ void DesktopCapture::setupCaptureThread()
 //-----------------------------------------------------------------
 void DesktopCapture::renderImage()
 {
-	QPixmap* pixmap = m_captureThread->getImage();
+	QMutexLocker lock(m_captureThread->getMutex());
+
+	auto pixmap = m_captureThread->getImage();
 	m_screenshotImage->setPixmap(pixmap->scaled(m_screenshotImage->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation));
 }
 
@@ -1095,7 +1097,9 @@ void DesktopCapture::onPomodoroCompositionModeChanged(int index)
 //-----------------------------------------------------------------
 bool DesktopCapture::eventFilter(QObject *object, QEvent *event)
 {
-	if (!m_captureThread || !m_cameraEnabled->isChecked() || !m_screenshotImage->pixmap())
+  auto drawPomodoro = m_pomodoroGroupBox->isChecked() && m_overlayStats->isChecked();
+  auto drawCamera = m_cameraEnabled->isChecked();
+	if (!m_captureThread || !(drawCamera || drawPomodoro) || !m_screenshotImage->pixmap())
 	{
 		return object->eventFilter(object, event);
 	}
@@ -1438,6 +1442,7 @@ void DesktopCapture::capture()
 	if (m_captureThread)
 	{
 		m_captureThread->takeScreenshot();
+
 		auto pixmap = m_captureThread->getImage();
 
 		if(!m_videoRadioButton->isChecked())
@@ -1470,34 +1475,34 @@ void DesktopCapture::capture()
 //-----------------------------------------------------------------
 void DesktopCapture::onCaptureGroupChanged(bool status)
 {
-	switch(status)
-	{
-		case true:
-			if (m_captureThread && m_captureThread->isPaused())
-			{
-				m_captureThread->resume();
-			}
+  if(m_captureThread)
+  {
+    switch(status)
+    {
+      case true:
+        if (m_captureThread->isPaused())
+        {
+          m_captureThread->resume();
+        }
 
-			if (!m_captureThread)
-			{
-				setupCameraResolutions();
-				setupCaptureThread();
-			}
-			m_startButton->setEnabled(true);
-			break;
-		case false:
-			if (m_captureThread && !m_captureThread->isPaused())
-			{
-				m_captureThread->pause();
-			}
+        if (!m_captureThread)
+        {
+          setupCameraResolutions();
+          setupCaptureThread();
+        }
+          break;
+      case false:
+        if (!m_captureThread->isPaused())
+        {
+          m_captureThread->pause();
+        }
+        break;
+      default:
+        break;
+    }
+  }
 
-			m_screenshotImage->clear();
-			m_startButton->setEnabled(m_pomodoroGroupBox->isChecked());
-			break;
-		default:
-			break;
-	}
-
+  m_startButton->setEnabled(m_pomodoroGroupBox->isChecked() || status);
 	m_screenshotImage->setEnabled(status);
 	m_screeshotTime->setEnabled(status);
 	m_dirButton->setEnabled(status);

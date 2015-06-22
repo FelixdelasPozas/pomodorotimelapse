@@ -167,6 +167,11 @@ class CaptureDesktopThread
      */
 		QPixmap *getImage();
 
+    /** \brief Returns the mutex used in this thread to write the image.
+     *
+     */
+    QMutex *getMutex();
+
     /** \brief Takes a picture of the desktop.
      *
      */

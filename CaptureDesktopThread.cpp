@@ -151,9 +151,14 @@ void CaptureDesktopThread::setCameraEnabled(bool enabled)
 //-----------------------------------------------------------------
 QPixmap* CaptureDesktopThread::getImage()
 {
-	QMutexLocker lock(&m_mutex);
-
+  // NOTE: not protected by mutex because the caller must get the mutex using getMutex()
 	return &m_image;
+}
+
+//-----------------------------------------------------------------
+QMutex* CaptureDesktopThread::getMutex()
+{
+  return &m_mutex;
 }
 
 //-----------------------------------------------------------------
@@ -751,22 +756,35 @@ void CaptureDesktopThread::takeScreenshot()
 	m_mutex.lock();
 
 	// capture desktop
-	auto desktopImage = QPixmap::grabWindow(QApplication::desktop()->winId(), m_geometry.x(), m_geometry.y(), m_geometry.width(), m_geometry.height());
+	auto desktopPixmap = QPixmap::grabWindow(QApplication::desktop()->winId(), m_geometry.x(), m_geometry.y(), m_geometry.width(), m_geometry.height());
 
-	// capture camera & composite
-	if (m_cameraEnabled && m_camera.isOpened())
+	if(m_pomodoro || m_cameraEnabled)
 	{
-		while (!m_camera.read(m_frame))
-		{
-			usleep(100);
-		}
-		m_mutex.unlock();
+	  auto desktopImage  = desktopPixmap.toImage();
 
-		auto image = desktopImage.toImage();
-		auto cameraImage = MatToQImage(m_frame);
-		overlayCameraImage(image, cameraImage);
-		overlayPomodoro(image);
-		desktopImage = QPixmap::fromImage(image);
+	  // capture camera & composite
+	  if (m_cameraEnabled && m_camera.isOpened())
+	  {
+	    while (!m_camera.read(m_frame))
+	    {
+	      usleep(100);
+	    }
+	    m_mutex.unlock();
+
+      auto cameraImage = MatToQImage(m_frame);
+      overlayCameraImage(desktopImage, cameraImage);
+	  }
+	  else
+	  {
+	    m_mutex.unlock();
+	  }
+
+	  if(m_pomodoro)
+	  {
+	    overlayPomodoro(desktopImage);
+	  }
+
+	  desktopPixmap = QPixmap::fromImage(desktopImage);
 	}
 	else
 	{
@@ -774,6 +792,6 @@ void CaptureDesktopThread::takeScreenshot()
 	}
 
 	m_mutex.lock();
-	m_image = desktopImage;
+	m_image = desktopPixmap;
 	m_mutex.unlock();
 }
