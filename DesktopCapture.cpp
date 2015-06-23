@@ -434,6 +434,7 @@ void DesktopCapture::loadConfiguration()
 	  settings.setValue(OUTPUT_SCALE, 1);
 	}
 	onScaleIndexChanged(scale);
+  m_scaleComboBox->setCurrentIndex(scale);
 
 	auto captureEnabled = true;
 	if (settings.contains(CAPTURE_ENABLED))
@@ -1568,34 +1569,34 @@ void DesktopCapture::trayMessage()
 {
 	QString message;
 	QString tooltip;
+  QString unit;
 
 	switch(m_pomodoro->status())
 	{
     case Pomodoro::Status::LongBreak:
-      message = QString("Competed a long break.");
-      tooltip = QString("Completed %1 pomodoros.").arg(m_pomodoro->completedPomodoros());
-      if (m_pomodoro->completedPomodoros() != static_cast<unsigned int>(m_pomodorosNumber->value()))
-      {
-        message += QString("\nStarting a pomodoro.");
-        tooltip = QString("In a pomodoro.\nCompleted %1 pomodoros.").arg(m_pomodoro->completedPomodoros());
-      }
-      break;
-    case Pomodoro::Status::Pomodoro:
-      message = QString("Completed a pomodoro.\nStarting a short break.");
-      tooltip = QString("In a short break.\nCompleted %1 pomodoros.").arg(m_pomodoro->completedPomodoros());
-      break;
     case Pomodoro::Status::ShortBreak:
-      message = QString("Competed a short break.\nStarting a ");
-      if ((m_pomodoro->completedPomodoros() % m_pomodorosBreakNumber->value()) == 0)
+      if(m_pomodoro->status() == Pomodoro::Status::LongBreak)
       {
-        message += QString("long break.");
-        tooltip = QString("In a long break.\nCompleted %1 pomodoros.").arg(m_pomodoro->completedPomodoros());
+        unit = QString("long");
       }
       else
       {
-        message += QString("pomodoro.");
-        tooltip = QString("In a pomodoro.\nCompleted %1 pomodoros.").arg(m_pomodoro->completedPomodoros());
+        unit = QString("short");
       }
+      message = QString("Completed a %1 break.\nStarting a pomodoro.").arg(unit);
+      tooltip = QString("In a pomodoro.\nCompleted %1 pomodoros.").arg(m_pomodoro->completedPomodoros());
+      break;
+    case Pomodoro::Status::Pomodoro:
+      if((m_pomodoro->completedPomodoros() % m_pomodorosBreakNumber->value()) == 0)
+      {
+        unit = QString("long");
+      }
+      else
+      {
+        unit = QString("short");
+      }
+      message = QString("Completed a pomodoro.\nStarting a %1 break.").arg(unit);
+      tooltip = QString("In a %1 break.\nCompleted %2 pomodoros.").arg(unit).arg(m_pomodoro->completedPomodoros());
       break;
     case Pomodoro::Status::Stopped:
       disconnect(m_pomodoro.get(), SIGNAL(pomodoroEnded()),
@@ -1607,7 +1608,7 @@ void DesktopCapture::trayMessage()
       disconnect(m_pomodoro.get(), SIGNAL(sessionEnded()),
                  this,             SLOT(trayMessage()));
 
-      message = QString("Session pomodoros completed!");
+      message = QString("Session completed!");
       break;
     default:
     case Pomodoro::Status::Paused:
@@ -1820,7 +1821,14 @@ void DesktopCapture::onPomodoroValuesChanged()
 
 	if(m_overlayStats->isChecked() && m_pomodoroGroupBox->isChecked() && m_captureThread)
 	{
-		m_captureThread->setStatsOverlayPosition(computeNewStatsPosition());
+	  if(m_pomodoroPositionComboBox->currentIndex() != 0)
+	  {
+	    onPomodoroPositionChanged(m_pomodoroPositionComboBox->currentIndex());
+	  }
+	  else
+	  {
+	    m_captureThread->setStatsOverlayPosition(computeNewStatsPosition());
+	  }
 	}
 }
 
@@ -1838,7 +1846,8 @@ void DesktopCapture::onMaskIndexChanged(int value)
 {
   Q_ASSERT(m_captureThread);
 
-  m_captureThread->setMask(static_cast<CaptureDesktopThread::MASK>(value));
+  auto mask = static_cast<CaptureDesktopThread::MASK>(value);
+  m_captureThread->setMask(mask);
 }
 
 //-----------------------------------------------------------------
@@ -1912,6 +1921,4 @@ void DesktopCapture::onScaleIndexChanged(int value)
       m_scale = 1.0;
       break;
   }
-
-  m_scaleComboBox->setCurrentIndex(value);
 }

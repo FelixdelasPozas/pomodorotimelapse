@@ -151,7 +151,7 @@ void PomodoroStatistics::updateElapsedTime()
 	}
 	else
 	{
-		QTime elapsedTime = m_pomodoro->elapsedTime();
+		auto elapsedTime = m_pomodoro->elapsedTime();
 		m_elapsedTime->setText(elapsedTime.toString(Qt::TextDate));
 	}
 
@@ -175,7 +175,7 @@ void PomodoroStatistics::updateGUI()
   m_stop      ->setEnabled(!m_paused);
 
 	unsigned long totalMs = 0;
-	QTime pomodoroTime = QTime(0, 0, 0, 0);
+	auto pomodoroTime = QTime(0, 0, 0, 0);
 
 	unsigned long seconds = pomodoroTime.secsTo(m_pomodoro->getPomodoroDuration());
 	seconds *= m_pomodoro->completedPomodoros();
@@ -184,15 +184,15 @@ void PomodoroStatistics::updateGUI()
 
 	m_completedPomodoros->setText(QString("%1 (%2)").arg(m_pomodoro->completedPomodoros()).arg(pomodoroTime.toString(Qt::TextDate)));
 
-	QTime shortBreakTime = QTime(0, 0, 0, 0);
-	seconds = shortBreakTime.secsTo(m_pomodoro->getLongBreakDuration());
+	auto shortBreakTime = QTime(0, 0, 0, 0);
+	seconds = shortBreakTime.secsTo(m_pomodoro->getShortBreakDuration());
 	seconds *= m_pomodoro->completedShortBreaks();
 	totalMs += seconds;
 	shortBreakTime = shortBreakTime.addSecs(seconds);
 
 	m_completedShortBreaks->setText(QString("%1 (%2)").arg(m_pomodoro->completedShortBreaks()).arg(shortBreakTime.toString(Qt::TextDate)));
 
-	QTime longBreakTime = QTime(0, 0, 0, 0);
+	auto longBreakTime = QTime(0, 0, 0, 0);
 	seconds = longBreakTime.secsTo(m_pomodoro->getLongBreakDuration());
 	seconds *= m_pomodoro->completedLongBreaks();
 	totalMs += seconds;
@@ -200,10 +200,10 @@ void PomodoroStatistics::updateGUI()
 
 	m_completedLongBreaks->setText(QString("%1 (%2)").arg(m_pomodoro->completedLongBreaks()).arg(longBreakTime.toString(Qt::TextDate)));
 
-	QTime totalTime = QTime(0, 0, 0, 0);
+	auto totalTime = QTime(0, 0, 0, 0);
 	totalTime = totalTime.addSecs(totalMs);
 
-	QTime elapsedTime = m_pomodoro->elapsedTime();
+	auto elapsedTime = m_pomodoro->elapsedTime();
 	m_elapsedTime->setText(elapsedTime.toString(Qt::TextDate));
 
 	switch(m_pomodoro->status())
@@ -242,11 +242,11 @@ void PomodoroStatistics::updateGUI()
 void PomodoroStatistics::updateTask()
 {
 	 bool ok;
-	 QString text = QInputDialog::getText(this,
-			                                  tr("Enter task name"),
-			                                  tr("Task name:"),
-			                                  QLineEdit::Normal,
-			                                  m_taskName->text(), &ok);
+	 auto text = QInputDialog::getText(this,
+			                               tr("Enter task name"),
+			                               tr("Task name:"),
+			                               QLineEdit::Normal,
+			                               m_taskName->text(), &ok);
 	 if (ok && !text.isEmpty())
 	 {
 		 m_taskName->setText(text);
