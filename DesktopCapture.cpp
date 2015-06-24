@@ -185,7 +185,6 @@ void DesktopCapture::loadConfiguration()
 				monitors << QString("Additional Screen %1 (Size: %2x%3 - Position: %4x%5)").arg(i).arg(geometry.width()).arg(geometry.height()).arg(geometry.x()).arg(geometry.y());
 			}
 		}
-		settings.setValue(MONITORS_LIST, monitors);
 	}
 	m_captureMonitorComboBox->insertItems(0, monitors);
 
@@ -193,10 +192,6 @@ void DesktopCapture::loadConfiguration()
   if (settings.contains(CAPTURED_MONITOR))
   {
     capturedMonitor = settings.value(CAPTURED_MONITOR, capturedMonitor).toInt();
-  }
-  else
-  {
-    settings.setValue(CAPTURED_MONITOR, capturedMonitor);
   }
   m_captureAllMonitors->setChecked(capturedMonitor == -1);
   m_captureMonitorComboBox->setCurrentIndex((capturedMonitor != -1) ? capturedMonitor : 0);
@@ -207,10 +202,6 @@ void DesktopCapture::loadConfiguration()
 	{
 		position = settings.value(CAMERA_OVERLAY_POSITION, position).toPoint();
 	}
-	else
-	{
-		settings.setValue(CAMERA_OVERLAY_POSITION, position);
-	}
 	m_PIPposition = position;
 
 	bool pomodoroEnabled = true;
@@ -218,20 +209,12 @@ void DesktopCapture::loadConfiguration()
 	{
 		pomodoroEnabled = settings.value(POMODORO_ENABLED, pomodoroEnabled).toBool();
 	}
-	else
-	{
-		settings.setValue(POMODORO_ENABLED, pomodoroEnabled);
-	}
 	m_pomodoroGroupBox->setChecked(pomodoroEnabled);
 
 	auto pomodoroTime = QTime(0,25,0);
 	if (settings.contains(POMODORO_TIME))
 	{
 		pomodoroTime = settings.value(POMODORO_TIME, pomodoroTime).toTime();
-	}
-	else
-	{
-		settings.setValue(POMODORO_TIME, pomodoroTime);
 	}
 	m_pomodoroTime->setTime(pomodoroTime);
 	m_pomodoro->setPomodoroDuration(pomodoroTime);
@@ -241,10 +224,6 @@ void DesktopCapture::loadConfiguration()
 	{
 		shortBreak = settings.value(POMODORO_SHORT_BREAK_TIME, shortBreak).toTime();
 	}
-	else
-	{
-		settings.setValue(POMODORO_SHORT_BREAK_TIME, shortBreak);
-	}
 	m_shortBreakTime->setTime(shortBreak);
 	m_pomodoro->setShortBreakDuration(shortBreak);
 
@@ -252,10 +231,6 @@ void DesktopCapture::loadConfiguration()
 	if (settings.contains(POMODORO_LONG_BREAK_TIME))
 	{
 		longBreak = settings.value(POMODORO_LONG_BREAK_TIME, longBreak).toTime();
-	}
-	else
-	{
-		settings.setValue(POMODORO_LONG_BREAK_TIME, longBreak);
 	}
 	m_longBreakTime->setTime(longBreak);
 	m_pomodoro->setLongBreakDuration(longBreak);
@@ -265,10 +240,6 @@ void DesktopCapture::loadConfiguration()
 	{
 		pomodorosBeforeBreak = settings.value(POMODOROS_BEFORE_BREAK, pomodorosBeforeBreak).toInt();
 	}
-	else
-	{
-		settings.setValue(POMODOROS_BEFORE_BREAK, pomodorosBeforeBreak);
-	}
 	m_pomodorosBreakNumber->setValue(pomodorosBeforeBreak);
 	m_pomodoro->setPomodorosBeforeBreak(pomodorosBeforeBreak);
 
@@ -277,20 +248,12 @@ void DesktopCapture::loadConfiguration()
 	{
 		animatePomodoro = settings.value(POMODOROS_ANIMATED_TRAY_ENABLED, animatePomodoro).toBool();
 	}
-	else
-	{
-		settings.setValue(POMODOROS_ANIMATED_TRAY_ENABLED, animatePomodoro);
-	}
 	m_pomodoroAnimateTray->setChecked(animatePomodoro);
 
 	auto pomodoroUseSounds = true;
 	if (settings.contains(POMODOROS_USE_SOUNDS))
 	{
 		pomodoroUseSounds = settings.value(POMODOROS_USE_SOUNDS, pomodoroUseSounds).toBool();
-	}
-	else
-	{
-		settings.setValue(POMODOROS_USE_SOUNDS, pomodoroUseSounds);
 	}
 	m_pomodoroUseSounds->setChecked(pomodoroUseSounds);
 	m_pomodoro->setUseSounds(pomodoroUseSounds);
@@ -299,10 +262,6 @@ void DesktopCapture::loadConfiguration()
 	if (settings.contains(POMODOROS_CONTINUOUS_TICTAC))
 	{
 		pomodoroContinuousTicTac = settings.value(POMODOROS_CONTINUOUS_TICTAC, pomodoroContinuousTicTac).toBool();
-	}
-	else
-	{
-		settings.setValue(POMODOROS_CONTINUOUS_TICTAC, pomodoroContinuousTicTac);
 	}
 	m_continuousTicTac->setChecked(pomodoroContinuousTicTac);
 	m_continuousTicTac->setEnabled(pomodoroUseSounds && this->m_pomodoroGroupBox->isChecked());
@@ -313,10 +272,6 @@ void DesktopCapture::loadConfiguration()
 	{
 		pomodorosInSession = settings.value(POMODOROS_SESSION_NUMBER, pomodorosInSession).toUInt();
 	}
-	else
-	{
-		settings.setValue(POMODOROS_SESSION_NUMBER, pomodorosInSession);
-	}
 	m_pomodorosNumber->setValue(pomodorosInSession);
 	m_pomodoro->setSessionPodomodos(pomodorosInSession);
 
@@ -324,10 +279,6 @@ void DesktopCapture::loadConfiguration()
 	if (settings.contains(POMODOROS_LAST_TASK))
 	{
 		task = settings.value(POMODOROS_LAST_TASK, task).toString();
-	}
-	else
-	{
-		settings.setValue(POMODOROS_LAST_TASK, task);
 	}
 	m_pomodoroTask->setText(task);
 	m_pomodoro->setTask(task);
@@ -337,10 +288,6 @@ void DesktopCapture::loadConfiguration()
 	{
 		overlayPomodoro = settings.value(POMODOROS_OVERLAY, overlayPomodoro).toBool();
 	}
-	else
-	{
-		settings.setValue(POMODOROS_OVERLAY, true);
-	}
 	m_overlayStats->setChecked(overlayPomodoro);
 	m_overlayStats->setEnabled(m_pomodoroGroupBox->isChecked());
 
@@ -349,19 +296,11 @@ void DesktopCapture::loadConfiguration()
 	{
 		m_statsPosition = settings.value(POMODOROS_OVERLAY_POSITION, m_statsPosition).toPoint();
 	}
-	else
-	{
-		settings.setValue(POMODOROS_OVERLAY_POSITION, m_statsPosition);
-	}
 
   int statsPosition = 0;
   if (settings.contains(POMODOROS_OVERLAY_FIXED_POSITION))
   {
     statsPosition = settings.value(POMODOROS_OVERLAY_FIXED_POSITION, statsPosition).toInt();
-  }
-  else
-  {
-    settings.setValue(POMODOROS_OVERLAY_FIXED_POSITION, statsPosition);
   }
   m_pomodoroPositionComboBox->insertItems(0, POSITION_NAMES);
   m_pomodoroPositionComboBox->setCurrentIndex(statsPosition);
@@ -383,20 +322,12 @@ void DesktopCapture::loadConfiguration()
 	{
 		timeBetweenCaptures = settings.value(CAPTURE_TIME, timeBetweenCaptures).toTime();
 	}
-	else
-	{
-		settings.setValue(CAPTURE_TIME, timeBetweenCaptures);
-	}
 	m_screeshotTime->setTime(timeBetweenCaptures);
 
 	auto captureVideo = true;
 	if (settings.contains(CAPTURE_VIDEO))
 	{
 		captureVideo = settings.value(CAPTURE_VIDEO, captureVideo).toBool();
-	}
-	else
-	{
-		settings.setValue(CAPTURE_VIDEO, captureVideo);
 	}
 	m_videoRadioButton->setChecked(captureVideo);
 	m_screenshotsRadioButton->setChecked(!captureVideo);
@@ -406,10 +337,6 @@ void DesktopCapture::loadConfiguration()
 	{
 		videoFps = settings.value(CAPTURE_VIDEO_FPS, videoFps).toInt();
 	}
-	else
-	{
-		settings.setValue(CAPTURE_VIDEO_FPS, videoFps);
-	}
 	m_fps->setEnabled(captureVideo);
 	m_fps->setValue(videoFps);
 
@@ -418,20 +345,12 @@ void DesktopCapture::loadConfiguration()
 	{
 		outputDir = settings.value(OUTPUT_DIR, outputDir).toString();
 	}
-	else
-	{
-		settings.setValue(OUTPUT_DIR, outputDir);
-	}
 	m_dirEditLabel->setText(outputDir.replace('/', QDir::separator()));
 
 	int scale = 1;
 	if(settings.contains(OUTPUT_SCALE))
 	{
 	  scale = settings.value(OUTPUT_SCALE, scale).toInt();
-	}
-	else
-	{
-	  settings.setValue(OUTPUT_SCALE, 1);
 	}
 	onScaleIndexChanged(scale);
   m_scaleComboBox->setCurrentIndex(scale);
@@ -441,20 +360,12 @@ void DesktopCapture::loadConfiguration()
 	{
 		captureEnabled = settings.value(CAPTURE_ENABLED, captureEnabled).toBool();
 	}
-	else
-	{
-		settings.setValue(CAPTURE_ENABLED, true);
-	}
 	m_captureGroupBox->setChecked(captureEnabled);
 
   bool enableCamera = true;
   if (settings.contains(CAMERA_ENABLED))
   {
     enableCamera = settings.value(CAMERA_ENABLED, enableCamera).toBool();
-  }
-  else
-  {
-    settings.setValue(CAMERA_ENABLED, true);
   }
   m_cameraEnabled->setChecked(enableCamera);
 
@@ -472,10 +383,6 @@ void DesktopCapture::loadConfiguration()
   {
     cameraPosition = settings.value(CAMERA_OVERLAY_FIXED_POSITION, cameraPosition).toInt();
   }
-  else
-  {
-    settings.setValue(CAMERA_OVERLAY_FIXED_POSITION, cameraPosition);
-  }
   m_cameraPositionComboBox->insertItems(0, POSITION_NAMES);
   m_cameraPositionComboBox->setCurrentIndex(cameraPosition);
   m_cameraPositionComboBox->setEnabled(enableCamera);
@@ -485,20 +392,12 @@ void DesktopCapture::loadConfiguration()
   {
     cameraMaskIndex = settings.value(CAMERA_MASK, cameraMaskIndex).toInt();
   }
-  else
-  {
-    settings.setValue(CAMERA_MASK, cameraMaskIndex);
-  }
   m_cameraMaskComboBox->setCurrentIndex(cameraMaskIndex);
 
   auto trackFace = false;
   if(settings.contains(CAMERA_TRACK_FACE))
   {
     trackFace = settings.value(CAMERA_TRACK_FACE, trackFace).toBool();
-  }
-  else
-  {
-    settings.setValue(CAMERA_TRACK_FACE, trackFace);
   }
   m_trackFace->setChecked(trackFace);
 
@@ -507,20 +406,12 @@ void DesktopCapture::loadConfiguration()
   {
     trackFace = settings.value(CAMERA_ASCII_ART, convertToASCII).toBool();
   }
-  else
-  {
-    settings.setValue(CAMERA_ASCII_ART, convertToASCII);
-  }
   m_ASCIIart->setChecked(convertToASCII);
 
   bool animateScreenshot = true;
   if (settings.contains(CAMERA_ANIMATED_TRAY_ENABLED))
   {
     animateScreenshot = settings.value(CAMERA_ANIMATED_TRAY_ENABLED, animateScreenshot).toBool();
-  }
-  else
-  {
-    settings.setValue(CAMERA_ANIMATED_TRAY_ENABLED, true);
   }
   m_screenshotAnimateTray->setEnabled(animateScreenshot && m_captureGroupBox->isChecked());
 
@@ -529,17 +420,11 @@ void DesktopCapture::loadConfiguration()
   {
     m_selectedResolution = settings.value(CAMERA_ACTIVE_RESOLUTION, m_selectedResolution).toInt();
   }
-  else
-  {
-    settings.setValue(CAMERA_ACTIVE_RESOLUTION, m_selectedResolution);
-  }
 
   if (settings.contains(CAMERA_RESOLUTIONS))
   {
     m_cameraResolutionsNames = settings.value(CAMERA_RESOLUTIONS, QStringList()).toStringList();
   }
-
-	settings.sync();
 }
 
 //-----------------------------------------------------------------
@@ -587,6 +472,8 @@ void DesktopCapture::saveConfiguration()
   settings.setValue(POMODOROS_OVERLAY, m_overlayStats->isChecked());
   settings.setValue(POMODOROS_OVERLAY_POSITION, m_statsPosition);
   settings.setValue(POMODOROS_OVERLAY_FIXED_POSITION, m_pomodoroPositionComboBox->currentIndex());
+  settings.setValue(CAMERA_ASCII_ART, m_ASCIIart->isChecked());
+  settings.setValue(POMODOROS_OVERLAY_COMPOSITION_MODE, m_pomodoroCompositionComboBox->currentIndex());
 
 	settings.sync();
 }
@@ -1020,7 +907,7 @@ void DesktopCapture::setupCaptureThread()
 	  }
 	  else
 	  {
-	    m_captureThread->setStatsOverlayPosition(m_PIPposition);
+	    m_captureThread->setStatsOverlayPosition(m_statsPosition);
 	  }
 	}
 
