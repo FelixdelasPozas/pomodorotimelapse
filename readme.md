@@ -46,10 +46,10 @@ Main dialog with the configuration options showing a preview of the captured are
 
 ![Main dialog]()
 
-Once started the tray icon will provide the information on the progression of the timer.
+Once started the tray icon will provide the information on the progression of the timer and the session.
 
 ![Tray icons]()
 
-If the pomodoro timer is being used the statistics can be shown and the current task can be changed. 
+If the pomodoro timer is being used the statistics can be shown and the current task can be changed while in a session. 
 
 ![Pomodoro statistics]()

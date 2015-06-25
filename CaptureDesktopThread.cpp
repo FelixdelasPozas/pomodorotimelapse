@@ -561,6 +561,7 @@ void CaptureDesktopThread::drawPomodoroUnit(QPainter &painter, QColor color, con
 {
 	QBrush brush(color);
 	color.setAlphaF(0.8);
+	painter.setClipRect(position.x(), position.y(), width, POMODORO_UNIT_HEIGHT);
 	painter.setBrush(brush);
 	painter.fillRect(position.x(), position.y(), width, POMODORO_UNIT_HEIGHT, color);
 	painter.setPen(Qt::white);
@@ -678,24 +679,29 @@ void CaptureDesktopThread::overlayPomodoro(QImage &image)
 	else
 	{
 		QPoint position = m_statsPosition;
-		for(unsigned int i = 1; i <= m_pomodoro->completedPomodoros(); ++i)
+		auto completedPomodoros = m_pomodoro->completedPomodoros();
+		auto pomodorosBeforeBreak = m_pomodoro->getPomodorosBeforeLongBreak();
+
+		for(unsigned int i = 1; i <= completedPomodoros; ++i)
 		{
 			drawPomodoroUnit(painter, Qt::red, position, m_pomodoro->getCompletedTasks()[i-1]);
 			position.setY(position.y() + POMODORO_UNIT_HEIGHT);
 
-			if (i <= m_pomodoro->completedShortBreaks())
+			auto isLongBreak = (i != completedPomodoros && (completedPomodoros % pomodorosBeforeBreak == 0) &&
+	                       (i / pomodorosBeforeBreak <= m_pomodoro->completedLongBreaks()));
+
+			if(isLongBreak)
 			{
-				drawPomodoroUnit(painter, Qt::blue, position, QString("Short break"));
-				position.setY(position.y() + POMODORO_UNIT_HEIGHT);
+        drawPomodoroUnit(painter, Qt::green, position, QString("Long Break"));
+        position.setY(position.y() + POMODORO_UNIT_HEIGHT);
 			}
-
-			bool longBreak = (i % m_pomodoro->getPomodorosBeforeLongBreak() == 0) &&
-					             ((i / m_pomodoro->getPomodorosBeforeLongBreak()) <= m_pomodoro->completedLongBreaks());
-
-			if (longBreak)
+			else
 			{
-				drawPomodoroUnit(painter, Qt::green, position, QString("Long Break"));
-				position.setY(position.y() + POMODORO_UNIT_HEIGHT);
+        if (i <= m_pomodoro->completedShortBreaks())
+        {
+          drawPomodoroUnit(painter, Qt::blue, position, QString("Short break"));
+          position.setY(position.y() + POMODORO_UNIT_HEIGHT);
+        }
 			}
 		}
 
@@ -731,7 +737,7 @@ void CaptureDesktopThread::overlayPomodoro(QImage &image)
 				break;
 		}
 
-		int pixels = static_cast<double>(mSec) / static_cast<double>(total) * 250;
+		int pixels = static_cast<double>(mSec) / static_cast<double>(total) * POMODORO_UNIT_MAX_WIDTH;
 		drawPomodoroUnit(painter, color, position, text, pixels);
 	}
 
