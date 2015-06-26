@@ -198,20 +198,21 @@ class CaptureDesktopThread
 		static constexpr int   POMODORO_UNIT_MARGIN    = 2;
 		static constexpr float POMODORO_UNIT_OPACITY   = 0.8;
 
+    struct Mask
+    {
+      QString name;
+      QString resource;
+      int     eyeDistance;
+      int     lipDistance;
+      QPoint  leftEye;
+    };
+
+    static const QList<const struct Mask> MASKS;
+
 	signals:
 		void imageAvailable();
 
 	private:
-		struct Mask
-		{
-		  QString resource;
-		  int     eyeDistance;
-		  int     lipDistance;
-		  QPoint  leftEye;
-		};
-
-		static const QList<struct Mask> MASKS;
-
 		static const QList<QPainter::CompositionMode> COMPOSITION_MODES_QT;
 
 		static const QString CHAR_RAMP_SHORT;

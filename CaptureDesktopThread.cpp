@@ -40,13 +40,13 @@ const QList<QPainter::CompositionMode> CaptureDesktopThread::COMPOSITION_MODES_Q
 		                                                                                  QPainter::CompositionMode_Plus,
 		                                                                                  QPainter::CompositionMode_Multiply };
 
-const QList<struct CaptureDesktopThread::Mask> CaptureDesktopThread::MASKS = { { QString(":/DesktopCapture/masks/monocle.png"),      200, 285, QPoint(150,107) },
-                                                                               { QString(":/DesktopCapture/masks/guyfawkes.png"),    275, 285, QPoint(167,292) },
-                                                                               { QString(":/DesktopCapture/masks/pirate.png"),       110,  80, QPoint(142,216) },
-                                                                               { QString(":/DesktopCapture/masks/awesome.png"),      110,  80, QPoint( 94,152) },
-                                                                               { QString(":/DesktopCapture/masks/problem.png"),      110,  80, QPoint(124,120) },
-                                                                               { QString(":/DesktopCapture/masks/awesome-face.png"),  74,  65, QPoint( 80, 85) },
-                                                                               { QString(":/DesktopCapture/masks/dealwithit.png"),   100, 109, QPoint(105, 28) } };
+const QList<const struct CaptureDesktopThread::Mask> CaptureDesktopThread::MASKS = { { QString("I feel like a sir"),      QString(":/DesktopCapture/masks/monocle.png"),      200, 285, QPoint(150,107) },
+                                                                                     { QString("Anonymous"),              QString(":/DesktopCapture/masks/guyfawkes.png"),    275, 285, QPoint(167,292) },
+                                                                                     { QString("With a bottle of rum"),   QString(":/DesktopCapture/masks/pirate.png"),       110,  80, QPoint(142,216) },
+                                                                                     { QString("Everything is awesome!"), QString(":/DesktopCapture/masks/awesome.png"),      110,  80, QPoint( 94,152) },
+                                                                                     { QString("U mad?"),                 QString(":/DesktopCapture/masks/problem.png"),      110,  80, QPoint(124,120) },
+                                                                                     { QString("Awesome face"),           QString(":/DesktopCapture/masks/awesome-face.png"),  74,  65, QPoint( 80, 85) },
+                                                                                     { QString("Deal with it"),           QString(":/DesktopCapture/masks/dealwithit.png"),   100, 109, QPoint(105, 28) } };
 
 const QString CaptureDesktopThread::CHAR_RAMP_LONG = QString(" .'`^\",:;Il!i><~+_-?][}{1)(|\\/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$");
 
@@ -687,19 +687,21 @@ void CaptureDesktopThread::overlayPomodoro(QImage &image)
 			drawPomodoroUnit(painter, Qt::red, position, m_pomodoro->getCompletedTasks()[i-1]);
 			position.setY(position.y() + POMODORO_UNIT_HEIGHT);
 
-			auto isLongBreak = (i != completedPomodoros && (completedPomodoros % pomodorosBeforeBreak == 0) &&
-	                       (i / pomodorosBeforeBreak <= m_pomodoro->completedLongBreaks()));
+			auto numLongBreaks = i / pomodorosBeforeBreak;
+			auto isLongBreak = ((i % pomodorosBeforeBreak == 0) &&
+	                       (numLongBreaks <= m_pomodoro->completedLongBreaks()));
 
 			if(isLongBreak)
 			{
-        drawPomodoroUnit(painter, Qt::green, position, QString("Long Break"));
+        drawPomodoroUnit(painter, Qt::green, position, QString("Long Break %1").arg(QString().number(static_cast<int>(numLongBreaks))));
         position.setY(position.y() + POMODORO_UNIT_HEIGHT);
 			}
 			else
 			{
-        if (i <= m_pomodoro->completedShortBreaks())
+			  auto numShortBreaks = i - numLongBreaks;
+        if (numShortBreaks <= m_pomodoro->completedShortBreaks())
         {
-          drawPomodoroUnit(painter, Qt::blue, position, QString("Short break"));
+          drawPomodoroUnit(painter, Qt::blue, position, QString("Short break %1").arg(QString().number(static_cast<int>(numShortBreaks))));
           position.setY(position.y() + POMODORO_UNIT_HEIGHT);
         }
 			}

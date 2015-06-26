@@ -291,48 +291,8 @@
                   <string>Sets the mask of the face.</string>
                  </property>
                  <property name="currentIndex">
-                  <number>7</number>
+                  <number>-1</number>
                  </property>
-                 <item>
-                  <property name="text">
-                   <string>I feel like a sir</string>
-                  </property>
-                 </item>
-                 <item>
-                  <property name="text">
-                   <string>Anonymous</string>
-                  </property>
-                 </item>
-                 <item>
-                  <property name="text">
-                   <string>With a bottle of rum</string>
-                  </property>
-                 </item>
-                 <item>
-                  <property name="text">
-                   <string>Everything is awesome!!!</string>
-                  </property>
-                 </item>
-                 <item>
-                  <property name="text">
-                   <string>U mad?</string>
-                  </property>
-                 </item>
-                 <item>
-                  <property name="text">
-                   <string>Awesome face</string>
-                  </property>
-                 </item>
-                 <item>
-                  <property name="text">
-                   <string>Deal with it</string>
-                  </property>
-                 </item>
-                 <item>
-                  <property name="text">
-                   <string>None</string>
-                  </property>
-                 </item>
                 </widget>
                </item>
               </layout>

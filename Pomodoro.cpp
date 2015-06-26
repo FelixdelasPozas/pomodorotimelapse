@@ -51,7 +51,7 @@ Pomodoro::Pomodoro()
 	connect(&m_progressTimer, SIGNAL(timeout()),
 	        this,             SLOT(updateProgress()), Qt::QueuedConnection);
 
-  // NOTE: Load sound files. QSound can´t play a file from the qt resource file
+  // NOTE: Load sound files. QSound canï¿½t play a file from the qt resource file
   // so we will dump them first to the temporal directory, then load the resources
   // and delete them.
   m_tictac_file = QTemporaryFile::createLocalFile(":/DesktopCapture/sounds/tictac.wav");
@@ -514,16 +514,30 @@ void Pomodoro::setPomodorosBeforeBreak(unsigned int value)
 }
 
 //-----------------------------------------------------------------
-QTime Pomodoro::completedSessionTime()
+QTime Pomodoro::completedSessionTime() const
 {
 	QTime elapsedTime;
-	unsigned int seconds = m_numPomodoros * m_pomodoroTime / 1000 ;
+	unsigned long seconds = m_numPomodoros * m_pomodoroTime / 1000 ;
 	seconds += m_numShortBreaks * m_shortBreakTime / 1000;
 	seconds += m_numLongBreaks * m_longBreakTime / 1000;
 
 	elapsedTime.addSecs(seconds);
 
 	return elapsedTime;
+}
+
+//-----------------------------------------------------------------
+QTime Pomodoro::sessionTime() const
+{
+  QTime sessionTime;
+  unsigned long seconds = m_sessionPomodoros * m_pomodoroTime / 1000;
+  auto numLongBreaks = (m_sessionPomodoros / m_numBeforeBreak) - ((m_sessionPomodoros % m_numBeforeBreak == 0) ? 1 : 0);
+  seconds += numLongBreaks * m_longBreakTime / 1000;
+  seconds += (m_sessionPomodoros - numLongBreaks - 1) * m_shortBreakTime / 1000;
+
+  sessionTime = sessionTime.addSecs(seconds);
+
+  return sessionTime;
 }
 
 //-----------------------------------------------------------------
@@ -536,7 +550,10 @@ QTime Pomodoro::elapsedTime()
 	}
 	else
 	{
-		returnTime = returnTime.addMSecs(m_elapsedMSeconds + m_startTime.elapsed());
+	  if(Status::Stopped != m_status)
+	  {
+	    returnTime = returnTime.addMSecs(m_elapsedMSeconds + m_startTime.elapsed());
+	  }
 	}
 
 	return returnTime;

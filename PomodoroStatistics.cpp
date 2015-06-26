@@ -28,6 +28,7 @@
 #include <QInputDialog>
 #include <QPainter>
 #include <QFontMetrics>
+#include <QDebug>
 
 //-----------------------------------------------------------------
 PomodoroStatistics::PomodoroStatistics(std::shared_ptr<Pomodoro> pomodoro, QWidget* parent)
@@ -153,9 +154,25 @@ void PomodoroStatistics::updateElapsedTime()
 	{
 		auto elapsedTime = m_pomodoro->elapsedTime();
 		m_elapsedTime->setText(elapsedTime.toString(Qt::TextDate));
+
+		updateProgress();
 	}
 
 	m_elapsedTime->repaint();
+}
+
+void PomodoroStatistics::updateProgress() const
+{
+  auto time = QTime(0,0,0,0);
+
+  auto totalSecs = time.secsTo(m_pomodoro->getPomodoroDuration()) * m_pomodoro->completedPomodoros();
+  totalSecs += time.secsTo(m_pomodoro->getShortBreakDuration()) * m_pomodoro->completedShortBreaks();
+  totalSecs += time.secsTo(m_pomodoro->getLongBreakDuration()) * m_pomodoro->completedLongBreaks();
+
+  auto elapsedSecs = time.secsTo(m_pomodoro->elapsedTime());
+  auto sessionSecs = time.secsTo(m_pomodoro->sessionTime());
+
+  m_progress->setValue(((totalSecs+elapsedSecs)*100)/sessionSecs);
 }
 
 //-----------------------------------------------------------------
@@ -174,12 +191,12 @@ void PomodoroStatistics::updateGUI()
   m_continue  ->setEnabled(!m_paused);
   m_stop      ->setEnabled(!m_paused);
 
-	unsigned long totalMs = 0;
+	unsigned long totalSecs = 0;
 	auto pomodoroTime = QTime(0, 0, 0, 0);
 
 	unsigned long seconds = pomodoroTime.secsTo(m_pomodoro->getPomodoroDuration());
 	seconds *= m_pomodoro->completedPomodoros();
-	totalMs += seconds;
+	totalSecs += seconds;
 	pomodoroTime = pomodoroTime.addSecs(seconds);
 
 	m_completedPomodoros->setText(QString("%1 (%2)").arg(m_pomodoro->completedPomodoros()).arg(pomodoroTime.toString(Qt::TextDate)));
@@ -187,7 +204,7 @@ void PomodoroStatistics::updateGUI()
 	auto shortBreakTime = QTime(0, 0, 0, 0);
 	seconds = shortBreakTime.secsTo(m_pomodoro->getShortBreakDuration());
 	seconds *= m_pomodoro->completedShortBreaks();
-	totalMs += seconds;
+	totalSecs += seconds;
 	shortBreakTime = shortBreakTime.addSecs(seconds);
 
 	m_completedShortBreaks->setText(QString("%1 (%2)").arg(m_pomodoro->completedShortBreaks()).arg(shortBreakTime.toString(Qt::TextDate)));
@@ -195,16 +212,18 @@ void PomodoroStatistics::updateGUI()
 	auto longBreakTime = QTime(0, 0, 0, 0);
 	seconds = longBreakTime.secsTo(m_pomodoro->getLongBreakDuration());
 	seconds *= m_pomodoro->completedLongBreaks();
-	totalMs += seconds;
+	totalSecs += seconds;
 	longBreakTime = longBreakTime.addSecs(seconds);
 
 	m_completedLongBreaks->setText(QString("%1 (%2)").arg(m_pomodoro->completedLongBreaks()).arg(longBreakTime.toString(Qt::TextDate)));
 
 	auto totalTime = QTime(0, 0, 0, 0);
-	totalTime = totalTime.addSecs(totalMs);
+	totalTime = totalTime.addSecs(totalSecs);
 
 	auto elapsedTime = m_pomodoro->elapsedTime();
 	m_elapsedTime->setText(elapsedTime.toString(Qt::TextDate));
+
+	updateProgress();
 
 	switch(m_pomodoro->status())
 	{

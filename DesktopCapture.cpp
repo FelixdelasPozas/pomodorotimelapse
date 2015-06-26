@@ -387,7 +387,14 @@ void DesktopCapture::loadConfiguration()
   m_cameraPositionComboBox->setCurrentIndex(cameraPosition);
   m_cameraPositionComboBox->setEnabled(enableCamera);
 
-  int cameraMaskIndex = m_cameraMaskComboBox->actions().size()-1;
+  QStringList masks;
+  for(auto mask: CaptureDesktopThread::MASKS)
+  {
+    masks << mask.name;
+  }
+  masks << QString("None");
+  m_cameraMaskComboBox->insertItems(0, masks);
+  int cameraMaskIndex = m_cameraMaskComboBox->count()-1;
   if(settings.contains(CAMERA_MASK))
   {
     cameraMaskIndex = settings.value(CAMERA_MASK, cameraMaskIndex).toInt();

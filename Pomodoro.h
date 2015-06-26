@@ -194,7 +194,12 @@ class Pomodoro
     /** \brief Returns the total time of completed units in the session.
      *
      */
-		QTime completedSessionTime();
+		QTime completedSessionTime() const;
+
+		/** \brief Returns the total time of the session;
+		 *
+		 */
+		QTime sessionTime() const;
 
     /** \brief Returns the time elapsed since the beginning of the current unit.
      *

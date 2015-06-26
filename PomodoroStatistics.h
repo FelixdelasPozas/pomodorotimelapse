@@ -101,6 +101,8 @@ class PomodoroStatistics
 		void updateTask();
 
 	private:
+		void updateProgress() const;
+
 		std::shared_ptr<Pomodoro> m_pomodoro;
 		QTimeLine                 m_timeLine;
 		QTimer                    m_timer;
