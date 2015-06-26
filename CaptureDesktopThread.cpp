@@ -574,9 +574,7 @@ int CaptureDesktopThread::pomodoroOverlayHeight()
 {
   if (nullptr == m_pomodoro) return 0;
 
-  return POMODORO_UNIT_HEIGHT * ((2 * m_pomodoro->getPomodorosInSession()) - 1 +
-                                 (m_pomodoro->getPomodorosInSession() / m_pomodoro->getPomodorosBeforeLongBreak()) -
-                                 ((m_pomodoro->getPomodorosInSession() % m_pomodoro->getPomodorosBeforeLongBreak() == 0) ? 1 : 0));
+  return POMODORO_UNIT_HEIGHT * ((2 * m_pomodoro->getPomodorosInSession()) - 1);
 }
 
 //-----------------------------------------------------------------
@@ -688,13 +686,14 @@ void CaptureDesktopThread::overlayPomodoro(QImage &image)
 			position.setY(position.y() + POMODORO_UNIT_HEIGHT);
 
 			auto numLongBreaks = i / pomodorosBeforeBreak;
-			auto isLongBreak = ((i % pomodorosBeforeBreak == 0) &&
-	                       (numLongBreaks <= m_pomodoro->completedLongBreaks()));
 
-			if(isLongBreak)
+			if(i % pomodorosBeforeBreak == 0)
 			{
-        drawPomodoroUnit(painter, Qt::green, position, QString("Long Break %1").arg(QString().number(static_cast<int>(numLongBreaks))));
-        position.setY(position.y() + POMODORO_UNIT_HEIGHT);
+			  if(numLongBreaks <= m_pomodoro->completedLongBreaks())
+			  {
+          drawPomodoroUnit(painter, Qt::green, position, QString("Long Break %1").arg(QString().number(static_cast<int>(numLongBreaks))));
+          position.setY(position.y() + POMODORO_UNIT_HEIGHT);
+			  }
 			}
 			else
 			{

@@ -161,7 +161,8 @@ void PomodoroStatistics::updateElapsedTime()
 	m_elapsedTime->repaint();
 }
 
-void PomodoroStatistics::updateProgress() const
+//-----------------------------------------------------------------
+void PomodoroStatistics::updateProgress()
 {
   auto time = QTime(0,0,0,0);
 
