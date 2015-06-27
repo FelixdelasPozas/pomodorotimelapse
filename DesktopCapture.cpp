@@ -1048,14 +1048,12 @@ bool DesktopCapture::eventFilter(QObject *object, QEvent *event)
           m_cameraPositionComboBox->setCurrentIndex(0);
 				}
 
-				int height = CaptureDesktopThread::POMODORO_UNIT_HEIGHT * ((2 * m_pomodoro->getPomodorosInSession() - 1) +
-				             (m_pomodoro->getPomodorosInSession() / m_pomodoro->getPomodorosBeforeLongBreak()) -
-				             ((m_pomodoro->getPomodorosInSession() % m_pomodoro->getPomodorosBeforeLongBreak() == 0) ? 1 : 0));
+				auto height = ((2 * m_pomodorosNumber->value()) - 1) * CaptureDesktopThread::POMODORO_UNIT_HEIGHT;
 
 				if ( (m_statsPosition.x() > mappedPoint.x()) ||
 		         (m_statsPosition.y() > mappedPoint.y()) ||
 		         (m_statsPosition.x() + CaptureDesktopThread::POMODORO_UNIT_MAX_WIDTH < mappedPoint.x()) ||
-		         (m_statsPosition.y()+height < mappedPoint.y()) )
+		         (m_statsPosition.y() + height < mappedPoint.y()) )
 				{
 					insideStats = false;
 				}
@@ -1196,9 +1194,7 @@ QPoint DesktopCapture::computeNewStatsPosition(const QPoint &dragPoint, const QP
 	double ratioX = static_cast<double>(geometry.width()) / static_cast<double>(imageGeometry.width());
 	double ratioY = static_cast<double>(geometry.height()) / static_cast<double>(imageGeometry.height());
 
-	int height = CaptureDesktopThread::POMODORO_UNIT_HEIGHT * ((2 * m_pomodoro->getPomodorosInSession() - 1) +
-	             (m_pomodoro->getPomodorosInSession() / m_pomodoro->getPomodorosBeforeLongBreak()) -
-	             ((m_pomodoro->getPomodorosInSession() % m_pomodoro->getPomodorosBeforeLongBreak() == 0) ? 1 : 0));
+	auto height = ((2 * m_pomodorosNumber->value()) - 1) * CaptureDesktopThread::POMODORO_UNIT_HEIGHT;
 
 	int dx = (point.x() - dragPoint.x())*ratioX;
 	int dy = (point.y() - dragPoint.y())*ratioY;
