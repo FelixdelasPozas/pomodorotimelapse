@@ -24,7 +24,7 @@ Several options can be configured:
 Also implemented some features just because they we're easy to do and fun.
 * The captured camera image can be converter to ASCII art.
 * Also if a face is detected in the camera picture:
-  - A mask can be drawn over (choosed over seven different ones).
+  - A mask can be drawn over the face (choosed over seven different ones).
   - The face can be centered in the camera image. 
 
 ## Output file formats
@@ -62,9 +62,7 @@ Coming soon...
 
 | Language                     |files          |blank        |comment           |code  |
 |:-----------------------------|--------------:|------------:|-----------------:|-----:|
-| C++                          |    9          |  733        |    400           |3432  |
+| C++                          |   9           | 733         |   400            | 3427
 | C/C++ Header                 |   10          |  314        |    767           | 761  |
 | CMake                        |    1          |   18        |      5           |  79  |
-| **Total**                    | **20**        | **1065**    | **1172**         | **4272** |
-
-
+| **Total**                    | **20**        | **1065**    | **1172**         | **4267** |
