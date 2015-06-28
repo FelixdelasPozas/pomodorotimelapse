@@ -49,8 +49,17 @@ The following libraries are required:
 The only current option is build from source as binaries are not provided. 
 
 # Screenshots
+Main dialog with the configuration options showing a preview of the captured area (whole 3840x1080 desktop) and the current position of the overlayed images (both camera and pomodoro statistics). Yeah, I always code with my monocle or my awesome face! ;-P
 
-Coming soon...
+![interface](https://cloud.githubusercontent.com/assets/12167134/8397664/aa0231c2-1dd3-11e5-94dc-4c00ae932324.jpg)
+
+Once started the tray icon will provide the information on the progression of the timer and the session.
+
+![trayicon](https://cloud.githubusercontent.com/assets/12167134/8397666/aa0c1fde-1dd3-11e5-922b-2107d16183b3.jpg)
+
+If the pomodoro timer is being used the statistics can be shown and the current task can be changed while in a session. 
+
+![statistics](https://cloud.githubusercontent.com/assets/12167134/8397665/aa08269a-1dd3-11e5-864e-ee362e6f52a0.jpg)
 
 # Repository information
 

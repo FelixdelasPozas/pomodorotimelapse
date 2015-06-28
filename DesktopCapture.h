@@ -275,6 +275,7 @@ class DesktopCapture
 	  static const QString CAPTURE_TIME;
 	  static const QString CAPTURE_VIDEO;
 	  static const QString CAPTURE_VIDEO_FPS;
+	  static const QString CAPTURE_ANIMATED_TRAY_ENABLED;
 	  static const QString CAPTURED_MONITOR;
 	  static const QString MONITORS_LIST;
 	  static const QString OUTPUT_DIR;
@@ -282,7 +283,6 @@ class DesktopCapture
 	  static const QString APPLICATION_GEOMETRY;
 	  static const QString APPLICATION_STATE;
 	  static const QString CAMERA_ENABLED;
-	  static const QString CAMERA_ANIMATED_TRAY_ENABLED;
 	  static const QString CAMERA_RESOLUTIONS;
 	  static const QString CAMERA_ACTIVE_RESOLUTION;
 	  static const QString CAMERA_OVERLAY_POSITION;

@@ -180,6 +180,19 @@
            </layout>
           </item>
           <item>
+           <widget class="QCheckBox" name="m_screenshotAnimateTray">
+            <property name="toolTip">
+             <string>Animate the tray icon when doing a capture.</string>
+            </property>
+            <property name="text">
+             <string>Animated tray icon during capture</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
            <widget class="QGroupBox" name="m_cameraEnabled">
             <property name="title">
              <string>Camera</string>
@@ -301,19 +314,6 @@
               <widget class="QCheckBox" name="m_ASCIIart">
                <property name="text">
                 <string>ASCII art</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QCheckBox" name="m_screenshotAnimateTray">
-               <property name="toolTip">
-                <string>Animate the tray icon when doing a capture.</string>
-               </property>
-               <property name="text">
-                <string>Animated tray icon</string>
-               </property>
-               <property name="checked">
-                <bool>true</bool>
                </property>
               </widget>
              </item>

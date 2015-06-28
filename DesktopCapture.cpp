@@ -55,6 +55,7 @@ const QString DesktopCapture::CAPTURE_TIME                       = QString("Time
 const QString DesktopCapture::CAPTURE_ENABLED                    = QString("Enable Desktop Capture");
 const QString DesktopCapture::CAPTURE_VIDEO                      = QString("Capture Video");
 const QString DesktopCapture::CAPTURE_VIDEO_FPS                  = QString("Capture Video FPS");
+const QString DesktopCapture::CAPTURE_ANIMATED_TRAY_ENABLED      = QString("Capture Animated Tray Icon");
 const QString DesktopCapture::CAPTURED_MONITOR                   = QString("Captured Desktop Monitor");
 const QString DesktopCapture::MONITORS_LIST                      = QString("Monitor Resolutions");
 const QString DesktopCapture::OUTPUT_DIR                         = QString("Output Directory");
@@ -62,7 +63,6 @@ const QString DesktopCapture::OUTPUT_SCALE                       = QString("Outp
 const QString DesktopCapture::APPLICATION_GEOMETRY               = QString("Application Geometry");
 const QString DesktopCapture::APPLICATION_STATE                  = QString("Application State");
 const QString DesktopCapture::CAMERA_ENABLED                     = QString("Camera Enabled");
-const QString DesktopCapture::CAMERA_ANIMATED_TRAY_ENABLED       = QString("Camera Animated Tray Icon");
 const QString DesktopCapture::CAMERA_RESOLUTIONS                 = QString("Available Camera Resolutions");
 const QString DesktopCapture::CAMERA_ACTIVE_RESOLUTION           = QString("Active Resolution");
 const QString DesktopCapture::CAMERA_OVERLAY_POSITION            = QString("Camera Overlay Position");
@@ -416,9 +416,9 @@ void DesktopCapture::loadConfiguration()
   m_ASCIIart->setChecked(convertToASCII);
 
   bool animateScreenshot = true;
-  if (settings.contains(CAMERA_ANIMATED_TRAY_ENABLED))
+  if (settings.contains(CAPTURE_ANIMATED_TRAY_ENABLED))
   {
-    animateScreenshot = settings.value(CAMERA_ANIMATED_TRAY_ENABLED, animateScreenshot).toBool();
+    animateScreenshot = settings.value(CAPTURE_ANIMATED_TRAY_ENABLED, animateScreenshot).toBool();
   }
   m_screenshotAnimateTray->setEnabled(animateScreenshot && m_captureGroupBox->isChecked());
 
@@ -452,7 +452,7 @@ void DesktopCapture::saveConfiguration()
 	settings.setValue(OUTPUT_DIR, m_dirEditLabel->text());
 	settings.setValue(OUTPUT_SCALE, m_scaleComboBox->currentIndex());
 	settings.setValue(CAMERA_ENABLED, m_cameraEnabled->isChecked());
-	settings.setValue(CAMERA_ANIMATED_TRAY_ENABLED, m_screenshotAnimateTray->isChecked());
+	settings.setValue(CAPTURE_ANIMATED_TRAY_ENABLED, m_screenshotAnimateTray->isChecked());
 	settings.setValue(CAMERA_RESOLUTIONS, m_cameraResolutionsNames);
 	settings.setValue(CAMERA_ACTIVE_RESOLUTION, m_cameraResolutionComboBox->currentIndex());
 	settings.setValue(CAMERA_OVERLAY_POSITION, m_PIPposition);
