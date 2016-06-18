@@ -529,7 +529,7 @@ Qt Framework</string>
             <item>
              <widget class="QLabel" name="label_27">
               <property name="text">
-               <string>version 4.8.6</string>
+               <string>version 5.7.0</string>
               </property>
               <property name="alignment">
                <set>Qt::AlignCenter</set>
