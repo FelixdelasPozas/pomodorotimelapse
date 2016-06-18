@@ -71,7 +71,7 @@ If the pomodoro timer is being used the statistics can be shown and the current 
 
 | Language                     |files          |blank        |comment           |code  |
 |:-----------------------------|--------------:|------------:|-----------------:|-----:|
-| C++                          |   9           | 733         |   400            | 3427
-| C/C++ Header                 |   10          |  314        |    767           | 761  |
-| CMake                        |    1          |   18        |      5           |  79  |
-| **Total**                    | **20**        | **1065**    | **1172**         | **4267** |
+| C++                          |   9           | 731         |   396            | 3419
+| C/C++ Header                 |   10          |  312        |    767           | 759  |
+| CMake                        |    1          |   20        |      7           |  77  |
+| **Total**                    | **20**        | **1064**    | **1170**         | **4255** |

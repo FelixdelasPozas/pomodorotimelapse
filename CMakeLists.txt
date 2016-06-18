@@ -7,19 +7,25 @@ set (DESKTOPCAPTURE_VERSION_MAJOR 1)
 set (DESKTOPCAPTURE_VERSION_MINOR 0)
 set (DESKTOPCAPTURE_VERSION_PATCH 0)
 
+# Find includes in corresponding build directories
+set(CMAKE_INCLUDE_CURRENT_DIR ON)
+
+# Instruct CMake to run moc automatically when needed.
+set(CMAKE_AUTOMOC ON)
+
+# Find the QtWidgets library
+find_package(Qt5 COMPONENTS Widgets Multimedia)
+
 if (CMAKE_BUILD_TYPE MATCHES Debug)
   set(CORE_EXTERNAL_LIBS ${CORE_EXTERNAL_LIBS} ${QT_QTTEST_LIBRARY})
 endif (CMAKE_BUILD_TYPE MATCHES Debug)
 
-if(DEFINED DESKTOPCAPTURE_VERSION_MAJOR)
+if(DEFINED MINGW)
   configure_file("${PROJECT_SOURCE_DIR}/DesktopCapture.rc.in" "${PROJECT_BINARY_DIR}/DesktopCapture.rc")
   set(CORE_SOURCES ${CORE_SOURCES} ${CMAKE_CURRENT_BINARY_DIR}/DesktopCapture.rc)
   set(CMAKE_RC_COMPILE_OBJECT "<CMAKE_RC_COMPILER> -O coff -o <OBJECT> -i <SOURCE>")
   enable_language(RC)
-endif(DEFINED DESKTOPCAPTURE_VERSION_MAJOR)
-
-find_package(Qt4 REQUIRED)
-include(${QT_USE_FILE})
+endif(DEFINED MINGW)
 
 find_package(OpenCV REQUIRED)
 
@@ -41,13 +47,14 @@ include_directories(
   )
 
 set(CMAKE_CXX_FLAGS " -Wall -Wno-deprecated -std=c++11 -fpermissive -mwindows")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${Qt5Widgets_EXECUTABLE_COMPILE_FLAGS}")
 
 # Add Qt Resource files
-qt4_add_resources(RESOURCES
+qt5_add_resources(RESOURCES
 	rsc/resources.qrc
 	)
 
-qt4_wrap_ui(CORE_UI
+qt5_wrap_ui(CORE_UI
   # .ui para Qt
   MainWindow.ui
   ProbeResolutionsDialog.ui
@@ -55,16 +62,6 @@ qt4_wrap_ui(CORE_UI
   AboutDialog.ui
   )
 	
-qt4_wrap_cpp(CORE_MOC
-  # .h para Qt
-  DesktopCapture.h
-  ProbeResolutionsDialog.h
-  CaptureDesktopThread.h
-  Pomodoro.h
-  PomodoroStatistics.h
-  AboutDialog.h
-  )
-
 set (CORE_SOURCES
   # ficheros para compilar
   ${RESOURCES}
@@ -82,6 +79,8 @@ set (CORE_SOURCES
   ${CMAKE_CURRENT_BINARY_DIR}/DesktopCapture.rc
 )
 
+SET_SOURCE_FILES_PROPERTIES(${CORE_SOURCES} PROPERTIES OBJECT_DEPENDS "${CORE_UI}")
+
 set(VPX_LIBS
   D:/Desarrollo/Bibliotecas/libvpx/libvpx.a
 )
@@ -96,7 +95,10 @@ set(CORE_EXTERNAL_LIBS
   ${VPX_LIBS}
   ${YUV_LIBS}
   ${DLIB_LIBRARY}
+  Qt5::Widgets
+  Qt5::Multimedia
 )
 
 add_executable(DesktopCapture ${CORE_SOURCES})
 target_link_libraries (DesktopCapture ${CORE_EXTERNAL_LIBS})
+qt5_use_modules(DesktopCapture Widgets Multimedia)

@@ -33,6 +33,9 @@
 #include <QPixmap>
 #include <QDebug>
 #include <QSettings>
+#include <QDesktopWidget>
+#include <QInputDialog>
+#include <QFileDialog>
 
 const QString DesktopCapture::INI_FILENAME = QString("DesktopCapture.ini");
 
@@ -654,7 +657,7 @@ void DesktopCapture::setupCameraResolutions()
 
 	m_cameraResolutionComboBox->setEnabled(m_cameraEnabled->isChecked());
 
-	if (m_captureThread)
+	if (m_captureThread && m_captureGroupBox->isChecked())
 	{
 		m_captureThread->resume();
 	}
@@ -749,11 +752,11 @@ void DesktopCapture::saveCapture(QPixmap *capture) const
 
 	if(m_scale != 1.0)
 	{
-	  capture->scaled(capture->size() * m_scale, Qt::KeepAspectRatio, Qt::TransformationMode::SmoothTransformation).save(fileName, format.toAscii(), 0);
+	  capture->scaled(capture->size() * m_scale, Qt::KeepAspectRatio, Qt::TransformationMode::SmoothTransformation).save(fileName, format.toStdString().c_str(), 0);
 	}
 	else
 	{
-	  capture->save(fileName, format.toAscii(), 0);
+	  capture->save(fileName, format.toStdString().c_str(), 0);
 	}
 }
 
@@ -1366,30 +1369,24 @@ void DesktopCapture::capture()
 //-----------------------------------------------------------------
 void DesktopCapture::onCaptureGroupChanged(bool status)
 {
-  if(m_captureThread)
+  if (status)
   {
-    switch(status)
+    if (!m_captureThread)
     {
-      case true:
-        if (m_captureThread->isPaused())
-        {
-          m_captureThread->resume();
-        }
+      setupCameraResolutions();
+      setupCaptureThread();
+    }
 
-        if (!m_captureThread)
-        {
-          setupCameraResolutions();
-          setupCaptureThread();
-        }
-          break;
-      case false:
-        if (!m_captureThread->isPaused())
-        {
-          m_captureThread->pause();
-        }
-        break;
-      default:
-        break;
+    if (m_captureThread->isPaused())
+    {
+      m_captureThread->resume();
+    }
+  }
+  else
+  {
+    if (m_captureThread && !m_captureThread->isPaused())
+    {
+      m_captureThread->pause();
     }
   }
 
@@ -1400,6 +1397,12 @@ void DesktopCapture::onCaptureGroupChanged(bool status)
 	m_dirEditLabel->setEnabled(status);
 	m_fps->setEnabled(status);
   m_overlayStats->setEnabled(status);
+
+  auto overlayState = status && m_overlayStats->isChecked();
+  m_pomodoroPositionComboBox->setEnabled(overlayState);
+  m_pomodoroPositionLabel->setEnabled(overlayState);
+  m_pomodoroCompositionComboBox->setEnabled(overlayState);
+  m_pomodoroCompositionLabel->setEnabled(overlayState);
 }
 
 //-----------------------------------------------------------------
@@ -1407,11 +1410,11 @@ void DesktopCapture::onPomodoroGroupChanged(bool status)
 {
 	m_startButton->setEnabled(m_captureGroupBox->isChecked() || status);
 	m_continuousTicTac->setEnabled(status && m_pomodoroUseSounds->isChecked());
-	m_overlayStats->setEnabled(status);
-	m_pomodoroPositionComboBox->setEnabled(status);
-	m_pomodoroPositionLabel->setEnabled(status);
-	m_pomodoroCompositionComboBox->setEnabled(status);
-	m_pomodoroCompositionLabel->setEnabled(status);
+	m_overlayStats->setEnabled(status && m_captureGroupBox->isChecked());
+	m_pomodoroPositionComboBox->setEnabled(status && m_captureGroupBox->isChecked());
+	m_pomodoroPositionLabel->setEnabled(status && m_captureGroupBox->isChecked());
+	m_pomodoroCompositionComboBox->setEnabled(status && m_captureGroupBox->isChecked());
+	m_pomodoroCompositionLabel->setEnabled(status && m_captureGroupBox->isChecked());
 
 	if (m_captureThread)
 	{
@@ -1556,7 +1559,7 @@ void DesktopCapture::onTaskButtonPressed()
 //-----------------------------------------------------------------
 void DesktopCapture::showAction()
 {
-  if (m_captureThread != nullptr)
+  if (m_captureThread != nullptr && m_captureGroupBox->isChecked())
   {
     m_captureThread->resume();
   }
@@ -1605,7 +1608,7 @@ void DesktopCapture::stopCapture()
 		m_pomodoro->clear();
 	}
 
-	if (m_captureThread)
+	if (m_captureThread && m_captureGroupBox->isChecked())
 	{
 		if(m_videoRadioButton->isChecked())
 		{

@@ -24,13 +24,14 @@
 #include <QString>
 #include <QDir>
 #include <QFile>
-#include <QSound>
 #include <QTemporaryFile>
 #include <QTimerEvent>
+#include <QWidget>
 
 //-----------------------------------------------------------------
 Pomodoro::Pomodoro()
-: m_pomodoroTime    {25 * 60 * 1000}
+: QObject{}
+, m_pomodoroTime    {25 * 60 * 1000}
 , m_shortBreakTime  {5 * 60 * 1000}
 , m_longBreakTime   {15 * 60 * 1000}
 , m_numBeforeBreak  {4}
@@ -51,17 +52,9 @@ Pomodoro::Pomodoro()
 	connect(&m_progressTimer, SIGNAL(timeout()),
 	        this,             SLOT(updateProgress()), Qt::QueuedConnection);
 
-  // NOTE: Load sound files. QSound can�t play a file from the qt resource file
-  // so we will dump them first to the temporal directory, then load the resources
-  // and delete them.
-  m_tictac_file = QTemporaryFile::createLocalFile(":/DesktopCapture/sounds/tictac.wav");
-  m_tictac = new QSound(m_tictac_file->fileName(), this);
-
-  m_crank_file = QTemporaryFile::createLocalFile(":/DesktopCapture/sounds/crank.wav");
-  m_crank = new QSound(m_crank_file->fileName(), this);
-
-  m_ring_file = QTemporaryFile::createLocalFile(":/DesktopCapture/sounds/deskbell.wav");
-  m_ring = new QSound(m_ring_file->fileName(), this);
+  m_tictac.setSource(QUrl::fromLocalFile(":/DesktopCapture/sounds/tictac.wav"));
+  m_crank.setSource(QUrl::fromLocalFile(":/DesktopCapture/sounds/crank.wav"));
+  m_ring.setSource(QUrl::fromLocalFile(":/DesktopCapture/sounds/deskbell.wav"));
 }
 
 //-----------------------------------------------------------------
@@ -71,14 +64,6 @@ Pomodoro::~Pomodoro()
 	{
 		stop();
 	}
-
-  // delete sounds and temporal files
-  delete m_tictac;
-  delete m_crank;
-  delete m_ring;
-  delete m_tictac_file;
-  delete m_crank_file;
-  delete m_ring_file;
 }
 
 //-----------------------------------------------------------------
@@ -111,7 +96,7 @@ void Pomodoro::startTimers()
 //-----------------------------------------------------------------
 QTime Pomodoro::getPomodoroDuration() const
 {
-	QTime time = QTime(0, 0, 0, 0);
+	QTime time{0,0,0,0};
 	time = time.addMSecs(m_pomodoroTime);
 	return time;
 }
@@ -119,7 +104,7 @@ QTime Pomodoro::getPomodoroDuration() const
 //-----------------------------------------------------------------
 QTime Pomodoro::getShortBreakDuration() const
 {
-	QTime time = QTime(0, 0, 0, 0);
+  QTime time{0,0,0,0};
 	time = time.addMSecs(m_shortBreakTime);
 	return time;
 }
@@ -127,7 +112,7 @@ QTime Pomodoro::getShortBreakDuration() const
 //-----------------------------------------------------------------
 QTime Pomodoro::getLongBreakDuration() const
 {
-	QTime time = QTime(0, 0, 0, 0);
+  QTime time{0,0,0,0};
 	time = time.addMSecs(m_longBreakTime);
 	return time;
 }
@@ -235,7 +220,7 @@ void Pomodoro::pause()
 	else
 	{
 		// resume
-		QTime time = QTime(0, 0, 0, 0);
+	  QTime time{0,0,0,0};
 		time = time.addMSecs(m_elapsedMSeconds);
 		unsigned long mSeconds = 0;
 		unsigned long progressInterval = 0;
@@ -363,21 +348,21 @@ void Pomodoro::invalidateCurrent()
 //-----------------------------------------------------------------
 void Pomodoro::setPomodoroDuration(QTime duration)
 {
-	QTime zeroTime;
+	QTime zeroTime{0,0,0,0};
 	m_pomodoroTime = zeroTime.msecsTo(duration);
 }
 
 //-----------------------------------------------------------------
 void Pomodoro::setShortBreakDuration(QTime duration)
 {
-	QTime zeroTime;
+  QTime zeroTime{0,0,0,0};
 	m_shortBreakTime = zeroTime.msecsTo(duration);
 }
 
 //-----------------------------------------------------------------
 void Pomodoro::setLongBreakDuration(QTime duration)
 {
-	QTime zeroTime;
+  QTime zeroTime{0,0,0,0};
 	m_longBreakTime = zeroTime.msecsTo(duration);
 }
 
@@ -485,7 +470,7 @@ void Pomodoro::setContinuousTicTac(bool value)
 	if (m_status == Status::Stopped)
 	{
 		m_continuousTicTac = value;
-		m_tictac->setLoops((value ? -1 : 1));
+		m_tictac.setLoopCount((value ? QSoundEffect::Infinite : 1));
 	}
 }
 
@@ -516,7 +501,7 @@ void Pomodoro::setPomodorosBeforeBreak(unsigned int value)
 //-----------------------------------------------------------------
 QTime Pomodoro::completedSessionTime() const
 {
-	QTime elapsedTime;
+	QTime elapsedTime{0,0,0,0};
 	unsigned long seconds = m_numPomodoros * m_pomodoroTime / 1000 ;
 	seconds += m_numShortBreaks * m_shortBreakTime / 1000;
 	seconds += m_numLongBreaks * m_longBreakTime / 1000;
@@ -529,7 +514,7 @@ QTime Pomodoro::completedSessionTime() const
 //-----------------------------------------------------------------
 QTime Pomodoro::sessionTime() const
 {
-  QTime sessionTime;
+  QTime sessionTime{0,0,0,0};
   unsigned long seconds = m_sessionPomodoros * m_pomodoroTime / 1000;
   auto numLongBreaks = (m_sessionPomodoros / m_numBeforeBreak) - ((m_sessionPomodoros % m_numBeforeBreak == 0) ? 1 : 0);
   seconds += numLongBreaks * m_longBreakTime / 1000;
@@ -543,7 +528,7 @@ QTime Pomodoro::sessionTime() const
 //-----------------------------------------------------------------
 QTime Pomodoro::elapsedTime()
 {
-	QTime returnTime = QTime(0,0,0,0);
+	QTime returnTime{0,0,0,0};
 	if (Status::Paused == m_status)
 	{
 		returnTime = returnTime.addMSecs(m_elapsedMSeconds);
@@ -615,21 +600,21 @@ void Pomodoro::playNextSound()
   {
     case Sound::CRANK:
       startTimer(LENGTH_CRANK);
-      m_crank->play();
+      m_crank.play();
       break;
     case Sound::RING:
       startTimer(LENGTH_RING);
-      m_ring->play();
+      m_ring.play();
       break;
     case Sound::TICTAC:
       startTimer(LENGTH_TICTAC);
-      m_tictac->play();
+      m_tictac.play();
       break;
     case Sound::NONE:
-      if(m_tictac->loops() == -1)
+      if(m_tictac.loopCount() == QSoundEffect::Infinite)
       {
         startTimer(LENGTH_TICTAC);
-        m_tictac->stop();
+        m_tictac.stop();
       }
       break;
     default:

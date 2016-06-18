@@ -30,6 +30,7 @@
 #include <QFontMetrics>
 #include <QRgb>
 #include <QDebug>
+#include <QScreen>
 
 // dLib
 #include <dlib/opencv.h>
@@ -127,24 +128,21 @@ void CaptureDesktopThread::setCameraEnabled(bool enabled)
 
 	m_cameraEnabled = enabled;
 
-	switch(m_cameraEnabled)
+	if(m_cameraEnabled)
 	{
-		case true:
-			if (!m_camera.isOpened())
-			{
-				m_camera.open(0);
-				m_camera.set(CV_CAP_PROP_FRAME_WIDTH, m_cameraResolution.width);
-				m_camera.set(CV_CAP_PROP_FRAME_HEIGHT, m_cameraResolution.height);
-			}
-			break;
-		case false:
-			if (m_camera.isOpened())
-			{
-				m_camera.release();
-			}
-			break;
-		default:
-			break;
+	  if (!m_camera.isOpened())
+		{
+			m_camera.open(0);
+			m_camera.set(CV_CAP_PROP_FRAME_WIDTH, m_cameraResolution.width);
+			m_camera.set(CV_CAP_PROP_FRAME_HEIGHT, m_cameraResolution.height);
+		}
+	}
+	else
+	{
+	  if (m_camera.isOpened())
+		{
+			m_camera.release();
+		}
 	}
 }
 
@@ -763,7 +761,7 @@ void CaptureDesktopThread::takeScreenshot()
 	m_mutex.lock();
 
 	// capture desktop
-	auto desktopPixmap = QPixmap::grabWindow(QApplication::desktop()->winId(), m_geometry.x(), m_geometry.y(), m_geometry.width(), m_geometry.height());
+	auto desktopPixmap = QApplication::screens().first()->grabWindow(QApplication::desktop()->winId(), m_geometry.x(), m_geometry.y(), m_geometry.width(), m_geometry.height());
 
 	if(m_pomodoro || m_cameraEnabled)
 	{
