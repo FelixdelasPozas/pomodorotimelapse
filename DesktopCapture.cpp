@@ -23,6 +23,8 @@
 #include "CaptureDesktopThread.h"
 #include "PomodoroStatistics.h"
 #include "AboutDialog.h"
+#include "Pomodoro.h"
+#include "VPXInterface.h"
 
 // OpenCV
 #include <opencv2/highgui/highgui.hpp>
@@ -37,57 +39,55 @@
 #include <QInputDialog>
 #include <QFileDialog>
 
-const QString DesktopCapture::INI_FILENAME = QString("DesktopCapture.ini");
+const QStringList DesktopCapture::COMPOSITION_MODES_NAMES = { "Copy",
+                                                              "Plus",
+                                                              "Multiply" };
 
-const QStringList DesktopCapture::COMPOSITION_MODES_NAMES = { QString("Copy"),
-                                                              QString("Plus"),
-                                                              QString("Multiply") };
+const QStringList DesktopCapture::POSITION_NAMES = { "Free",
+                                                     "Top Left",
+                                                     "Top Center",
+                                                     "Top Right",
+                                                     "Center Left",
+                                                     "Center",
+                                                     "Center Right",
+                                                     "Bottom Left",
+                                                     "Bottom Center",
+                                                     "Bottom Right" };
 
-const QStringList DesktopCapture::POSITION_NAMES = { QString("Free"),
-                                                     QString("Top Left"),
-                                                     QString("Top Center"),
-                                                     QString("Top Right"),
-                                                     QString("Center Left"),
-                                                     QString("Center"),
-                                                     QString("Center Right"),
-                                                     QString("Bottom Left"),
-                                                     QString("Bottom Center"),
-                                                     QString("Bottom Right") };
-
-const QString DesktopCapture::CAPTURE_TIME                       = QString("Time Between Captures");
-const QString DesktopCapture::CAPTURE_ENABLED                    = QString("Enable Desktop Capture");
-const QString DesktopCapture::CAPTURE_VIDEO                      = QString("Capture Video");
-const QString DesktopCapture::CAPTURE_VIDEO_FPS                  = QString("Capture Video FPS");
-const QString DesktopCapture::CAPTURE_ANIMATED_TRAY_ENABLED      = QString("Capture Animated Tray Icon");
-const QString DesktopCapture::CAPTURED_MONITOR                   = QString("Captured Desktop Monitor");
-const QString DesktopCapture::MONITORS_LIST                      = QString("Monitor Resolutions");
-const QString DesktopCapture::OUTPUT_DIR                         = QString("Output Directory");
-const QString DesktopCapture::OUTPUT_SCALE                       = QString("Output Scale");
-const QString DesktopCapture::APPLICATION_GEOMETRY               = QString("Application Geometry");
-const QString DesktopCapture::APPLICATION_STATE                  = QString("Application State");
-const QString DesktopCapture::CAMERA_ENABLED                     = QString("Camera Enabled");
-const QString DesktopCapture::CAMERA_RESOLUTIONS                 = QString("Available Camera Resolutions");
-const QString DesktopCapture::CAMERA_ACTIVE_RESOLUTION           = QString("Active Resolution");
-const QString DesktopCapture::CAMERA_OVERLAY_POSITION            = QString("Camera Overlay Position");
-const QString DesktopCapture::CAMERA_OVERLAY_COMPOSITION_MODE    = QString("Camera Overlay Composition Mode");
-const QString DesktopCapture::CAMERA_OVERLAY_FIXED_POSITION      = QString("Camera Overlay Fixed Position");
-const QString DesktopCapture::CAMERA_MASK                        = QString("Camera Mask");
-const QString DesktopCapture::CAMERA_TRACK_FACE                  = QString("Center face in camera picture");
-const QString DesktopCapture::CAMERA_ASCII_ART                   = QString("Convert camera picture to ASCII art");
-const QString DesktopCapture::POMODORO_TIME                      = QString("Pomodoro Time");
-const QString DesktopCapture::POMODORO_SHORT_BREAK_TIME          = QString("Short Break Time");
-const QString DesktopCapture::POMODORO_LONG_BREAK_TIME           = QString("Long Break Time");
-const QString DesktopCapture::POMODOROS_BEFORE_BREAK             = QString("Pomodoros Before A Long Break");
-const QString DesktopCapture::POMODOROS_ANIMATED_TRAY_ENABLED    = QString("Pomodoro Animated Tray Icon");
-const QString DesktopCapture::POMODOROS_USE_SOUNDS               = QString("Pomodoro Use Sounds");
-const QString DesktopCapture::POMODORO_ENABLED                   = QString("Enable Pomodoro");
-const QString DesktopCapture::POMODOROS_CONTINUOUS_TICTAC        = QString("Continuous Tic-Tac");
-const QString DesktopCapture::POMODOROS_SESSION_NUMBER           = QString("Pomodoros In Session");
-const QString DesktopCapture::POMODOROS_LAST_TASK                = QString("Last task");
-const QString DesktopCapture::POMODOROS_OVERLAY                  = QString("Overlay Pomodoro Statistics In Capture");
-const QString DesktopCapture::POMODOROS_OVERLAY_POSITION         = QString("Pomodoro Overlay Position");
-const QString DesktopCapture::POMODOROS_OVERLAY_FIXED_POSITION   = QString("Pomodoro Overlay Fixed Position");
-const QString DesktopCapture::POMODOROS_OVERLAY_COMPOSITION_MODE = QString("Pomodoro Overlay Composition Mode");
+const QString DesktopCapture::CAPTURE_TIME                       = "Time Between Captures";
+const QString DesktopCapture::CAPTURE_ENABLED                    = "Enable Desktop Capture";
+const QString DesktopCapture::CAPTURE_VIDEO                      = "Capture Video";
+const QString DesktopCapture::CAPTURE_VIDEO_FPS                  = "Capture Video FPS";
+const QString DesktopCapture::CAPTURE_ANIMATED_TRAY_ENABLED      = "Capture Animated Tray Icon";
+const QString DesktopCapture::CAPTURED_MONITOR                   = "Captured Desktop Monitor";
+const QString DesktopCapture::MONITORS_LIST                      = "Monitor Resolutions";
+const QString DesktopCapture::OUTPUT_DIR                         = "Output Directory";
+const QString DesktopCapture::OUTPUT_SCALE                       = "Output Scale";
+const QString DesktopCapture::APPLICATION_GEOMETRY               = "Application Geometry";
+const QString DesktopCapture::APPLICATION_STATE                  = "Application State";
+const QString DesktopCapture::CAMERA_ENABLED                     = "Camera Enabled";
+const QString DesktopCapture::CAMERA_RESOLUTIONS                 = "Available Camera Resolutions";
+const QString DesktopCapture::CAMERA_ACTIVE_RESOLUTION           = "Active Resolution";
+const QString DesktopCapture::CAMERA_OVERLAY_POSITION            = "Camera Overlay Position";
+const QString DesktopCapture::CAMERA_OVERLAY_COMPOSITION_MODE    = "Camera Overlay Composition Mode";
+const QString DesktopCapture::CAMERA_OVERLAY_FIXED_POSITION      = "Camera Overlay Fixed Position";
+const QString DesktopCapture::CAMERA_MASK                        = "Camera Mask";
+const QString DesktopCapture::CAMERA_TRACK_FACE                  = "Center face in camera picture";
+const QString DesktopCapture::CAMERA_ASCII_ART                   = "Convert camera picture to ASCII art";
+const QString DesktopCapture::POMODORO_TIME                      = "Pomodoro Time";
+const QString DesktopCapture::POMODORO_SHORT_BREAK_TIME          = "Short Break Time";
+const QString DesktopCapture::POMODORO_LONG_BREAK_TIME           = "Long Break Time";
+const QString DesktopCapture::POMODOROS_BEFORE_BREAK             = "Pomodoros Before A Long Break";
+const QString DesktopCapture::POMODOROS_ANIMATED_TRAY_ENABLED    = "Pomodoro Animated Tray Icon";
+const QString DesktopCapture::POMODOROS_USE_SOUNDS               = "Pomodoro Use Sounds";
+const QString DesktopCapture::POMODORO_ENABLED                   = "Enable Pomodoro";
+const QString DesktopCapture::POMODOROS_CONTINUOUS_TICTAC        = "Continuous Tic-Tac";
+const QString DesktopCapture::POMODOROS_SESSION_NUMBER           = "Pomodoros In Session";
+const QString DesktopCapture::POMODOROS_LAST_TASK                = "Last task";
+const QString DesktopCapture::POMODOROS_OVERLAY                  = "Overlay Pomodoro Statistics In Capture";
+const QString DesktopCapture::POMODOROS_OVERLAY_POSITION         = "Pomodoro Overlay Position";
+const QString DesktopCapture::POMODOROS_OVERLAY_FIXED_POSITION   = "Pomodoro Overlay Fixed Position";
+const QString DesktopCapture::POMODOROS_OVERLAY_COMPOSITION_MODE = "Pomodoro Overlay Composition Mode";
 
 //-----------------------------------------------------------------
 DesktopCapture::DesktopCapture()
@@ -97,12 +97,12 @@ DesktopCapture::DesktopCapture()
 , m_secuentialNumber{0}
 , m_started         {false}
 , m_statisticsDialog{nullptr}
+, m_paused          {false}
 , m_menuPause       {nullptr}
 , m_menuShowStats   {nullptr}
 , m_menuStopCapture {nullptr}
 , m_menuChangeTask  {nullptr}
 , m_menuQuit        {nullptr}
-, m_paused          {false}
 {
 	setupUi(this);
 
@@ -152,7 +152,7 @@ DesktopCapture::~DesktopCapture()
 //-----------------------------------------------------------------
 void DesktopCapture::loadConfiguration()
 {
-	QSettings settings(INI_FILENAME, QSettings::IniFormat);
+  QSettings settings("Felix de las Pozas Alvarez", "DesktopCapture");
 
 	if (settings.contains(APPLICATION_GEOMETRY))
 	{
@@ -343,7 +343,7 @@ void DesktopCapture::loadConfiguration()
 	m_fps->setEnabled(captureVideo);
 	m_fps->setValue(videoFps);
 
-	auto outputDir = QDir::currentPath();
+	auto outputDir = QDir::homePath();
 	if (settings.contains(OUTPUT_DIR))
 	{
 		outputDir = settings.value(OUTPUT_DIR, outputDir).toString();
@@ -440,7 +440,7 @@ void DesktopCapture::loadConfiguration()
 //-----------------------------------------------------------------
 void DesktopCapture::saveConfiguration()
 {
-	QSettings settings("DesktopCapture.ini", QSettings::IniFormat);
+  QSettings settings("Felix de las Pozas Alvarez", "DesktopCapture");
 	int capturedMonitor = (m_captureAllMonitors->isChecked() ? -1 : m_captureMonitorComboBox->currentIndex());
 
 	settings.setValue(CAPTURED_MONITOR, capturedMonitor);
@@ -1537,7 +1537,7 @@ void DesktopCapture::statisticsDialogClosed()
 	disconnect(m_statisticsDialog, SIGNAL(finished(int)),
 	           this,               SLOT(statisticsDialogClosed()));
 
-	PomodoroStatistics::Result result = m_statisticsDialog->getResult();
+	const auto result = m_statisticsDialog->getResult();
 
 	delete m_statisticsDialog;
 	m_statisticsDialog = nullptr;

@@ -101,8 +101,8 @@ void CaptureDesktopThread::setResolution(const Resolution &resolution)
 
 	if (m_camera.isOpened())
 	{
-		m_camera.set(CV_CAP_PROP_FRAME_WIDTH, resolution.width);
-		m_camera.set(CV_CAP_PROP_FRAME_HEIGHT, resolution.height);
+		m_camera.set(cv::CAP_PROP_FRAME_WIDTH, resolution.width);
+		m_camera.set(cv::CAP_PROP_FRAME_HEIGHT, resolution.height);
 	}
 }
 
@@ -133,8 +133,8 @@ void CaptureDesktopThread::setCameraEnabled(bool enabled)
 	  if (!m_camera.isOpened())
 		{
 			m_camera.open(0);
-			m_camera.set(CV_CAP_PROP_FRAME_WIDTH, m_cameraResolution.width);
-			m_camera.set(CV_CAP_PROP_FRAME_HEIGHT, m_cameraResolution.height);
+			m_camera.set(cv::CAP_PROP_FRAME_WIDTH, m_cameraResolution.width);
+			m_camera.set(cv::CAP_PROP_FRAME_HEIGHT, m_cameraResolution.height);
 		}
 	}
 	else
@@ -507,16 +507,26 @@ void CaptureDesktopThread::overlayCameraImage(QImage &baseImage, QImage &overlay
 
   if(m_mask != MASK::NONE || m_trackFace)
   {
+    double luma = 0;
+    long i = 0;
+
+    for(auto buf = m_frame.datastart; buf < m_frame.dataend; buf += 3, ++i)
+      luma += (buf[2]*0.299) + (buf[1]*0.587) + (buf[0]*0.144);
+
+    luma /= i;
+
+    cv::normalize(m_frame, m_frame, 255, 128 - static_cast<int>(luma), cv::NORM_MINMAX);
+
     dlib::cv_image<dlib::bgr_pixel> cimg(m_frame);
     auto faces = m_faceDetector(cimg);
 
     if(!faces.empty())
     {
       auto trackFace = faces.front();
-      auto trackArea = trackFace.width() * trackFace.height();
+      auto trackArea = trackFace.area();
       for(auto face: faces)
       {
-        auto area = face.width() * face.height();
+        const auto area = face.area();
         if(area > trackArea)
         {
           trackFace = face;
@@ -526,14 +536,17 @@ void CaptureDesktopThread::overlayCameraImage(QImage &baseImage, QImage &overlay
 
       shapes = m_faceShape(cimg, trackFace);
 
-      if (m_mask != MASK::NONE)
+      if(shapes.num_parts() > 0)
       {
-        drawMask(overlayImage, shapes);
-      }
+        if (m_mask != MASK::NONE)
+        {
+          drawMask(overlayImage, shapes);
+        }
 
-      if (m_trackFace)
-      {
-        centerFace(overlayImage, shapes.get_rect());
+        if (m_trackFace)
+        {
+          centerFace(overlayImage, shapes.get_rect());
+        }
       }
     }
   }
@@ -579,8 +592,8 @@ int CaptureDesktopThread::pomodoroOverlayHeight()
 void CaptureDesktopThread::imageToASCII(QImage &image)
 {
   // change ramp if desired. short ramp gives better pictures in my opinion.
-  auto ramp = CHAR_RAMP_SHORT;
-  auto length = CHAR_RAMP_SHORT.length();
+  auto ramp = CHAR_RAMP_LONG;
+  auto length = CHAR_RAMP_LONG.length();
 
   auto intensityToLetter = [ramp, length](unsigned int value) { return QString(ramp.at((value * (length-1)) / 255)); };
 
@@ -610,13 +623,13 @@ void CaptureDesktopThread::imageToASCII(QImage &image)
       {
         for(int j = 0; j < textHeight; ++j)
         {
-          auto rgb = image.pixel(charX + i, charY + +j);
+          auto rgb = image.pixel(charX + i, charY + j);
           value += qGray(rgb);
         }
       }
 
       value /= textWidth * textHeight;
-      auto background = image.pixel(charX, charY);
+      const auto background = image.pixel(charX, charY);
       painter.fillRect(charX, charY, textWidth, textHeight, Qt::black);
       painter.setPen(background);
       painter.drawText(charX, charY, intensityToLetter(value));
@@ -777,6 +790,7 @@ void CaptureDesktopThread::takeScreenshot()
 	    m_mutex.unlock();
 
       auto cameraImage = MatToQImage(m_frame);
+
       overlayCameraImage(desktopImage, cameraImage);
 	  }
 	  else

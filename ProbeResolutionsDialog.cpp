@@ -21,8 +21,8 @@
 #include "ProbeResolutionsDialog.h"
 
 //-----------------------------------------------------------------
-ProbeResolutionsDialog::ProbeResolutionsDialog(QWidget *parent)
-: QDialog{parent}
+ProbeResolutionsDialog::ProbeResolutionsDialog(QWidget *parent, Qt::WindowFlags f)
+: QDialog(parent, f)
 {
 	setupUi(this);
 	m_progressBar->setValue(0);
@@ -134,10 +134,10 @@ void ProbeThread::run()
 		auto value = (CommonResolutions.indexOf(resolution)+1)*100/CommonResolutions.size();
 		emit progress(value);
 
-		m_camera.set(CV_CAP_PROP_FRAME_WIDTH, resolution.width);
-		m_camera.set(CV_CAP_PROP_FRAME_HEIGHT, resolution.height);
-		auto width = m_camera.get(CV_CAP_PROP_FRAME_WIDTH);
-		auto height = m_camera.get(CV_CAP_PROP_FRAME_HEIGHT);
+		m_camera.set(cv::CAP_PROP_FRAME_WIDTH, resolution.width);
+		m_camera.set(cv::CAP_PROP_FRAME_HEIGHT, resolution.height);
+		auto width = m_camera.get(cv::CAP_PROP_FRAME_WIDTH);
+		auto height = m_camera.get(cv::CAP_PROP_FRAME_HEIGHT);
 
 		if ((width == resolution.width) && (height == resolution.height))
 		{

@@ -20,6 +20,9 @@
 #ifndef CAPTURE_DESKTOP_THREAD_H_
 #define CAPTURE_DESKTOP_THREAD_H_
 
+// C++
+#include <memory>
+
 // Project
 #include "Resolutions.h"
 #include "Pomodoro.h"
@@ -37,17 +40,32 @@
 // dLib
 #include <dlib/image_processing/frontal_face_detector.h>
 #include <dlib/image_processing/render_face_detections.h>
+#include <dlib/image_processing.h>
+#include <dlib/gui_widgets.h>
+#include <dlib/image_io.h>
 
-// C++
-#include <memory>
-
+/** \class CaptureDesktopThread
+ * \brief Thread to capture and composite the image.
+ *
+ */
 class CaptureDesktopThread
 : public QThread
 {
 	Q_OBJECT
 	public:
+	  /** \class COMPOSITION_MODE
+	   * \brief Camera image composition modes.
+	   */
 	  enum class COMPOSITION_MODE: char { COPY, PLUS, MULTIPLY };
+
+	  /** \class POSTION
+	   * \brief Camera position modes.
+	   */
 	  enum class POSITION: char { FREE, TOP_LEFT, TOP_CENTER, TOP_RIGHT, CENTER_LEFT, CENTER, CENTER_RIGHT, BOTTOM_LEFT, BOTTOM_CENTER, BOTTOM_RIGHT };
+
+	  /** \class MASK
+	   * \brief Face detection masks.
+	   */
 	  enum class MASK: char { GENTLEMAN, ANONYMOUS, PIRATE, AWESOME, UMAD, AWESOMEFACE, DEALWITHIT, NONE };
 
   	/** \brief CaptureDesktopThread class constructor.
@@ -215,8 +233,8 @@ class CaptureDesktopThread
 	private:
 		static const QList<QPainter::CompositionMode> COMPOSITION_MODES_QT;
 
-		static const QString CHAR_RAMP_SHORT;
-		static const QString CHAR_RAMP_LONG;
+		static const QString CHAR_RAMP_SHORT; /** ASCII Art characters. Change in imageToASCII(). */
+		static const QString CHAR_RAMP_LONG;  /** ASCII Art characters (long).                    */
 
 		/** \brief Computes the position of the top left corner given the size of the area and
 		 *         the POSITION to put it.
@@ -227,20 +245,20 @@ class CaptureDesktopThread
 		QPoint computePosition(const POSITION position, const QRect &area);
 
     /** \brief Overlays the camera image over the desktop captured image.
-     * \param[in/out] baseImage captured desktop image.
+     * \param[inout] baseImage captured desktop image.
      * \param[in] overlayImage camera picture.
      *
      */
 		void overlayCameraImage(QImage &baseImage, QImage &overlayImage);
 
     /** \brief Overlays the pomodoro statistics over the desktop captured image.
-     * \param[in/out] baseImage captured desktop image.
+     * \param[inout] baseImage captured desktop image.
      *
      */
 		void overlayPomodoro(QImage &baseImage);
 
     /** \brief Draws a single pomodoro unit.
-     * \param[in/out] painter painter object reference.
+     * \param[inout] painter painter object reference.
      * \param[in] color color of the unit.
      * \param[in] position top-left point of the area of the unit.
      * \param[in] text text of the pomodoro unit.
@@ -308,8 +326,8 @@ class CaptureDesktopThread
 
 		std::shared_ptr<Pomodoro> m_pomodoro;    /** pomodoro shared pointer */
 
-		dlib::frontal_face_detector m_faceDetector; /** dlib face deterctor                           */
-		dlib::shape_predictor       m_faceShape;    /** dlib face poser                               */
+		dlib::frontal_face_detector m_faceDetector; /** dlib face detector. */
+		dlib::shape_predictor       m_faceShape;    /** dlib face poser.    */
 };
 
 #endif // CAPTURE_DESKTOP_THREAD_H_

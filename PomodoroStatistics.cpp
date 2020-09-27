@@ -31,8 +31,8 @@
 #include <QDebug>
 
 //-----------------------------------------------------------------
-PomodoroStatistics::PomodoroStatistics(std::shared_ptr<Pomodoro> pomodoro, QWidget* parent)
-: QDialog(parent)
+PomodoroStatistics::PomodoroStatistics(std::shared_ptr<Pomodoro> pomodoro, QWidget* parent, Qt::WindowFlags f)
+: QDialog(parent, f)
 , m_pomodoro{pomodoro}
 , m_paused{pomodoro->status() == Pomodoro::Status::Paused}
 , m_result{Result::None}
@@ -57,16 +57,16 @@ PomodoroStatistics::PomodoroStatistics(std::shared_ptr<Pomodoro> pomodoro, QWidg
           this,             SLOT(updateGUI()));
 
 	connect(m_invalidate, SIGNAL(pressed()),
-	         this,         SLOT(invalidate()));
+	        this,         SLOT(invalidate()));
 
 	connect(m_stop, SIGNAL(pressed()),
-	         this,   SLOT(stop()));
+	        this,   SLOT(stop()));
 
 	connect(m_continue, SIGNAL(pressed()),
-	         this,       SLOT(resume()));
+	        this,       SLOT(resume()));
 
 	connect(m_pause, SIGNAL(pressed()),
-	         this,   SLOT(pause()));
+	        this,   SLOT(pause()));
 
 	if(m_pomodoro->status() != Pomodoro::Status::Stopped)
 	{		m_timer.setInterval(1000);

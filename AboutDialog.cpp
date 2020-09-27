@@ -20,10 +20,23 @@
 // Project
 #include <AboutDialog.h>
 
-const QString AboutDialog::VERSION = QString("version 1.0.0");
+// dlib
+#include <dlib/revision.h>
+
+// OpenCV
+#include <opencv2/core/utility.hpp>
+
+// VPX
+#include <vpx/vpx_codec.h>
+
+// libyuv
+#include <libyuv/version.h>
+
+const QString AboutDialog::VERSION = QString("version 1.1.0");
 
 //-----------------------------------------------------------------
-AboutDialog::AboutDialog()
+AboutDialog::AboutDialog(QWidget *parent, Qt::WindowFlags f)
+: QDialog(parent, f)
 {
   setupUi(this);
 
@@ -34,10 +47,10 @@ AboutDialog::AboutDialog()
 
   m_compilationDate->setText(tr("Compiled on ") + compilation_date + compilation_time);
   m_version->setText(VERSION);
-}
-
-//-----------------------------------------------------------------
-AboutDialog::~AboutDialog()
-{
+  m_qtVersion->setText(tr("version %1").arg(qVersion()));
+  m_dlibVersion->setText(tr("version %1.%2.%3").arg(DLIB_MAJOR_VERSION).arg(DLIB_MINOR_VERSION).arg(DLIB_PATCH_VERSION));
+  m_opencvVersion->setText(tr("version %1").arg(QString::fromStdString(cv::getVersionString())));
+  m_vpxVersion->setText(tr("version %1.%2.%3").arg(vpx_codec_version_major()).arg(vpx_codec_version_minor()).arg(vpx_codec_version_patch()));
+  m_yuvVersion->setText(tr("version %1").arg(LIBYUV_VERSION));
 }
 

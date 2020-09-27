@@ -38,7 +38,7 @@ Pomodoro::Pomodoro()
 , m_numPomodoros    {0}
 , m_numShortBreaks  {0}
 , m_numLongBreaks   {0}
-, m_task            {QString("Undefined task")}
+, m_task            {"Undefined task"}
 , m_progress        {0}
 , m_status          {Status::Stopped}
 , m_continuousTicTac{false}
@@ -506,9 +506,7 @@ QTime Pomodoro::completedSessionTime() const
 	seconds += m_numShortBreaks * m_shortBreakTime / 1000;
 	seconds += m_numLongBreaks * m_longBreakTime / 1000;
 
-	elapsedTime.addSecs(seconds);
-
-	return elapsedTime;
+	return elapsedTime.addSecs(seconds);
 }
 
 //-----------------------------------------------------------------

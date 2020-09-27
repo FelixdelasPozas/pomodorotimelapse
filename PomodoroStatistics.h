@@ -48,9 +48,10 @@ class PomodoroStatistics
 	  /** \brief PomodoroStatistics class constructor.
 	   * \param[in] pomodoro pomodoro smart pointer.
 	   * \param[in] parent raw pointer of the parent of this object.
+	   * \param[in] f Window flags.
 	   *
 	   */
-		explicit PomodoroStatistics(std::shared_ptr<Pomodoro> pomodoro, QWidget *parent = nullptr);
+		explicit PomodoroStatistics(std::shared_ptr<Pomodoro> pomodoro, QWidget *parent = nullptr, Qt::WindowFlags f = Qt::WindowFlags());
 
 		/** \brief PomodoroStatistics class virtual destructor.
 		 *
@@ -106,11 +107,10 @@ class PomodoroStatistics
 		 */
 		void updateProgress();
 
-		std::shared_ptr<Pomodoro> m_pomodoro;
-		QTimeLine                 m_timeLine;
-		QTimer                    m_timer;
-		bool                      m_paused;
-		Result                    m_result;
+		std::shared_ptr<Pomodoro> m_pomodoro; /** pomodoro object.                             */
+		QTimer                    m_timer;    /** update timer.                                */
+		bool                      m_paused;   /** true if pomodoro is paused, false otherwise. */
+		Result                    m_result;   /** */
 };
 
 #endif // POMODORO_STATISTICS_H_

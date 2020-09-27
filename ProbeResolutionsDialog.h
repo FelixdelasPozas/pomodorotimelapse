@@ -91,9 +91,10 @@ class ProbeResolutionsDialog
 	public:
 	  /** \brief ProbeResolutionsDialog class constructor.
 	   * \param[in] parent raw pointer of the parent of this object.
+	   * \param[in] f Window flags.
 	   *
 	   */
-		explicit ProbeResolutionsDialog(QWidget *parent = nullptr);
+		explicit ProbeResolutionsDialog(QWidget *parent = nullptr, Qt::WindowFlags f = Qt::WindowFlags());
 
 		/** \brief ProbeResolutionsDialog class virtual destructor.
 		 *

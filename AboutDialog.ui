@@ -219,7 +219,7 @@ WebM VP8/VP9 Codec SDK</string>
              </widget>
             </item>
             <item>
-             <widget class="QLabel" name="label_8">
+             <widget class="QLabel" name="m_vpxVersion">
               <property name="text">
                <string>version 1.4.0</string>
               </property>
@@ -302,7 +302,7 @@ YUV conversion and scaling functionality</string>
              </widget>
             </item>
             <item>
-             <widget class="QLabel" name="label_21">
+             <widget class="QLabel" name="m_yuvVersion">
               <property name="text">
                <string>version 1348</string>
               </property>
@@ -379,7 +379,7 @@ dLib C++ Library</string>
              </widget>
             </item>
             <item>
-             <widget class="QLabel" name="label_13">
+             <widget class="QLabel" name="m_dlibVersion">
               <property name="text">
                <string>version 18.16</string>
               </property>
@@ -450,7 +450,7 @@ Open Source Computer Vision Library</string>
              </widget>
             </item>
             <item>
-             <widget class="QLabel" name="label_25">
+             <widget class="QLabel" name="m_opencvVersion">
               <property name="text">
                <string>version 2.4.11</string>
               </property>
@@ -527,7 +527,7 @@ Qt Framework</string>
              </widget>
             </item>
             <item>
-             <widget class="QLabel" name="label_27">
+             <widget class="QLabel" name="m_qtVersion">
               <property name="text">
                <string>version 5.7.0</string>
               </property>

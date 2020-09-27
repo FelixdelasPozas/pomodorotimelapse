@@ -24,17 +24,29 @@
 #include <QDialog>
 #include "ui_AboutDialog.h"
 
+/** \class AboutDialog
+ * \brief Hedonistic about dialog
+ *
+ */
 class AboutDialog
 : public QDialog
 , public Ui_AboutDialog
 {
     Q_OBJECT
   public:
-    AboutDialog();
-    virtual ~AboutDialog();
+    /** \brief AboutDialog class constructor.
+     *
+     */
+    explicit AboutDialog(QWidget *parent = nullptr, Qt::WindowFlags f = Qt::WindowFlags());
+
+    /** \brief AboutDialog class virtual destructor.
+     *
+     */
+    virtual ~AboutDialog()
+    {};
 
   private:
-    static const QString VERSION;
+    static const QString VERSION; /** application version string. */
 };
 
 #endif // ABOUTDIALOG_H_

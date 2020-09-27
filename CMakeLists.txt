@@ -4,7 +4,7 @@ cmake_minimum_required (VERSION 2.8.6)
 
 # Version Number
 set (DESKTOPCAPTURE_VERSION_MAJOR 1)
-set (DESKTOPCAPTURE_VERSION_MINOR 0)
+set (DESKTOPCAPTURE_VERSION_MINOR 1)
 set (DESKTOPCAPTURE_VERSION_PATCH 0)
 
 # Find includes in corresponding build directories
@@ -22,6 +22,7 @@ endif (CMAKE_BUILD_TYPE MATCHES Debug)
 
 if(DEFINED MINGW)
   configure_file("${PROJECT_SOURCE_DIR}/DesktopCapture.rc.in" "${PROJECT_BINARY_DIR}/DesktopCapture.rc")
+  configure_file("${PROJECT_SOURCE_DIR}/installer/script.iss.in" "${PROJECT_BINARY_DIR}/script.iss")
   set(CORE_SOURCES ${CORE_SOURCES} ${CMAKE_CURRENT_BINARY_DIR}/DesktopCapture.rc)
   set(CMAKE_RC_COMPILE_OBJECT "<CMAKE_RC_COMPILER> -O coff -o <OBJECT> -i <SOURCE>")
   enable_language(RC)
@@ -32,8 +33,8 @@ find_package(OpenCV REQUIRED)
 set(LIBVPX_LIBRARY_DIR "D:/Desarrollo/Bibliotecas/libvpx")
 set(LIBYUV_INCLUDE_DIR "D:/Desarrollo/Bibliotecas/libyuv/include")
 
-set(DLIB_INCLUDE_DIR "D:/Desarrollo/Bibliotecas/dlib-18.16")
-set(DLIB_LIBRARY "D:/Desarrollo/Bibliotecas/dlib-build/libdlib.a")
+set(DLIB_INCLUDE_DIR "D:/Desarrollo/Bibliotecas/dlib-19.21")
+set(DLIB_LIBRARY "D:/Desarrollo/Bibliotecas/dlib-build/dlib/libdlib.a")
 
 include_directories(
   ${CMAKE_SOURCE_DIR}
