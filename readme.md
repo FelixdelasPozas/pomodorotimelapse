@@ -63,7 +63,7 @@ If the pomodoro timer is being used the statistics can be shown and the current 
 
 # Repository information
 
-**Version**: 1.0.0
+**Version**: 1.1.0
 
 **Status**: finished
 
@@ -71,7 +71,7 @@ If the pomodoro timer is being used the statistics can be shown and the current 
 
 | Language                     |files          |blank        |comment           |code  |
 |:-----------------------------|--------------:|------------:|-----------------:|-----:|
-| C++                          |   9           | 731         |   396            | 3419
-| C/C++ Header                 |   10          |  312        |    767           | 759  |
-| CMake                        |    1          |   20        |      7           |  77  |
-| **Total**                    | **20**        | **1064**    | **1170**         | **4255** |
+| C++                          |   9           |  737        |   399            | 3435
+| C/C++ Header                 |   10          |  315        |    792           | 761  |
+| CMake                        |    1          |   20        |      7           |  78  |
+| **Total**                    | **20**        | **1072**    | **1198**         | **4274** |
