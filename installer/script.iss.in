@@ -1,0 +1,40 @@
+; Mingw64 Distribution Inno Setup File
+
+[Setup]
+AppName=Desktop Capture
+AppVersion=@DESKTOPCAPTURE_VERSION_MAJOR@.@DESKTOPCAPTURE_VERSION_MINOR@.@DESKTOPCAPTURE_VERSION_PATCH@
+DefaultDirName={pf64}\Desktop Capture
+DefaultGroupName=Desktop Capture
+OutputDir=@PROJECT_BINARY_DIR@
+AppComments=Desktop Capture
+AppContact=Felix de las Pozas Alvarez
+AppCopyright=(c)2020 Felix de las Pozas Alvarez
+AppPublisher=Felix de las Pozas Alvarez
+ArchitecturesAllowed=x64
+Compression=lzma2/ultra64
+CreateUninstallRegKey=yes
+Uninstallable=yes
+DisableFinishedPage=no
+DisableWelcomePage=no
+ChangesAssociations=no
+CloseApplications=yes
+UninstallDisplayIcon=@CMAKE_SOURCE_DIR@/rsc/application.ico
+UninstallDisplayName=Desktop Capture v@DESKTOPCAPTURE_VERSION_MAJOR@.@DESKTOPCAPTURE_VERSION_MINOR@.@DESKTOPCAPTURE_VERSION_PATCH@
+SourceDir=@PROJECT_BINARY_DIR@
+SetupIconFile=@CMAKE_SOURCE_DIR@/rsc/application.ico
+OutputBaseFilename=DesktopCapture_v@DESKTOPCAPTURE_VERSION_MAJOR@.@DESKTOPCAPTURE_VERSION_MINOR@.@DESKTOPCAPTURE_VERSION_PATCH@_Setup
+WizardImageFile=@CMAKE_SOURCE_DIR@/installer/image.bmp
+WizardSmallImageFile=@CMAKE_SOURCE_DIR@/installer/smallimage.bmp
+
+[Files]
+Source: "DesktopCapture.exe"; DestDir: "{app}";
+Source: "*.dll"; DestDir: "{app}";
+Source: "audio/*.*"; DestDir: "{app}/audio/";
+Source: "mediaservice/*.*"; DestDir: "{app}/mediaservice/";
+Source: "iconengines/*.*"; DestDir: "{app}/iconengines/";
+Source: "imageformats/*.*"; DestDir: "{app}/imageformats/";
+Source: "platforms/*.*"; DestDir: "{app}/platforms/";
+Source: "shape_predictor_68_face_landmarks.dat"; DestDir: "{app}";
+
+[Run]
+Filename: "{app}\DesktopCapture.exe"; Description: "Launch Desktop Capture"; Flags: postinstall nowait skipifsilent unchecked
