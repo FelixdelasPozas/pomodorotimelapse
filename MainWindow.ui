@@ -151,13 +151,6 @@
               <property name="toolTip">
                <string>Edit the time between captures</string>
               </property>
-              <property name="time">
-               <time>
-                <hour>0</hour>
-                <minute>0</minute>
-                <second>30</second>
-               </time>
-              </property>
               <property name="maximumTime">
                <time>
                 <hour>0</hour>
@@ -174,6 +167,13 @@
               </property>
               <property name="displayFormat">
                <string>mm:ss</string>
+              </property>
+              <property name="time">
+               <time>
+                <hour>0</hour>
+                <minute>0</minute>
+                <second>30</second>
+               </time>
               </property>
              </widget>
             </item>
@@ -551,13 +551,6 @@
                 <property name="toolTip">
                  <string>Edit pomodoro duration value</string>
                 </property>
-                <property name="time">
-                 <time>
-                  <hour>0</hour>
-                  <minute>25</minute>
-                  <second>0</second>
-                 </time>
-                </property>
                 <property name="maximumTime">
                  <time>
                   <hour>0</hour>
@@ -574,6 +567,13 @@
                 </property>
                 <property name="displayFormat">
                  <string>mm:ss</string>
+                </property>
+                <property name="time">
+                 <time>
+                  <hour>0</hour>
+                  <minute>25</minute>
+                  <second>0</second>
+                 </time>
                 </property>
                </widget>
               </item>
@@ -596,13 +596,6 @@
                 <property name="toolTip">
                  <string>Edit short break duration value</string>
                 </property>
-                <property name="time">
-                 <time>
-                  <hour>0</hour>
-                  <minute>5</minute>
-                  <second>0</second>
-                 </time>
-                </property>
                 <property name="maximumTime">
                  <time>
                   <hour>0</hour>
@@ -619,6 +612,13 @@
                 </property>
                 <property name="displayFormat">
                  <string>mm:ss</string>
+                </property>
+                <property name="time">
+                 <time>
+                  <hour>0</hour>
+                  <minute>5</minute>
+                  <second>0</second>
+                 </time>
                 </property>
                </widget>
               </item>
@@ -641,13 +641,6 @@
                 <property name="toolTip">
                  <string>Edit long break duration value</string>
                 </property>
-                <property name="time">
-                 <time>
-                  <hour>0</hour>
-                  <minute>15</minute>
-                  <second>0</second>
-                 </time>
-                </property>
                 <property name="maximumTime">
                  <time>
                   <hour>0</hour>
@@ -667,6 +660,13 @@
                 </property>
                 <property name="displayFormat">
                  <string>mm:ss</string>
+                </property>
+                <property name="time">
+                 <time>
+                  <hour>0</hour>
+                  <minute>15</minute>
+                  <second>0</second>
+                 </time>
                 </property>
                </widget>
               </item>
@@ -931,6 +931,13 @@
              </property>
              <property name="flat">
               <bool>false</bool>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="m_quit">
+             <property name="text">
+              <string>Quit</string>
              </property>
             </widget>
            </item>

@@ -4,7 +4,7 @@ cmake_minimum_required (VERSION 2.8.6)
 
 # Version Number
 set (DESKTOPCAPTURE_VERSION_MAJOR 1)
-set (DESKTOPCAPTURE_VERSION_MINOR 1)
+set (DESKTOPCAPTURE_VERSION_MINOR 2)
 set (DESKTOPCAPTURE_VERSION_PATCH 0)
 
 # Find includes in corresponding build directories
@@ -77,6 +77,7 @@ set (CORE_SOURCES
   AboutDialog.cpp
   VPXInterface.cpp
   webmEBMLwriter.cpp
+  Utils.cpp
   ${CMAKE_CURRENT_BINARY_DIR}/DesktopCapture.rc
 )
 
@@ -98,6 +99,7 @@ set(CORE_EXTERNAL_LIBS
   ${DLIB_LIBRARY}
   Qt5::Widgets
   Qt5::Multimedia
+  pthread
 )
 
 add_executable(DesktopCapture ${CORE_SOURCES})

@@ -91,8 +91,7 @@ const QString DesktopCapture::POMODOROS_OVERLAY_COMPOSITION_MODE = "Pomodoro Ove
 
 //-----------------------------------------------------------------
 DesktopCapture::DesktopCapture()
-: m_pomodoro        {new Pomodoro()}
-, m_trayIcon        {nullptr}
+: m_trayIcon        {nullptr}
 , m_captureThread   {nullptr}
 , m_secuentialNumber{0}
 , m_started         {false}
@@ -108,6 +107,8 @@ DesktopCapture::DesktopCapture()
 
 	setWindowTitle("Desktop Capture");
 	setWindowIcon(QIcon(":/DesktopCapture/application.ico"));
+
+	m_pomodoro = std::make_shared<Pomodoro>();
 
 	loadConfiguration();
 
@@ -423,7 +424,7 @@ void DesktopCapture::loadConfiguration()
   {
     animateScreenshot = settings.value(CAPTURE_ANIMATED_TRAY_ENABLED, animateScreenshot).toBool();
   }
-  m_screenshotAnimateTray->setEnabled(animateScreenshot && m_captureGroupBox->isChecked());
+	m_screenshotAnimateTray->setChecked(animateScreenshot);
 
   m_selectedResolution = 0;
   if (settings.contains(CAMERA_ACTIVE_RESOLUTION))
@@ -565,6 +566,9 @@ void DesktopCapture::connectSignals() const
 
   connect(m_about, SIGNAL(pressed()),
           this,    SLOT(onAboutButtonPressed()));
+
+  connect(m_quit, SIGNAL(clicked()), 
+	        this,   SLOT(quitApplication()));					
 }
 
 //-----------------------------------------------------------------
@@ -584,6 +588,7 @@ void DesktopCapture::setupCameraResolutions()
 		m_cameraResolutions.clear();
 		m_cameraResolutionComboBox->insertItem(0, QString("No cameras detected."));
 		m_cameraResolutionComboBox->setEnabled(false);
+		m_cameraEnabled->setEnabled(false);
 	}
 	else
 	{
@@ -1008,7 +1013,7 @@ bool DesktopCapture::eventFilter(QObject *object, QEvent *event)
 
 	static QPoint dragPoint = QPoint(0, 0);
 	QMouseEvent *me = static_cast<QMouseEvent *>(event);
-	Resolution cameraResolution = m_cameraResolutions.at(m_cameraResolutionComboBox->currentIndex());
+	Resolution cameraResolution = drawCamera ? m_cameraResolutions.at(m_cameraResolutionComboBox->currentIndex()) : Resolution{QString(),0,0};
 
 	QLabel *label = qobject_cast<QLabel *>(object);
 	if (!label)
@@ -1038,7 +1043,7 @@ bool DesktopCapture::eventFilter(QObject *object, QEvent *event)
 				auto ratio = geometry.width() / static_cast<double>(m_screenshotImage->pixmap()->size().width());
 				auto mappedPoint = QPoint((me->pos().x() - unusedSpace.width()/2) * ratio, (me->pos().y() - unusedSpace.height()/2) * ratio);
 
-				if ( (m_PIPposition.x() > mappedPoint.x()) ||
+				if ( !drawCamera || (m_PIPposition.x() > mappedPoint.x()) ||
 		         (m_PIPposition.y() > mappedPoint.y()) ||
 		         (m_PIPposition.x()+cameraResolution.width < mappedPoint.x()) ||
 		         (m_PIPposition.y()+cameraResolution.height < mappedPoint.y()) )

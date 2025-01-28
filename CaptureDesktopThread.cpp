@@ -22,6 +22,8 @@
 
 // Qt
 #include <QApplication>
+#include <QCoreApplication>
+#include <QFileInfo>
 #include <QDesktopWidget>
 #include <QImage>
 #include <QPainter>
@@ -29,6 +31,7 @@
 #include <QFont>
 #include <QFontMetrics>
 #include <QRgb>
+#include <QDir>
 #include <QDebug>
 #include <QScreen>
 
@@ -79,8 +82,16 @@ CaptureDesktopThread::CaptureDesktopThread(int monitor, Resolution cameraResolut
 		m_cameraEnabled = false;
 	}
 
-	m_faceDetector = dlib::get_frontal_face_detector();
-	dlib::deserialize("shape_predictor_68_face_landmarks.dat") >> m_faceShape;
+  m_faceDetector = dlib::get_frontal_face_detector();
+
+  QDir applicationDir{QCoreApplication::applicationDirPath()};
+  const auto faceShapeFile = applicationDir.absoluteFilePath("shape_predictor_68_face_landmarks.dat");
+
+  QFileInfo shapeFileInfo{faceShapeFile};
+  if (shapeFileInfo.exists())
+  {
+    dlib::deserialize(faceShapeFile.toStdString().c_str()) >> m_faceShape;
+  }
 }
 
 //-----------------------------------------------------------------
@@ -642,7 +653,9 @@ void CaptureDesktopThread::imageToASCII(QImage &image)
 //-----------------------------------------------------------------
 void CaptureDesktopThread::overlayPomodoro(QImage &image)
 {
-	if (m_pomodoro == nullptr) return;
+  QMutexLocker lock(&m_mutex);
+
+	if (!m_pomodoro) return;
 
 	static unsigned long total = 0;
 	auto compositionMode = COMPOSITION_MODES_QT.at(static_cast<int>(m_statisticsMode));
