@@ -56,5 +56,6 @@
 	<file>masks/problem.png</file>
 	<file>masks/awesome-face.png</file>
 	<file>masks/dealwithit.png</file>
+	<file>kofi_logo.png</file>
   </qresource>
 </RCC>

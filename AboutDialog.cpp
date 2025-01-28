@@ -32,6 +32,11 @@
 // libyuv
 #include <libyuv/version.h>
 
+// Qt
+#include <QDesktopServices>
+#include <QUrl>
+#include <QDateTime>
+
 const QString AboutDialog::VERSION = QString("version 1.1.0");
 
 //-----------------------------------------------------------------
@@ -52,5 +57,9 @@ AboutDialog::AboutDialog(QWidget *parent, Qt::WindowFlags f)
   m_opencvVersion->setText(tr("version %1").arg(QString::fromStdString(cv::getVersionString())));
   m_vpxVersion->setText(tr("version %1.%2.%3").arg(vpx_codec_version_major()).arg(vpx_codec_version_minor()).arg(vpx_codec_version_patch()));
   m_yuvVersion->setText(tr("version %1").arg(LIBYUV_VERSION));
+  m_copy->setText(tr("Copyright (c) 2015-%1 Félix de las Pozas Álvarez").arg(QDateTime::currentDateTime().date().year()));
+
+  QObject::connect(m_kofiLabel, &ClickableHoverLabel::clicked,
+                  [this](){ QDesktopServices::openUrl(QUrl{"https://ko-fi.com/felixdelaspozas"}); });    
 }
 

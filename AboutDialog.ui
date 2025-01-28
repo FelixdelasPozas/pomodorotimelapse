@@ -7,19 +7,19 @@
     <x>0</x>
     <y>0</y>
     <width>593</width>
-    <height>469</height>
+    <height>584</height>
    </rect>
   </property>
   <property name="minimumSize">
    <size>
     <width>593</width>
-    <height>469</height>
+    <height>584</height>
    </size>
   </property>
   <property name="maximumSize">
    <size>
     <width>593</width>
-    <height>469</height>
+    <height>584</height>
    </size>
   </property>
   <property name="windowTitle">
@@ -98,7 +98,7 @@
           </widget>
          </item>
          <item>
-          <widget class="QLabel" name="label_4">
+          <widget class="QLabel" name="m_copy">
            <property name="text">
             <string>Copyright (c) 2015 Félix de las Pozas Álvarez</string>
            </property>
@@ -559,6 +559,82 @@ Qt Framework</string>
     </layout>
    </item>
    <item>
+    <widget class="QLabel" name="label_4">
+     <property name="text">
+      <string>Icons courtesy of &lt;a href=&quot;https://www.svgrepo.com&quot;&gt;SVG Repo&lt;/a&gt;</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+     <property name="openExternalLinks">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="Line" name="line_4">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="label_8">
+     <property name="toolTip">
+      <string>Thank you for your support!</string>
+     </property>
+     <property name="text">
+      <string>If you want to support this project you can do it on &lt;a href=&quot;https://ko-fi.com/felixdelaspozas&quot;&gt;Ko-fi&lt;/a&gt;</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_3">
+     <item>
+      <spacer name="horizontalSpacer_4">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="ClickableHoverLabel" name="m_kofiLabel">
+       <property name="toolTip">
+        <string>Thank you for your support!</string>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+       <property name="pixmap">
+        <pixmap resource="rsc/resources.qrc">:/DesktopCapture/kofi_logo.png</pixmap>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_3">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+   <item>
     <widget class="QDialogButtonBox" name="buttonBox">
      <property name="maximumSize">
       <size>
@@ -576,6 +652,13 @@ Qt Framework</string>
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>ClickableHoverLabel</class>
+   <extends>QLabel</extends>
+   <header>Utils.h</header>
+  </customwidget>
+ </customwidgets>
  <resources>
   <include location="rsc/resources.qrc"/>
  </resources>
