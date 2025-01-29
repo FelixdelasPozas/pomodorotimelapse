@@ -3,7 +3,7 @@
 [Setup]
 AppName=Desktop Capture
 AppVersion=@DESKTOPCAPTURE_VERSION_MAJOR@.@DESKTOPCAPTURE_VERSION_MINOR@.@DESKTOPCAPTURE_VERSION_PATCH@
-DefaultDirName={pf64}\Desktop Capture
+DefaultDirName={commonpf64}\Desktop Capture
 DefaultGroupName=Desktop Capture
 OutputDir=@PROJECT_BINARY_DIR@
 AppComments=Desktop Capture
