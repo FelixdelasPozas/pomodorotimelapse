@@ -267,6 +267,10 @@ class DesktopCapture
      */
     void onPomodoroCompositionModeChanged(int index);
 
+		/** \brief Computes the video length per second.
+		 *
+		 */
+		void computeVideoTime() const;
 
 	private:
 	  static const QStringList COMPOSITION_MODES_NAMES;

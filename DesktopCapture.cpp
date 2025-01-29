@@ -308,8 +308,8 @@ void DesktopCapture::loadConfiguration()
   }
   m_pomodoroPositionComboBox->insertItems(0, POSITION_NAMES);
   m_pomodoroPositionComboBox->setCurrentIndex(statsPosition);
-  m_pomodoroPositionComboBox->setEnabled(m_overlayStats->isChecked());
-  m_pomodoroPositionLabel->setEnabled(m_overlayStats->isChecked());
+  m_pomodoroPositionComboBox->setEnabled(m_overlayStats->isChecked() && m_pomodoroGroupBox->isChecked());
+  m_pomodoroPositionLabel->setEnabled(m_overlayStats->isChecked() && m_pomodoroGroupBox->isChecked());
 
   int modeIndex = 0;
   if (settings.contains(POMODOROS_OVERLAY_COMPOSITION_MODE))
@@ -318,15 +318,15 @@ void DesktopCapture::loadConfiguration()
   }
   m_pomodoroCompositionComboBox->insertItems(0, COMPOSITION_MODES_NAMES);
   m_pomodoroCompositionComboBox->setCurrentIndex(modeIndex);
-  m_pomodoroCompositionComboBox->setEnabled(m_overlayStats->isChecked());
-  m_pomodoroCompositionLabel->setEnabled(m_overlayStats->isChecked());
+  m_pomodoroCompositionComboBox->setEnabled(m_overlayStats->isChecked() && m_pomodoroGroupBox->isChecked());
+  m_pomodoroCompositionLabel->setEnabled(m_overlayStats->isChecked() && m_pomodoroGroupBox->isChecked());
 
 	auto timeBetweenCaptures = QTime(0,0,30);
 	if (settings.contains(CAPTURE_TIME))
 	{
 		timeBetweenCaptures = settings.value(CAPTURE_TIME, timeBetweenCaptures).toTime();
 	}
-	m_screeshotTime->setTime(timeBetweenCaptures);
+	m_screenshotTime->setTime(timeBetweenCaptures);
 
 	auto captureVideo = true;
 	if (settings.contains(CAPTURE_VIDEO))
@@ -436,6 +436,8 @@ void DesktopCapture::loadConfiguration()
   {
     m_cameraResolutionsNames = settings.value(CAMERA_RESOLUTIONS, QStringList()).toStringList();
   }
+
+	computeVideoTime();
 }
 
 //-----------------------------------------------------------------
@@ -472,7 +474,7 @@ void DesktopCapture::saveConfiguration()
   settings.setValue(POMODOROS_USE_SOUNDS, m_pomodoroUseSounds->isChecked());
   settings.setValue(POMODOROS_CONTINUOUS_TICTAC, m_continuousTicTac->isChecked());
 	settings.setValue(POMODOROS_SESSION_NUMBER, m_pomodorosNumber->value());
-  settings.setValue(CAPTURE_TIME, m_screeshotTime->time());
+  settings.setValue(CAPTURE_TIME, m_screenshotTime->time());
   settings.setValue(CAPTURE_ENABLED, m_captureGroupBox->isChecked());
   settings.setValue(CAPTURE_VIDEO, m_videoRadioButton->isChecked());
   settings.setValue(CAPTURE_VIDEO_FPS, m_fps->value());
@@ -569,6 +571,9 @@ void DesktopCapture::connectSignals() const
 
   connect(m_quit, SIGNAL(clicked()), 
 	        this,   SLOT(quitApplication()));					
+
+	connect(m_fps, SIGNAL(valueChanged(int)), this, SLOT(computeVideoTime()));
+	connect(m_screenshotTime, SIGNAL(timeChanged(QTime)), this, SLOT(computeVideoTime()));
 }
 
 //-----------------------------------------------------------------
@@ -729,6 +734,16 @@ void DesktopCapture::recomputeOverlaysPositions()
       m_captureThread->setStatsOverlayPosition(m_statsPosition);
     }
   }
+}
+
+//-----------------------------------------------------------------
+void DesktopCapture::computeVideoTime() const
+{
+	const auto timeVal = m_screenshotTime->time();
+	const auto totalTime = timeVal.second() + timeVal.minute()*60;
+	const float frameNum = 3600.f/totalTime;
+	const float fps = m_fps->value();
+	m_computedTime->setText(tr("%1 hours per second. One real-time hour in %2 seconds. %3 frames/hour.").arg(fps/frameNum).arg(frameNum/fps).arg(frameNum));
 }
 
 //-----------------------------------------------------------------
@@ -1244,7 +1259,7 @@ void DesktopCapture::onStartButtonPressed()
 			m_captureThread->pause();
 		}
 
-		auto time = m_screeshotTime->time();
+		auto time = m_screenshotTime->time();
 		int ms = time.second() * 1000 + time.minute() * 1000 * 60 + time.hour() * 60 * 60 * 1000 + time.msec();
 
 		m_timer.setInterval(ms);
@@ -1397,7 +1412,7 @@ void DesktopCapture::onCaptureGroupChanged(bool status)
 
   m_startButton->setEnabled(m_pomodoroGroupBox->isChecked() || status);
 	m_screenshotImage->setEnabled(status);
-	m_screeshotTime->setEnabled(status);
+	m_screenshotTime->setEnabled(status);
 	m_dirButton->setEnabled(status);
 	m_dirEditLabel->setEnabled(status);
 	m_fps->setEnabled(status);
