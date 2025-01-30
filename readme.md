@@ -46,7 +46,8 @@ The following libraries are required:
 * [Qt opensource framework](http://www.qt.io/).
 
 # Install
-The only current option is build from source as binaries are not provided. 
+
+Download the latest installer from the [releases page](https://github.com/FelixdelasPozas/pomodorotimelapse/releases). Supported versions are from Windows 7 onwards. Neither the application or the installer are digitally signed so the system will ask for approval before running it the first time.
 
 # Screenshots
 Main dialog with the configuration options showing a preview of the captured area (whole 3840x1080 desktop) and the current position of the overlayed images (both camera and pomodoro statistics). Yeah, I always code with my monocle or my awesome face! ;-P
