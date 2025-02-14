@@ -38,15 +38,16 @@
 #include <QRgb>
 #include <QDir>
 #include <QScreen>
+#include <QTemporaryFile>
 #include <QDebug>
 
 // dLib
 #include <dlib/opencv.h>
 #include <dlib/gui_widgets.h>
 
-const QList<QPainter::CompositionMode> CaptureDesktopThread::COMPOSITION_MODES_QT = { QPainter::CompositionMode_SourceOver,
-		                                                                                  QPainter::CompositionMode_Plus,
-		                                                                                  QPainter::CompositionMode_Multiply };
+const QList<QPainter::CompositionMode> COMPOSITION_MODES_QT = { QPainter::CompositionMode_SourceOver,
+		                                                            QPainter::CompositionMode_Plus,
+		                                                            QPainter::CompositionMode_Multiply };
 
 const QList<CaptureDesktopThread::Mask> CaptureDesktopThread::MASKS = { { QString("I feel like a sir"),      QString(":/DesktopCapture/masks/monocle.png"),      200, 285, QPoint(150,107) },
                                                                         { QString("Anonymous"),              QString(":/DesktopCapture/masks/guyfawkes.png"),    275, 285, QPoint(167,292) },
@@ -57,14 +58,14 @@ const QList<CaptureDesktopThread::Mask> CaptureDesktopThread::MASKS = { { QStrin
                                                                         { QString("Deal with it"),           QString(":/DesktopCapture/masks/dealwithit.png"),   100, 109, QPoint(105, 28) },
                                                                         { QString("The Laughing Man"),       QString(":/DesktopCapture/masks/laughingman.png"),  100,  85, QPoint(129,187) } };
 
-const QString CaptureDesktopThread::CHAR_RAMP_LONG   = QString(" .'`^\",:;Il!i><~+_-?][}{1)(|\\/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$");
-const QString CaptureDesktopThread::CHAR_RAMP_SHORT  = QString(" .:-=+*#%@");
-const QString CaptureDesktopThread::CHAR_RAMP_BLOCKS = QString(" ░▒▓█");
+// ASCII Art characters ramps.
+const QString CHAR_RAMP_LONG   = QString(" .'`^\",:;Il!i><~+_-?][}{1)(|\\/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$");
+const QString CHAR_RAMP_SHORT  = QString(" .:-=+*#%@");
+const QString CHAR_RAMP_BLOCKS = QString(" ░▒▓█");
 
 const QList<CaptureDesktopThread::Ramp> CaptureDesktopThread::RAMPS{ { QString("Long"), CHAR_RAMP_LONG },
                                                                      { QString("Short"), CHAR_RAMP_SHORT },
                                                                      { QString("Blocks"), CHAR_RAMP_BLOCKS } };
-
 
 //-----------------------------------------------------------------
 CaptureDesktopThread::CaptureDesktopThread(int monitor, Resolution cameraResolution, QObject* parent)
@@ -93,13 +94,8 @@ CaptureDesktopThread::CaptureDesktopThread(int monitor, Resolution cameraResolut
 		m_cameraEnabled = false;
 
   m_faceDetector = dlib::get_frontal_face_detector();
-
-  QDir applicationDir{QCoreApplication::applicationDirPath()};
-  const auto faceShapeFile = applicationDir.absoluteFilePath("shape_predictor_68_face_landmarks.dat");
-
-  QFileInfo shapeFileInfo{faceShapeFile};
-  if (shapeFileInfo.exists())
-    dlib::deserialize(faceShapeFile.toStdString().c_str()) >> m_faceShape;
+  auto shapeFile = std::unique_ptr<QTemporaryFile>(QTemporaryFile::createNativeFile(":/DesktopCapture/shape_predictor_68_face_landmarks.dat"));
+  dlib::deserialize(shapeFile->fileName().toStdString().c_str()) >> m_faceShape;
 }
 
 //-----------------------------------------------------------------
@@ -534,15 +530,15 @@ void CaptureDesktopThread::overlayCameraImage(QImage &baseImage, QImage &overlay
 
   if(m_mask != MASK::NONE || m_trackFace)
   {
-    // double luma = 0;
-    // long i = 0;
+    double luma = 0;
+    long i = 0;
 
-    // for(auto buf = m_frame.datastart; buf < m_frame.dataend; buf += 3, ++i)
-    //   luma += (buf[2]*0.299) + (buf[1]*0.587) + (buf[0]*0.144);
+    for(auto buf = m_frame.datastart; buf < m_frame.dataend; buf += 3, ++i)
+      luma += (buf[2]*0.299) + (buf[1]*0.587) + (buf[0]*0.144);
 
-    // luma /= i;
+    luma /= i;
 
-    // cv::normalize(m_frame, m_frame, 255, 128 - static_cast<int>(luma), cv::NORM_MINMAX);
+    cv::normalize(m_frame, m_frame, 255, 128 - static_cast<int>(luma), cv::NORM_MINMAX);
 
     dlib::cv_image<dlib::bgr_pixel> cimg(m_frame);
     const auto faces = m_faceDetector(cimg);
@@ -662,6 +658,7 @@ void CaptureDesktopThread::imageToASCII(QImage &image)
 
   QPainter painter(&image);
   painter.setFont(font);
+  painter.fillRect(image.rect(), Qt::black);
 
   for(size_t i = 0; i < blocksValue.size(); ++i)
   {

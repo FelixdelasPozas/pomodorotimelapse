@@ -51,7 +51,7 @@
 class CaptureDesktopThread
 : public QThread
 {
-	Q_OBJECT
+		Q_OBJECT
 	public:
 	  /** \class COMPOSITION_MODE
 	   * \brief Camera image composition modes.
@@ -102,9 +102,9 @@ class CaptureDesktopThread
   	 * \param[in] parent raw pointer of the parent of this object.
   	 *
   	 */
-		explicit CaptureDesktopThread(int              monitor,
-				                          Resolution       cameraResolution,
-				                          QObject         *parent = nullptr);
+		explicit CaptureDesktopThread(int        monitor,
+				                          Resolution cameraResolution,
+				                          QObject   *parent = nullptr);
 
 		/** \brief CaptureDesktopThread class virtual destructor.
      *
@@ -245,11 +245,6 @@ class CaptureDesktopThread
 		 */
 		void setCameraAsASCII(bool enabled);
 
-		static constexpr int   POMODORO_UNIT_MAX_WIDTH = 250;
-		static constexpr int   POMODORO_UNIT_HEIGHT    = 15;
-		static constexpr int   POMODORO_UNIT_MARGIN    = 2;
-		static constexpr float POMODORO_UNIT_OPACITY   = 0.8;
-
     struct Mask
     {
       QString name;
@@ -262,8 +257,8 @@ class CaptureDesktopThread
 			: name{n}, resource{res}, eyeDistance{eyed}, lipDistance{lipd}, leftEye{p}{};
     };
 
-    static const QList<Mask> MASKS;
-		
+		static const QList<CaptureDesktopThread::Mask> MASKS;
+
 		struct Ramp
 		{
 			QString name;
@@ -273,18 +268,17 @@ class CaptureDesktopThread
 			: name{n}, value{v}{};
 		};
 
-		static const QList<Ramp> RAMPS;
+		static const QList<CaptureDesktopThread::Ramp> RAMPS;
+
+		static constexpr int POMODORO_UNIT_MAX_WIDTH = 250;
+		static constexpr int POMODORO_UNIT_HEIGHT = 15;
+		static constexpr int POMODORO_UNIT_MARGIN = 2;
+		static constexpr float POMODORO_UNIT_OPACITY = 0.8;
 
 	signals:
 		void imageAvailable();
 
 	private:
-		static const QList<QPainter::CompositionMode> COMPOSITION_MODES_QT;
-
-		static const QString CHAR_RAMP_SHORT;  /** ASCII Art characters. Change in imageToASCII(). */
-		static const QString CHAR_RAMP_LONG;   /** ASCII Art characters (long).                    */
-		static const QString CHAR_RAMP_BLOCKS; /** ASCII Art characters. Block characters. */
-
 		/** \brief Computes the position of the top left corner given the size of the area and
 		 *         the POSITION to put it.
 		 * \param[in] position position of the area.

@@ -248,10 +248,10 @@ class DesktopCapture
     void onFaceTrackingChanged(int status);
 
     /** \brief Updates the conversion to ASCII art of the camera picture.
-     * \param[in] status check status value.
+     * \param[in] bool check status value.
      *
      */
-    void onConvertToASCIIChanged(int status);
+    void onConvertToASCIIChanged(bool status);
 
     /** \brief Shows the about dialog.
      *
@@ -287,45 +287,6 @@ class DesktopCapture
 		void onRampCharSizeChanged(int size);
 
 	private:
-	  static const QStringList COMPOSITION_MODES_NAMES;
-	  static const QStringList POSITION_NAMES;
-	  static const QString CAPTURE_ENABLED;
-	  static const QString CAPTURE_TIME;
-	  static const QString CAPTURE_VIDEO;
-	  static const QString CAPTURE_VIDEO_FPS;
-	  static const QString CAPTURE_ANIMATED_TRAY_ENABLED;
-	  static const QString CAPTURED_MONITOR;
-	  static const QString MONITORS_LIST;
-	  static const QString OUTPUT_DIR;
-	  static const QString OUTPUT_SCALE;
-	  static const QString APPLICATION_GEOMETRY;
-	  static const QString APPLICATION_STATE;
-	  static const QString CAMERA_ENABLED;
-	  static const QString CAMERA_RESOLUTIONS;
-	  static const QString CAMERA_ACTIVE_RESOLUTION;
-	  static const QString CAMERA_OVERLAY_POSITION;
-	  static const QString CAMERA_OVERLAY_COMPOSITION_MODE;
-	  static const QString CAMERA_OVERLAY_FIXED_POSITION;
-	  static const QString CAMERA_MASK;
-	  static const QString CAMERA_TRACK_FACE;
-	  static const QString CAMERA_ASCII_ART;
-	  static const QString POMODORO_ENABLED;
-	  static const QString POMODORO_TIME;
-	  static const QString POMODORO_SHORT_BREAK_TIME;
-	  static const QString POMODORO_LONG_BREAK_TIME;
-	  static const QString POMODOROS_BEFORE_BREAK;
-	  static const QString POMODOROS_ANIMATED_TRAY_ENABLED;
-	  static const QString POMODOROS_USE_SOUNDS;
-	  static const QString POMODOROS_CONTINUOUS_TICTAC;
-	  static const QString POMODOROS_SESSION_NUMBER;
-	  static const QString POMODOROS_LAST_TASK;
-	  static const QString POMODOROS_OVERLAY;
-	  static const QString POMODOROS_OVERLAY_POSITION;
-	  static const QString POMODOROS_OVERLAY_FIXED_POSITION;
-	  static const QString POMODOROS_OVERLAY_COMPOSITION_MODE;
-		static const QString CAMERA_ASCII_ART_RAMP;
-		static const QString CAMERA_ASCII_ART_RAMP_CHAR_SIZE;
-
 	  /** \brief Returns the time in text.
 	   * \param[in] time
 	   *

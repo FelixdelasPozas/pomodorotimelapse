@@ -41,7 +41,7 @@ PomodoroStatistics::PomodoroStatistics(std::shared_ptr<Pomodoro> pomodoro, QWidg
 	setWindowFlags(Qt::Window|Qt::CustomizeWindowHint|Qt::WindowTitleHint|Qt::WindowSystemMenuHint);
 
 	m_status->setTextFormat(Qt::RichText);
-	m_progress->setStyle(QStyleFactory::create("fusion"));
+	m_progress->setStyle(QStyleFactory::create("windowsvista"));
 
   connect(m_pomodoro.get(), SIGNAL(beginPomodoro()),
           this,             SLOT(updateGUI()));

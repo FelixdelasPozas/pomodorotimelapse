@@ -40,62 +40,58 @@
 #include <QInputDialog>
 #include <QFileDialog>
 
-const QStringList DesktopCapture::COMPOSITION_MODES_NAMES = { "Copy",
-                                                              "Plus",
-                                                              "Multiply" };
+const QStringList COMPOSITION_MODES_NAMES = { "Copy", "Plus", "Multiply" };
 
-const QStringList DesktopCapture::POSITION_NAMES = { "Free",
-                                                     "Top Left",
-                                                     "Top Center",
-                                                     "Top Right",
-                                                     "Center Left",
-                                                     "Center",
-                                                     "Center Right",
-                                                     "Bottom Left",
-                                                     "Bottom Center",
-                                                     "Bottom Right" };
+const QStringList POSITION_NAMES = { "Free",
+                                     "Top Left",
+                                     "Top Center",
+                                     "Top Right",
+                                     "Center Left",
+                                      "Center",
+                                      "Center Right",
+                                      "Bottom Left",
+                                      "Bottom Center",
+                                      "Bottom Right" };
 
-const QString DesktopCapture::CAPTURE_TIME                       = "Time Between Captures";
-const QString DesktopCapture::CAPTURE_ENABLED                    = "Enable Desktop Capture";
-const QString DesktopCapture::CAPTURE_VIDEO                      = "Capture Video";
-const QString DesktopCapture::CAPTURE_VIDEO_FPS                  = "Capture Video FPS";
-const QString DesktopCapture::CAPTURE_ANIMATED_TRAY_ENABLED      = "Capture Animated Tray Icon";
-const QString DesktopCapture::CAPTURED_MONITOR                   = "Captured Desktop Monitor";
-const QString DesktopCapture::MONITORS_LIST                      = "Monitor Resolutions";
-const QString DesktopCapture::OUTPUT_DIR                         = "Output Directory";
-const QString DesktopCapture::OUTPUT_SCALE                       = "Output Scale";
-const QString DesktopCapture::APPLICATION_GEOMETRY               = "Application Geometry";
-const QString DesktopCapture::APPLICATION_STATE                  = "Application State";
-const QString DesktopCapture::CAMERA_ENABLED                     = "Camera Enabled";
-const QString DesktopCapture::CAMERA_RESOLUTIONS                 = "Available Camera Resolutions";
-const QString DesktopCapture::CAMERA_ACTIVE_RESOLUTION           = "Active Resolution";
-const QString DesktopCapture::CAMERA_OVERLAY_POSITION            = "Camera Overlay Position";
-const QString DesktopCapture::CAMERA_OVERLAY_COMPOSITION_MODE    = "Camera Overlay Composition Mode";
-const QString DesktopCapture::CAMERA_OVERLAY_FIXED_POSITION      = "Camera Overlay Fixed Position";
-const QString DesktopCapture::CAMERA_MASK                        = "Camera Mask";
-const QString DesktopCapture::CAMERA_TRACK_FACE                  = "Center face in camera picture";
-const QString DesktopCapture::CAMERA_ASCII_ART                   = "Convert camera picture to ASCII art";
-const QString DesktopCapture::POMODORO_TIME                      = "Pomodoro Time";
-const QString DesktopCapture::POMODORO_SHORT_BREAK_TIME          = "Short Break Time";
-const QString DesktopCapture::POMODORO_LONG_BREAK_TIME           = "Long Break Time";
-const QString DesktopCapture::POMODOROS_BEFORE_BREAK             = "Pomodoros Before A Long Break";
-const QString DesktopCapture::POMODOROS_ANIMATED_TRAY_ENABLED    = "Pomodoro Animated Tray Icon";
-const QString DesktopCapture::POMODOROS_USE_SOUNDS               = "Pomodoro Use Sounds";
-const QString DesktopCapture::POMODORO_ENABLED                   = "Enable Pomodoro";
-const QString DesktopCapture::POMODOROS_CONTINUOUS_TICTAC        = "Continuous Tic-Tac";
-const QString DesktopCapture::POMODOROS_SESSION_NUMBER           = "Pomodoros In Session";
-const QString DesktopCapture::POMODOROS_LAST_TASK                = "Last task";
-const QString DesktopCapture::POMODOROS_OVERLAY                  = "Overlay Pomodoro Statistics In Capture";
-const QString DesktopCapture::POMODOROS_OVERLAY_POSITION         = "Pomodoro Overlay Position";
-const QString DesktopCapture::POMODOROS_OVERLAY_FIXED_POSITION   = "Pomodoro Overlay Fixed Position";
-const QString DesktopCapture::POMODOROS_OVERLAY_COMPOSITION_MODE = "Pomodoro Overlay Composition Mode";
-const QString DesktopCapture::CAMERA_ASCII_ART_RAMP              = "ASCII Art Character Ramp Index";
-const QString DesktopCapture::CAMERA_ASCII_ART_RAMP_CHAR_SIZE    = "ASCII Art Character Size";
-
-const QString CHECKBOX_STYLE = "QCheckBox {\
-    width: 8px;\
-    height: 8px;\
-}";
+const QString CAPTURE_TIME                       = "Time Between Captures";
+const QString CAPTURE_ENABLED                    = "Enable Desktop Capture";
+const QString CAPTURE_VIDEO                      = "Capture Video";
+const QString CAPTURE_VIDEO_FPS                  = "Capture Video FPS";
+const QString CAPTURE_ANIMATED_TRAY_ENABLED      = "Capture Animated Tray Icon";
+const QString CAPTURED_MONITOR                   = "Captured Desktop Monitor";
+const QString MONITORS_LIST                      = "Monitor Resolutions";
+const QString OUTPUT_DIR                         = "Output Directory";
+const QString OUTPUT_SCALE                       = "Output Scale";
+const QString APPLICATION_GEOMETRY               = "Application Geometry";
+const QString APPLICATION_STATE                  = "Application State";
+const QString CAMERA_ENABLED                     = "Camera Enabled";
+const QString CAMERA_RESOLUTIONS                 = "Available Camera Resolutions";
+const QString CAMERA_ACTIVE_RESOLUTION           = "Active Resolution";
+const QString CAMERA_OVERLAY_POSITION            = "Camera Overlay Position";
+const QString CAMERA_OVERLAY_COMPOSITION_MODE    = "Camera Overlay Composition Mode";
+const QString CAMERA_OVERLAY_FIXED_POSITION      = "Camera Overlay Fixed Position";
+const QString CAMERA_MASK                        = "Camera Mask";
+const QString CAMERA_TRACK_FACE                  = "Center face in camera picture";
+const QString CAMERA_ASCII_ART                   = "Convert camera picture to ASCII art";
+const QString POMODORO_TIME                      = "Pomodoro Time";
+const QString POMODORO_SHORT_BREAK_TIME          = "Short Break Time";
+const QString POMODORO_LONG_BREAK_TIME           = "Long Break Time";
+const QString POMODOROS_BEFORE_BREAK             = "Pomodoros Before A Long Break";
+const QString POMODOROS_ANIMATED_TRAY_ENABLED    = "Pomodoro Animated Tray Icon";
+const QString POMODOROS_USE_SOUNDS               = "Pomodoro Use Sounds";
+const QString POMODORO_ENABLED                   = "Enable Pomodoro";
+const QString POMODOROS_CONTINUOUS_TICTAC        = "Continuous Tic-Tac";
+const QString POMODOROS_SESSION_NUMBER           = "Pomodoros In Session";
+const QString POMODOROS_LAST_TASK                = "Last task";
+const QString POMODOROS_OVERLAY                  = "Overlay Pomodoro Statistics In Capture";
+const QString POMODOROS_OVERLAY_POSITION         = "Pomodoro Overlay Position";
+const QString POMODOROS_OVERLAY_FIXED_POSITION   = "Pomodoro Overlay Fixed Position";
+const QString POMODOROS_OVERLAY_COMPOSITION_MODE = "Pomodoro Overlay Composition Mode";
+const QString CAMERA_ASCII_ART_RAMP              = "ASCII Art Character Ramp Index";
+const QString CAMERA_ASCII_ART_RAMP_CHAR_SIZE    = "ASCII Art Character Size";
+const QString TIME_OVERLAY                       = "Overlay Time";
+const QString TIME_OVERLAY_POSITION              = "Time Overlay Position";
+const QString TIME_OVERLAY_COMPOSITION_MODE      = "Time Overlay Composition Mode";
 
 const QString INI_FILENAME{"DesktopCapture.ini"};
 
@@ -114,8 +110,6 @@ DesktopCapture::DesktopCapture()
 , m_menuQuit        {nullptr}
 {
 	setupUi(this);
-
-	setStyleSheet(CHECKBOX_STYLE);
 
 	setWindowTitle("Desktop Capture");
 	setWindowIcon(QIcon(":/DesktopCapture/application.svg"));
@@ -305,8 +299,6 @@ void DesktopCapture::loadConfiguration()
 
   const auto convertToASCII = settings->value(CAMERA_ASCII_ART, false).toBool();
   m_ASCIIart->setChecked(convertToASCII);
-	m_rampLayout->setEnabled(convertToASCII);
-	m_rampCharLayout->setEnabled(convertToASCII);
 
   const auto animateScreenshot = settings->value(CAPTURE_ANIMATED_TRAY_ENABLED, true).toBool();
 	m_screenshotAnimateTray->setChecked(animateScreenshot);
@@ -445,8 +437,8 @@ void DesktopCapture::connectSignals() const
   connect(m_trackFace, SIGNAL(stateChanged(int)),
           this,        SLOT(onFaceTrackingChanged(int)));
 
-  connect(m_ASCIIart, SIGNAL(stateChanged(int)),
-          this,       SLOT(onConvertToASCIIChanged(int)));
+  connect(m_ASCIIart, SIGNAL(toggled(bool)),
+          this,       SLOT(onConvertToASCIIChanged(bool)));
 
   connect(m_about, SIGNAL(pressed()),
           this,    SLOT(onAboutButtonPressed()));
@@ -1547,6 +1539,8 @@ void DesktopCapture::onCaptureVideoChanged(bool unused)
 	const auto enabled = (m_videoRadioButton->isChecked());
 	m_fpsLabel->setEnabled(enabled);
 	m_fps->setEnabled(enabled);
+	m_computedTime->setEnabled(enabled);
+	m_computedTimeLabel->setEnabled(enabled);
 }
 
 //-----------------------------------------------------------------
@@ -1566,13 +1560,10 @@ void DesktopCapture::onFaceTrackingChanged(int status)
 }
 
 //-----------------------------------------------------------------
-void DesktopCapture::onConvertToASCIIChanged(int status)
+void DesktopCapture::onConvertToASCIIChanged(bool status)
 {
   Q_ASSERT(m_captureThread);
-	const auto isEnabled = status == Qt::Checked;
-  m_captureThread->setCameraAsASCII(isEnabled);
-	m_rampLayout->setEnabled(isEnabled);
-	m_rampCharLayout->setEnabled(isEnabled);
+  m_captureThread->setCameraAsASCII(status);
 }
 
 //-----------------------------------------------------------------

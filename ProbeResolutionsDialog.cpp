@@ -31,7 +31,7 @@ ProbeResolutionsDialog::ProbeResolutionsDialog(QWidget *parent, Qt::WindowFlags 
 	setWindowFlags(windowFlags() & ~(Qt::WindowContextHelpButtonHint) & ~(Qt::WindowMaximizeButtonHint) & ~(Qt::WindowMinimizeButtonHint));
 
 	m_progressBar->setValue(0);
-	m_progressBar->setStyle(QStyleFactory::create("fusion"));
+	m_progressBar->setStyle(QStyleFactory::create("windowsvista"));
 
 	m_thread = std::make_unique<ProbeThread>(this);
 

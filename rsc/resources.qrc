@@ -60,5 +60,7 @@
 		<file>masks/dealwithit.png</file>
 		<file>masks/laughingman.png</file>
 		<file>kofi_logo.png</file>
+		<file>folder.svg</file>
+		<file compress="19" compress-algo="zstd">shape_predictor_68_face_landmarks.dat</file>
   </qresource>
 </RCC>
