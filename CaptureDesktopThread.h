@@ -24,8 +24,8 @@
 #include <memory>
 
 // Project
-#include "Resolutions.h"
-#include "Pomodoro.h"
+#include <Resolutions.h>
+#include <Pomodoro.h>
 
 // OpenCV
 #include <opencv2/highgui/highgui.hpp>
@@ -56,19 +56,47 @@ class CaptureDesktopThread
 	  /** \class COMPOSITION_MODE
 	   * \brief Camera image composition modes.
 	   */
-	  enum class COMPOSITION_MODE: char { COPY, PLUS, MULTIPLY };
+		enum class COMPOSITION_MODE : char
+		{
+			COPY,
+			PLUS,
+			MULTIPLY
+		};
 
-	  /** \class POSTION
+		/** \class POSTION
 	   * \brief Camera position modes.
 	   */
-	  enum class POSITION: char { FREE, TOP_LEFT, TOP_CENTER, TOP_RIGHT, CENTER_LEFT, CENTER, CENTER_RIGHT, BOTTOM_LEFT, BOTTOM_CENTER, BOTTOM_RIGHT };
+		enum class POSITION : char
+		{
+			FREE,
+			TOP_LEFT,
+			TOP_CENTER,
+			TOP_RIGHT,
+			CENTER_LEFT,
+			CENTER,
+			CENTER_RIGHT,
+			BOTTOM_LEFT,
+			BOTTOM_CENTER,
+			BOTTOM_RIGHT
+		};
 
-	  /** \class MASK
+		/** \class MASK
 	   * \brief Face detection masks.
 	   */
-	  enum class MASK: char { GENTLEMAN, ANONYMOUS, PIRATE, AWESOME, UMAD, AWESOMEFACE, DEALWITHIT, NONE };
+		enum class MASK : char
+		{
+			GENTLEMAN,
+			ANONYMOUS,
+			PIRATE,
+			AWESOME,
+			UMAD,
+			AWESOMEFACE,
+			DEALWITHIT,
+			LAUGHINGMAN,
+			NONE
+		};
 
-  	/** \brief CaptureDesktopThread class constructor.
+		/** \brief CaptureDesktopThread class constructor.
   	 * \param[in] monitor monitor index according to Qt or -1 to capture all monitors.
   	 * \param[in] cameraResolution resolution of the picture captured by the camera.
   	 * \param[in] parent raw pointer of the parent of this object.
@@ -121,7 +149,7 @@ class CaptureDesktopThread
      * \param[in] resolution struct Resolution reference.
      *
      */
-		void setResolution(const Resolution &resolution);
+		void setCameraResolution(const Resolution &resolution);
 
     /** \brief Sets the position where the camera picture will be placed in the captured desktop image.
      * \param[in] point top-left point of the area to put the picture.
@@ -185,11 +213,6 @@ class CaptureDesktopThread
      */
 		QPixmap *getImage();
 
-    /** \brief Returns the mutex used in this thread to write the image.
-     *
-     */
-    QMutex *getMutex();
-
     /** \brief Takes a picture of the desktop.
      *
      */
@@ -198,7 +221,18 @@ class CaptureDesktopThread
 		/** \brief Sets the mask type.
 		 *
 		 */
-		void setMask(MASK mask);
+		void setMask(const MASK mask);
+
+		/** \brief Sets the ramp characters. 
+		 * \param[in] rampIndex Index of the selected ramp y the Ramps list.
+		 *
+		 */
+		void setRamp(const int rampIndex);
+
+		/** \brief Sets the character size in the ASCII art image.
+		 * \param[in] size Qt font size.
+		 */
+		void setRampCharSize(const int size);
 
 		/** \brief Enables/disables face tracking and centering.
 		 * \param[in] enabled boolean value.
@@ -223,9 +257,23 @@ class CaptureDesktopThread
       int     eyeDistance;
       int     lipDistance;
       QPoint  leftEye;
+
+			Mask(const QString &n, const QString &res, const int eyed, const int lipd, const QPoint &p)
+			: name{n}, resource{res}, eyeDistance{eyed}, lipDistance{lipd}, leftEye{p}{};
     };
 
-    static const QList<const struct Mask> MASKS;
+    static const QList<Mask> MASKS;
+		
+		struct Ramp
+		{
+			QString name;
+			QString value;
+
+			Ramp(const QString &n, const QString &v)
+			: name{n}, value{v}{};
+		};
+
+		static const QList<Ramp> RAMPS;
 
 	signals:
 		void imageAvailable();
@@ -233,8 +281,9 @@ class CaptureDesktopThread
 	private:
 		static const QList<QPainter::CompositionMode> COMPOSITION_MODES_QT;
 
-		static const QString CHAR_RAMP_SHORT; /** ASCII Art characters. Change in imageToASCII(). */
-		static const QString CHAR_RAMP_LONG;  /** ASCII Art characters (long).                    */
+		static const QString CHAR_RAMP_SHORT;  /** ASCII Art characters. Change in imageToASCII(). */
+		static const QString CHAR_RAMP_LONG;   /** ASCII Art characters (long).                    */
+		static const QString CHAR_RAMP_BLOCKS; /** ASCII Art characters. Block characters. */
 
 		/** \brief Computes the position of the top left corner given the size of the area and
 		 *         the POSITION to put it.
@@ -304,6 +353,12 @@ class CaptureDesktopThread
 		 */
 		void imageToASCII(QImage &image);
 
+		/** \brief Converts the given pìxmap into an ASCII image.
+		 * \param[in/out] image QPixmap reference.
+		 *
+		 */
+		void imageToASCII(QPixmap &image);
+
 		bool             m_aborted;              /** true if the thread has been aborted.                          */
 		bool             m_paused;               /** true to stop capturing.                                       */
 		QMutex           m_mutex;                /** thread mutex                                                  */
@@ -323,6 +378,8 @@ class CaptureDesktopThread
 		bool             m_trackFace;            /** true to track and center the face in the camera picture.      */
 		COMPOSITION_MODE m_statisticsMode;       /** composition mode for the statistics overlay.                  */
 		bool             m_ASCII_Art;            /** true to convert the camera image to ASCII art.                */
+		int              m_ramp;                 /** index of the character ramp used in the ASCII art.            */
+		int              m_rampCharSize;         /** Qt font size of the characters used in the ramp.              */
 
 		std::shared_ptr<Pomodoro> m_pomodoro;    /** pomodoro shared pointer */
 

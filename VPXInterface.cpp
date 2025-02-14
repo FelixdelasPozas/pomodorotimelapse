@@ -18,7 +18,7 @@
  */
 
 // Project
-#include "VPXInterface.h"
+#include <VPXInterface.h>
 
 // libyuv
 #include "libyuv/convert.h"
@@ -124,23 +124,15 @@ VPX_Interface::~VPX_Interface()
 {
 	vpx_img_free(&m_vp8_rawImage);
 	if(scalingEnabled())
-	{
 	  vpx_img_free(&m_vp8_rawImageScaled);
-	}
 
 	if (vpx_codec_destroy(&m_vp8_context))
-	{
 		qDebug() << "Failed to destroy codec";
-	}
 
 	if (m_frameNumber != 0)
-	{
 		write_webm_file_footer(&m_ebml, m_hash);
-	}
 	else
-	{
 		QFile::remove(m_vp8_filename);
-	}
 
 	fclose(m_ebml.stream);
 }
@@ -173,9 +165,7 @@ void VPX_Interface::encodeFrame(QImage* frame)
     image = &m_vp8_rawImageScaled;
 	}
 	else
-	{
 	  image = &m_vp8_rawImage;
-	}
 
 // DUMP RAW FRAME ///////////////////////////////////////////////////////////////
 //	QString frameName = QString("D:\\Descargas\\rawFrame") + QString::number(m_frameNumber) + QString(".raw");

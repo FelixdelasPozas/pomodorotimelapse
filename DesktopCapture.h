@@ -21,9 +21,9 @@
 #define DESKTOP_CAPTURE_H_
 
 // Project
-#include "CaptureDesktopThread.h"
-#include "Resolutions.h"
-#include "PomodoroStatistics.h"
+#include <CaptureDesktopThread.h>
+#include <Resolutions.h>
+#include <PomodoroStatistics.h>
 #include "ui_MainWindow.h"
 
 // Qt
@@ -42,6 +42,7 @@ class QProgressDialog;
 class QResizeEvent;
 class QEvent;
 class QPixmap;
+class QSettings;
 
 class CaptureDesktopThread;
 class Pomodoro;
@@ -68,9 +69,11 @@ class DesktopCapture
 		 */
 		~DesktopCapture();
 
-		void changeEvent(QEvent*);
-		bool eventFilter(QObject *object, QEvent *event);
-		void closeEvent(QCloseEvent *e);
+		virtual bool eventFilter(QObject *object, QEvent *event) override;
+		
+	protected:
+		virtual void changeEvent(QEvent*) override;
+		virtual void closeEvent(QCloseEvent *e) override;
 
 	private slots:
 	  /** \brief Updates the captured monitor.
@@ -272,6 +275,17 @@ class DesktopCapture
 		 */
 		void computeVideoTime() const;
 
+		/** \brief Updates the character ramp used in the ASCII art.
+		 * \param[in] index Index of the ramp in the RAMPS list. 
+		 *
+		 */
+		void onRampChanged(int index);
+
+		/** \brief Updates the character size in the ASCII art. 
+		 * \param[in] size Character pixel size.
+		 */
+		void onRampCharSizeChanged(int size);
+
 	private:
 	  static const QStringList COMPOSITION_MODES_NAMES;
 	  static const QStringList POSITION_NAMES;
@@ -309,8 +323,8 @@ class DesktopCapture
 	  static const QString POMODOROS_OVERLAY_POSITION;
 	  static const QString POMODOROS_OVERLAY_FIXED_POSITION;
 	  static const QString POMODOROS_OVERLAY_COMPOSITION_MODE;
-
-	  static const QStringList CAPTURE_VIDEO_QUALITY_STRINGS;
+		static const QString CAMERA_ASCII_ART_RAMP;
+		static const QString CAMERA_ASCII_ART_RAMP_CHAR_SIZE;
 
 	  /** \brief Returns the time in text.
 	   * \param[in] time
@@ -388,23 +402,28 @@ class DesktopCapture
 	   */
 	  void recomputeOverlaysPositions();
 
-		QStringList                    m_cameraResolutionsNames; /** camera resolution strings.                   */
-		ResolutionList                 m_cameraResolutions;      /** camera resolution structs.                   */
-		int                            m_selectedResolution;     /** selected camera resolution position.         */
-		std::shared_ptr<Pomodoro>      m_pomodoro;               /** pomodoro object.                             */
-		QPixmap                        m_desktopCapture;         /** pixmap of captured desktop.                  */
-		QSystemTrayIcon               *m_trayIcon;               /** tray icon object.                            */
-		CaptureDesktopThread          *m_captureThread;          /** capture and composition thread.              */
-		QMutex                         m_mutex;                  /** mutex for data integrity.                    */
-		QPoint                         m_PIPposition;            /** position of camera image.                    */
-		QPoint                         m_statsPosition;          /** position of pomodoro statistics.             */
-		QTimer                         m_timer;                  /** timer.                                       */
-		unsigned long                  m_secuentialNumber;       /** frame number.                                */
-		bool                           m_started;                /** true if capturing, false otherwise.          */
-		PomodoroStatistics            *m_statisticsDialog;       /** Pomodoro statistics dialog object.           */
-		std::shared_ptr<VPX_Interface> m_vp8_interface;          /** VPX codec interface.                         */
-		float                          m_scale;                  /** output scale ratio.                          */
-		bool                           m_paused;                 /** true if pomodoro is paused, false otherwise. */
+		/** \brief Returns the appropiate QSettings object depending on the presence of the INI file.
+		 *
+		 */
+		std::unique_ptr<QSettings> applicationSettings() const;
+
+		QStringList                           m_cameraResolutionsNames; /** camera resolution strings.                   */
+		ResolutionList                        m_cameraResolutions;      /** camera resolution structs.                   */
+		int                                   m_selectedResolution;     /** selected camera resolution position.         */
+		std::shared_ptr<Pomodoro>             m_pomodoro;               /** pomodoro object.                             */
+		QPixmap                               m_desktopCapture;         /** pixmap of captured desktop.                  */
+		std::unique_ptr<QSystemTrayIcon>      m_trayIcon;               /** tray icon object.                            */
+		std::unique_ptr<CaptureDesktopThread> m_captureThread;          /** capture and composition thread.              */
+		QMutex                                m_mutex;                  /** mutex for data integrity.                    */
+		QPoint                                m_PIPposition;            /** position of camera image.                    */
+		QPoint                                m_statsPosition;          /** position of pomodoro statistics.             */
+		QTimer                                m_timer;                  /** timer.                                       */
+		unsigned long                         m_secuentialNumber;       /** frame number.                                */
+		bool                                  m_started;                /** true if capturing, false otherwise.          */
+		PomodoroStatistics                   *m_statisticsDialog;       /** Pomodoro statistics dialog object.           */
+		std::shared_ptr<VPX_Interface>        m_vp8_interface;          /** VPX codec interface.                         */
+		float                                 m_scale;                  /** output scale ratio.                          */
+		bool                                  m_paused;                 /** true if pomodoro is paused, false otherwise. */
 
 		QAction *m_menuPause;         /** tray menu pause.                    */
 		QAction *m_menuShowStats;     /** tray menu show pomodoro statistics. */

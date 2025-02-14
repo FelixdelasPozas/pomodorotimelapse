@@ -1,6 +1,10 @@
+cmake_minimum_required (VERSION 3.10.0)
+
 project (DesktopCapture)
 
-cmake_minimum_required (VERSION 2.8.6)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 # Version Number
 set (DESKTOPCAPTURE_VERSION_MAJOR 1)
@@ -12,9 +16,12 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 # Instruct CMake to run moc automatically when needed.
 set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTOUIC ON)
+
+SET(CMAKE_NO_SYSTEM_FROM_IMPORTED ON)
 
 # Find the QtWidgets library
-find_package(Qt5 COMPONENTS Widgets Multimedia)
+find_package(Qt6 COMPONENTS Widgets Multimedia)
 
 if (CMAKE_BUILD_TYPE MATCHES Debug)
   set(CORE_EXTERNAL_LIBS ${CORE_EXTERNAL_LIBS} ${QT_QTTEST_LIBRARY})
@@ -29,12 +36,8 @@ if(DEFINED MINGW)
 endif(DEFINED MINGW)
 
 find_package(OpenCV REQUIRED)
-
-set(LIBVPX_LIBRARY_DIR "D:/Desarrollo/Bibliotecas/libvpx")
-set(LIBYUV_INCLUDE_DIR "D:/Desarrollo/Bibliotecas/libyuv/include")
-
-set(DLIB_INCLUDE_DIR "D:/Desarrollo/Bibliotecas/dlib-19.21")
-set(DLIB_LIBRARY "D:/Desarrollo/Bibliotecas/dlib-build/dlib/libdlib.a")
+find_package(dlib REQUIRED)
+find_package(TBB REQUIRED)
 
 include_directories(
   ${CMAKE_SOURCE_DIR}
@@ -42,21 +45,16 @@ include_directories(
   ${CMAKE_CURRENT_SOURCE_DIR}
   ${CMAKE_BINARY_DIR}          # Generated .h files
   ${CMAKE_CURRENT_BINARY_DIR}  # For wrap/ui files
-  ${LIBVPX_LIBRARY_DIR}
-  ${LIBYUV_INCLUDE_DIR}
-  ${DLIB_INCLUDE_DIR}
   )
 
-set(CMAKE_CXX_FLAGS " -Wall -Wno-deprecated -std=c++11 -fpermissive -mwindows")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${Qt5Widgets_EXECUTABLE_COMPILE_FLAGS}")
+#set(CMAKE_CXX_FLAGS " -Wall -Wno-deprecated -std=c++17 -mwindows")
+set(CMAKE_CXX_FLAGS " -Wall -Wno-deprecated -std=c++17 -mconsole -flarge-source-files")
 
-# Add Qt Resource files
-qt5_add_resources(RESOURCES
+qt6_add_resources(RESOURCES
 	rsc/resources.qrc
 	)
 
-qt5_wrap_ui(CORE_UI
-  # .ui para Qt
+qt6_wrap_ui(CORE_UI
   MainWindow.ui
   ProbeResolutionsDialog.ui
   PomodoroStatistics.ui
@@ -64,7 +62,6 @@ qt5_wrap_ui(CORE_UI
   )
 	
 set (CORE_SOURCES
-  # ficheros para compilar
   ${RESOURCES}
   ${CORE_MOC}
   ${CORE_UI}
@@ -83,25 +80,17 @@ set (CORE_SOURCES
 
 SET_SOURCE_FILES_PROPERTIES(${CORE_SOURCES} PROPERTIES OBJECT_DEPENDS "${CORE_UI}")
 
-set(VPX_LIBS
-  D:/Desarrollo/Bibliotecas/libvpx/libvpx.a
-)
-
-set(YUV_LIBS
-  D:/Desarrollo/Bibliotecas/libyuv-build/libyuv.a
-)
-
 set(CORE_EXTERNAL_LIBS
   ${QT_LIBRARIES}
   ${OpenCV_LIBS}
-  ${VPX_LIBS}
-  ${YUV_LIBS}
-  ${DLIB_LIBRARY}
-  Qt5::Widgets
-  Qt5::Multimedia
+  Qt6::Widgets
+  Qt6::Multimedia
   pthread
+  dlib::dlib
+  libvpx
+  libyuv
+  TBB::tbb
 )
 
 add_executable(DesktopCapture ${CORE_SOURCES})
 target_link_libraries (DesktopCapture ${CORE_EXTERNAL_LIBS})
-qt5_use_modules(DesktopCapture Widgets Multimedia)

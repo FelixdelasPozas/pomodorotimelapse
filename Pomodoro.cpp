@@ -61,18 +61,14 @@ Pomodoro::Pomodoro()
 Pomodoro::~Pomodoro()
 {
 	if (m_status != Status::Stopped)
-	{
 		stop();
-	}
 }
 
 //-----------------------------------------------------------------
 void Pomodoro::setUseSounds(bool value)
 {
 	if (m_status == Status::Stopped)
-	{
 		m_useSounds = value;
-	}
 }
 
 //-----------------------------------------------------------------
@@ -80,8 +76,7 @@ void Pomodoro::startTimers()
 {
 	m_timer.start();
 	m_progressTimer.start();
-	m_startTime = QTime(0,0,0,0);
-	m_startTime.start();
+	m_startTime = QDateTime::currentDateTime();
 	m_progress = 0;
 	m_elapsedMSeconds = 0;
 	updateProgress();
@@ -128,9 +123,8 @@ void Pomodoro::stopTimers()
 	if (m_useSounds && !noSounds)
 	{
 		if (m_continuousTicTac)
-		{
 		  queueSound(Sound::NONE);
-		}
+
 		queueSound(Sound::RING);
 	}
 }
@@ -207,15 +201,13 @@ void Pomodoro::pause()
 	if (Status::Paused != m_status)
 	{
 		// pause timers
-		m_elapsedMSeconds += m_startTime.elapsed();
+		m_elapsedMSeconds += m_startTime.msecsTo(QDateTime::currentDateTime());
 		oldStatus = m_status;
 		m_status = Status::Paused;
 		m_timer.stop();
 		m_progressTimer.stop();
 		if (m_continuousTicTac)
-		{
 		  queueSound(Sound::NONE);
-		}
 	}
 	else
 	{
@@ -249,8 +241,7 @@ void Pomodoro::pause()
 
 		m_status = oldStatus;
 
-		m_startTime = QTime(0, 0, 0, 0);
-		m_startTime.start();
+		m_startTime = QDateTime::currentDateTime();
 		m_timer.setInterval(mSeconds);
 		m_timer.start();
 
@@ -259,9 +250,7 @@ void Pomodoro::pause()
 		m_progressTimer.start();
 
 		if (m_continuousTicTac)
-		{
 		  queueSound(Sound::TICTAC);
-		}
 	}
 }
 
@@ -269,11 +258,9 @@ void Pomodoro::pause()
 unsigned int Pomodoro::elapsed() const
 {
 	if (Status::Paused == m_status)
-	{
 		return m_elapsedMSeconds;
-	}
 
-	return m_elapsedMSeconds + m_startTime.elapsed();
+	return m_elapsedMSeconds + m_startTime.msecsTo(QDateTime::currentDateTime());
 }
 
 //-----------------------------------------------------------------
@@ -315,9 +302,7 @@ void Pomodoro::invalidateCurrent()
 	if (Status::Stopped == m_status) return;
 
 	if(Status::Paused != m_status)
-	{
 	  stopTimers();
-	}
 
 	switch(m_status)
 	{
@@ -367,7 +352,7 @@ void Pomodoro::setLongBreakDuration(QTime duration)
 }
 
 //-----------------------------------------------------------------
-void Pomodoro::setTask(QString taskTitle)
+void Pomodoro::setTaskTitle(QString taskTitle)
 {
 	m_task = taskTitle;
 }
@@ -429,13 +414,9 @@ void Pomodoro::endPomodoro()
 	emit pomodoroEnded();
 
   if ((m_numPomodoros % m_numBeforeBreak) == 0)
-  {
     startLongBreak();
-  }
   else
-  {
     startShortBreak();
-  }
 }
 
 //-----------------------------------------------------------------
@@ -484,18 +465,14 @@ QIcon Pomodoro::icon() const
 void Pomodoro::setSessionPodomodos(unsigned int value)
 {
 	if (m_status == Status::Stopped)
-	{
 		m_sessionPomodoros = value;
-	}
 }
 
 //-----------------------------------------------------------------
 void Pomodoro::setPomodorosBeforeBreak(unsigned int value)
 {
 	if (m_status == Status::Stopped)
-	{
-		this->m_numBeforeBreak = value;
-	}
+		m_numBeforeBreak = value;
 }
 
 //-----------------------------------------------------------------
@@ -514,7 +491,7 @@ QTime Pomodoro::sessionTime() const
 {
   QTime sessionTime{0,0,0,0};
   unsigned long seconds = m_sessionPomodoros * m_pomodoroTime / 1000;
-  auto numLongBreaks = (m_sessionPomodoros / m_numBeforeBreak) - ((m_sessionPomodoros % m_numBeforeBreak == 0) ? 1 : 0);
+  const auto numLongBreaks = (m_sessionPomodoros / m_numBeforeBreak) - ((m_sessionPomodoros % m_numBeforeBreak == 0) ? 1 : 0);
   seconds += numLongBreaks * m_longBreakTime / 1000;
   seconds += (m_sessionPomodoros - numLongBreaks - 1) * m_shortBreakTime / 1000;
 
@@ -524,19 +501,15 @@ QTime Pomodoro::sessionTime() const
 }
 
 //-----------------------------------------------------------------
-QTime Pomodoro::elapsedTime()
+QTime Pomodoro::elapsedTime() const
 {
 	QTime returnTime{0,0,0,0};
 	if (Status::Paused == m_status)
-	{
 		returnTime = returnTime.addMSecs(m_elapsedMSeconds);
-	}
 	else
 	{
 	  if(Status::Stopped != m_status)
-	  {
-	    returnTime = returnTime.addMSecs(m_elapsedMSeconds + m_startTime.elapsed());
-	  }
+	    returnTime = returnTime.addMSecs(m_elapsedMSeconds + m_startTime.msecsTo(QDateTime::currentDateTime()));
 	}
 
 	return returnTime;
@@ -586,9 +559,7 @@ void Pomodoro::queueSound(Sound sound)
   m_playList << sound;
 
   if(m_playList.size() == 1)
-  {
     playNextSound();
-  }
 }
 
 //-----------------------------------------------------------------
@@ -627,7 +598,5 @@ void Pomodoro::timerEvent(QTimerEvent *e)
   m_playList.removeFirst();
 
   if(!m_playList.empty())
-  {
     playNextSound();
-  }
 }

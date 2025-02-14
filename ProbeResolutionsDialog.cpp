@@ -18,25 +18,31 @@
  */
 
 // Project
-#include "ProbeResolutionsDialog.h"
+#include <ProbeResolutionsDialog.h>
+
+// Qt
+#include <QStyleFactory>
 
 //-----------------------------------------------------------------
 ProbeResolutionsDialog::ProbeResolutionsDialog(QWidget *parent, Qt::WindowFlags f)
 : QDialog(parent, f)
 {
 	setupUi(this);
+	setWindowFlags(windowFlags() & ~(Qt::WindowContextHelpButtonHint) & ~(Qt::WindowMaximizeButtonHint) & ~(Qt::WindowMinimizeButtonHint));
+
 	m_progressBar->setValue(0);
+	m_progressBar->setStyle(QStyleFactory::create("fusion"));
 
-	m_thread = new ProbeThread(this);
+	m_thread = std::make_unique<ProbeThread>(this);
 
-	connect(m_thread, SIGNAL(probed(QString)),
-	        this,     SLOT(updateLabel(QString)));
+	connect(m_thread.get(), SIGNAL(probed(QString)),
+	        this,           SLOT(updateLabel(QString)));
 
-	connect(m_thread, SIGNAL(progress(int)),
-	        this,     SLOT(updateProgress(int)));
+	connect(m_thread.get(), SIGNAL(progress(int)),
+	        this,           SLOT(updateProgress(int)));
 
-	connect(m_thread, SIGNAL(finished()),
-	        this,     SLOT(threadFinished()));
+	connect(m_thread.get(), SIGNAL(finished()),
+	        this,           SLOT(threadFinished()));
 
 	connect(this, SIGNAL(rejected()),
 	        this, SLOT(cancelThread()));
@@ -48,7 +54,6 @@ ProbeResolutionsDialog::ProbeResolutionsDialog(QWidget *parent, Qt::WindowFlags 
 ProbeResolutionsDialog::~ProbeResolutionsDialog()
 {
 	m_thread->wait();
-	delete m_thread;
 }
 
 //-----------------------------------------------------------------
@@ -131,13 +136,13 @@ void ProbeThread::run()
 
 		emit probed(QString("%1x%2 - ").arg(resolution.width).arg(resolution.height) + resolution.name);
 
-		auto value = (CommonResolutions.indexOf(resolution)+1)*100/CommonResolutions.size();
+		const auto value = (CommonResolutions.indexOf(resolution)+1)*100/CommonResolutions.size();
 		emit progress(value);
 
 		m_camera.set(cv::CAP_PROP_FRAME_WIDTH, resolution.width);
 		m_camera.set(cv::CAP_PROP_FRAME_HEIGHT, resolution.height);
-		auto width = m_camera.get(cv::CAP_PROP_FRAME_WIDTH);
-		auto height = m_camera.get(cv::CAP_PROP_FRAME_HEIGHT);
+		const auto width = m_camera.get(cv::CAP_PROP_FRAME_WIDTH);
+		const auto height = m_camera.get(cv::CAP_PROP_FRAME_HEIGHT);
 
 		if ((width == resolution.width) && (height == resolution.height))
 		{

@@ -7,19 +7,19 @@
     <x>0</x>
     <y>0</y>
     <width>593</width>
-    <height>584</height>
+    <height>618</height>
    </rect>
   </property>
   <property name="minimumSize">
    <size>
     <width>593</width>
-    <height>584</height>
+    <height>618</height>
    </size>
   </property>
   <property name="maximumSize">
    <size>
     <width>593</width>
-    <height>584</height>
+    <height>618</height>
    </size>
   </property>
   <property name="windowTitle">
@@ -27,7 +27,7 @@
   </property>
   <property name="windowIcon">
    <iconset resource="rsc/resources.qrc">
-    <normaloff>:/DesktopCapture/application-shot.ico</normaloff>:/DesktopCapture/application-shot.ico</iconset>
+    <normaloff>:/DesktopCapture/application-shot.svg</normaloff>:/DesktopCapture/application-shot.svg</iconset>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
@@ -37,7 +37,7 @@
        <item>
         <spacer name="horizontalSpacer">
          <property name="orientation">
-          <enum>Qt::Horizontal</enum>
+          <enum>Qt::Orientation::Horizontal</enum>
          </property>
          <property name="sizeHint" stdset="0">
           <size>
@@ -59,13 +59,13 @@
           <string/>
          </property>
          <property name="pixmap">
-          <pixmap resource="rsc/resources.qrc">:/DesktopCapture/application-shot.ico</pixmap>
+          <pixmap resource="rsc/resources.qrc">:/DesktopCapture/application-shot.svg</pixmap>
          </property>
          <property name="scaledContents">
           <bool>true</bool>
          </property>
          <property name="alignment">
-          <set>Qt::AlignCenter</set>
+          <set>Qt::AlignmentFlag::AlignCenter</set>
          </property>
         </widget>
        </item>
@@ -75,7 +75,6 @@
           <widget class="QLabel" name="label_2">
            <property name="font">
             <font>
-             <weight>75</weight>
              <bold>true</bold>
             </font>
            </property>
@@ -83,7 +82,7 @@
             <string>Desktop Capture</string>
            </property>
            <property name="alignment">
-            <set>Qt::AlignCenter</set>
+            <set>Qt::AlignmentFlag::AlignCenter</set>
            </property>
           </widget>
          </item>
@@ -93,7 +92,7 @@
             <string>version 1.0.0</string>
            </property>
            <property name="alignment">
-            <set>Qt::AlignCenter</set>
+            <set>Qt::AlignmentFlag::AlignCenter</set>
            </property>
           </widget>
          </item>
@@ -103,7 +102,7 @@
             <string>Copyright (c) 2015 Félix de las Pozas Álvarez</string>
            </property>
            <property name="alignment">
-            <set>Qt::AlignCenter</set>
+            <set>Qt::AlignmentFlag::AlignCenter</set>
            </property>
           </widget>
          </item>
@@ -113,7 +112,7 @@
             <string>Compiled on</string>
            </property>
            <property name="alignment">
-            <set>Qt::AlignCenter</set>
+            <set>Qt::AlignmentFlag::AlignCenter</set>
            </property>
           </widget>
          </item>
@@ -122,7 +121,7 @@
        <item>
         <spacer name="horizontalSpacer_2">
          <property name="orientation">
-          <enum>Qt::Horizontal</enum>
+          <enum>Qt::Orientation::Horizontal</enum>
          </property>
          <property name="sizeHint" stdset="0">
           <size>
@@ -137,7 +136,7 @@
      <item>
       <widget class="Line" name="line">
        <property name="orientation">
-        <enum>Qt::Horizontal</enum>
+        <enum>Qt::Orientation::Horizontal</enum>
        </property>
       </widget>
      </item>
@@ -145,7 +144,6 @@
       <widget class="QGroupBox" name="groupBox">
        <property name="font">
         <font>
-         <weight>75</weight>
          <bold>true</bold>
         </font>
        </property>
@@ -166,7 +164,7 @@ QGroupBox::title {
         <string>Powered by</string>
        </property>
        <property name="alignment">
-        <set>Qt::AlignHCenter|Qt::AlignTop</set>
+        <set>Qt::AlignmentFlag::AlignHCenter|Qt::AlignmentFlag::AlignTop</set>
        </property>
        <property name="flat">
         <bool>false</bool>
@@ -192,7 +190,7 @@ QGroupBox::title {
              <bool>true</bool>
             </property>
             <property name="alignment">
-             <set>Qt::AlignCenter</set>
+             <set>Qt::AlignmentFlag::AlignCenter</set>
             </property>
            </widget>
           </item>
@@ -202,7 +200,6 @@ QGroupBox::title {
              <widget class="QLabel" name="label_6">
               <property name="font">
                <font>
-                <weight>75</weight>
                 <bold>true</bold>
                </font>
               </property>
@@ -211,10 +208,10 @@ QGroupBox::title {
 WebM VP8/VP9 Codec SDK</string>
               </property>
               <property name="textFormat">
-               <enum>Qt::AutoText</enum>
+               <enum>Qt::TextFormat::AutoText</enum>
               </property>
               <property name="alignment">
-               <set>Qt::AlignCenter</set>
+               <set>Qt::AlignmentFlag::AlignCenter</set>
               </property>
              </widget>
             </item>
@@ -224,7 +221,7 @@ WebM VP8/VP9 Codec SDK</string>
                <string>version 1.4.0</string>
               </property>
               <property name="alignment">
-               <set>Qt::AlignCenter</set>
+               <set>Qt::AlignmentFlag::AlignCenter</set>
               </property>
              </widget>
             </item>
@@ -236,13 +233,13 @@ WebM VP8/VP9 Codec SDK</string>
              <string>&lt;a href=&quot;https://chromium.googlesource.com/webm/libvpx&quot;&gt;https://chromium.googlesource.com/webm/libvpx&lt;/a&gt;</string>
             </property>
             <property name="textFormat">
-             <enum>Qt::RichText</enum>
+             <enum>Qt::TextFormat::RichText</enum>
             </property>
             <property name="scaledContents">
              <bool>false</bool>
             </property>
             <property name="alignment">
-             <set>Qt::AlignCenter</set>
+             <set>Qt::AlignmentFlag::AlignCenter</set>
             </property>
             <property name="openExternalLinks">
              <bool>true</bool>
@@ -254,7 +251,7 @@ WebM VP8/VP9 Codec SDK</string>
         <item>
          <widget class="Line" name="line_2">
           <property name="orientation">
-           <enum>Qt::Horizontal</enum>
+           <enum>Qt::Orientation::Horizontal</enum>
           </property>
          </widget>
         </item>
@@ -278,7 +275,7 @@ WebM VP8/VP9 Codec SDK</string>
              <bool>true</bool>
             </property>
             <property name="alignment">
-             <set>Qt::AlignCenter</set>
+             <set>Qt::AlignmentFlag::AlignCenter</set>
             </property>
            </widget>
           </item>
@@ -288,7 +285,6 @@ WebM VP8/VP9 Codec SDK</string>
              <widget class="QLabel" name="label_20">
               <property name="font">
                <font>
-                <weight>75</weight>
                 <bold>true</bold>
                </font>
               </property>
@@ -297,7 +293,7 @@ WebM VP8/VP9 Codec SDK</string>
 YUV conversion and scaling functionality</string>
               </property>
               <property name="alignment">
-               <set>Qt::AlignCenter</set>
+               <set>Qt::AlignmentFlag::AlignCenter</set>
               </property>
              </widget>
             </item>
@@ -307,7 +303,7 @@ YUV conversion and scaling functionality</string>
                <string>version 1348</string>
               </property>
               <property name="alignment">
-               <set>Qt::AlignCenter</set>
+               <set>Qt::AlignmentFlag::AlignCenter</set>
               </property>
              </widget>
             </item>
@@ -319,7 +315,7 @@ YUV conversion and scaling functionality</string>
              <string>&lt;a href=&quot;https://code.google.com/p/libyuv/&quot;&gt;https://code.google.com/p/libyuv/&lt;/a&gt;</string>
             </property>
             <property name="alignment">
-             <set>Qt::AlignCenter</set>
+             <set>Qt::AlignmentFlag::AlignCenter</set>
             </property>
             <property name="openExternalLinks">
              <bool>true</bool>
@@ -331,7 +327,7 @@ YUV conversion and scaling functionality</string>
         <item>
          <widget class="Line" name="line_5">
           <property name="orientation">
-           <enum>Qt::Horizontal</enum>
+           <enum>Qt::Orientation::Horizontal</enum>
           </property>
          </widget>
         </item>
@@ -365,7 +361,6 @@ YUV conversion and scaling functionality</string>
              <widget class="QLabel" name="label_12">
               <property name="font">
                <font>
-                <weight>75</weight>
                 <bold>true</bold>
                </font>
               </property>
@@ -374,7 +369,7 @@ YUV conversion and scaling functionality</string>
 dLib C++ Library</string>
               </property>
               <property name="alignment">
-               <set>Qt::AlignCenter</set>
+               <set>Qt::AlignmentFlag::AlignCenter</set>
               </property>
              </widget>
             </item>
@@ -384,7 +379,7 @@ dLib C++ Library</string>
                <string>version 18.16</string>
               </property>
               <property name="alignment">
-               <set>Qt::AlignCenter</set>
+               <set>Qt::AlignmentFlag::AlignCenter</set>
               </property>
              </widget>
             </item>
@@ -396,7 +391,7 @@ dLib C++ Library</string>
              <string>&lt;a href=&quot;http://dlib.net&quot;&gt;http://dlib.net&lt;/a&gt;</string>
             </property>
             <property name="alignment">
-             <set>Qt::AlignCenter</set>
+             <set>Qt::AlignmentFlag::AlignCenter</set>
             </property>
            </widget>
           </item>
@@ -405,7 +400,7 @@ dLib C++ Library</string>
         <item>
          <widget class="Line" name="line_3">
           <property name="orientation">
-           <enum>Qt::Horizontal</enum>
+           <enum>Qt::Orientation::Horizontal</enum>
           </property>
          </widget>
         </item>
@@ -436,7 +431,6 @@ dLib C++ Library</string>
              <widget class="QLabel" name="label_24">
               <property name="font">
                <font>
-                <weight>75</weight>
                 <bold>true</bold>
                </font>
               </property>
@@ -445,7 +439,7 @@ dLib C++ Library</string>
 Open Source Computer Vision Library</string>
               </property>
               <property name="alignment">
-               <set>Qt::AlignCenter</set>
+               <set>Qt::AlignmentFlag::AlignCenter</set>
               </property>
              </widget>
             </item>
@@ -455,7 +449,7 @@ Open Source Computer Vision Library</string>
                <string>version 2.4.11</string>
               </property>
               <property name="alignment">
-               <set>Qt::AlignCenter</set>
+               <set>Qt::AlignmentFlag::AlignCenter</set>
               </property>
              </widget>
             </item>
@@ -467,7 +461,7 @@ Open Source Computer Vision Library</string>
              <string>&lt;a href=&quot;http://opencv.org&quot;&gt;http://opencv.org&lt;/a&gt;</string>
             </property>
             <property name="alignment">
-             <set>Qt::AlignCenter</set>
+             <set>Qt::AlignmentFlag::AlignCenter</set>
             </property>
             <property name="openExternalLinks">
              <bool>true</bool>
@@ -479,7 +473,7 @@ Open Source Computer Vision Library</string>
         <item>
          <widget class="Line" name="line_6">
           <property name="orientation">
-           <enum>Qt::Horizontal</enum>
+           <enum>Qt::Orientation::Horizontal</enum>
           </property>
          </widget>
         </item>
@@ -513,16 +507,14 @@ Open Source Computer Vision Library</string>
              <widget class="QLabel" name="label_26">
               <property name="font">
                <font>
-                <weight>75</weight>
                 <bold>true</bold>
                </font>
               </property>
               <property name="text">
-               <string>libqt opensource
-Qt Framework</string>
+               <string>Qt Library</string>
               </property>
               <property name="alignment">
-               <set>Qt::AlignCenter</set>
+               <set>Qt::AlignmentFlag::AlignCenter</set>
               </property>
              </widget>
             </item>
@@ -532,7 +524,7 @@ Qt Framework</string>
                <string>version 5.7.0</string>
               </property>
               <property name="alignment">
-               <set>Qt::AlignCenter</set>
+               <set>Qt::AlignmentFlag::AlignCenter</set>
               </property>
              </widget>
             </item>
@@ -544,7 +536,7 @@ Qt Framework</string>
              <string>&lt;a href=&quot;http://www.qt.io/&quot;&gt;http://www.qt.io/&lt;/a&gt;</string>
             </property>
             <property name="alignment">
-             <set>Qt::AlignCenter</set>
+             <set>Qt::AlignmentFlag::AlignCenter</set>
             </property>
             <property name="openExternalLinks">
              <bool>true</bool>
@@ -564,7 +556,7 @@ Qt Framework</string>
       <string>Icons courtesy of &lt;a href=&quot;https://www.svgrepo.com&quot;&gt;SVG Repo&lt;/a&gt;</string>
      </property>
      <property name="alignment">
-      <set>Qt::AlignCenter</set>
+      <set>Qt::AlignmentFlag::AlignCenter</set>
      </property>
      <property name="openExternalLinks">
       <bool>true</bool>
@@ -574,7 +566,7 @@ Qt Framework</string>
    <item>
     <widget class="Line" name="line_4">
      <property name="orientation">
-      <enum>Qt::Horizontal</enum>
+      <enum>Qt::Orientation::Horizontal</enum>
      </property>
     </widget>
    </item>
@@ -587,7 +579,7 @@ Qt Framework</string>
       <string>If you want to support this project you can do it on &lt;a href=&quot;https://ko-fi.com/felixdelaspozas&quot;&gt;Ko-fi&lt;/a&gt;</string>
      </property>
      <property name="alignment">
-      <set>Qt::AlignCenter</set>
+      <set>Qt::AlignmentFlag::AlignCenter</set>
      </property>
     </widget>
    </item>
@@ -596,7 +588,7 @@ Qt Framework</string>
      <item>
       <spacer name="horizontalSpacer_4">
        <property name="orientation">
-        <enum>Qt::Horizontal</enum>
+        <enum>Qt::Orientation::Horizontal</enum>
        </property>
        <property name="sizeHint" stdset="0">
         <size>
@@ -622,7 +614,7 @@ Qt Framework</string>
      <item>
       <spacer name="horizontalSpacer_3">
        <property name="orientation">
-        <enum>Qt::Horizontal</enum>
+        <enum>Qt::Orientation::Horizontal</enum>
        </property>
        <property name="sizeHint" stdset="0">
         <size>
@@ -643,10 +635,10 @@ Qt Framework</string>
       </size>
      </property>
      <property name="orientation">
-      <enum>Qt::Horizontal</enum>
+      <enum>Qt::Orientation::Horizontal</enum>
      </property>
      <property name="standardButtons">
-      <set>QDialogButtonBox::Ok</set>
+      <set>QDialogButtonBox::StandardButton::Ok</set>
      </property>
     </widget>
    </item>

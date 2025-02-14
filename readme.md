@@ -47,7 +47,9 @@ The following libraries are required:
 
 # Install
 
-Download the latest installer from the [releases page](https://github.com/FelixdelasPozas/pomodorotimelapse/releases). Supported versions are from Windows 7 onwards. Neither the application or the installer are digitally signed so the system will ask for approval before running it the first time.
+DesktopCapture is available for Windows 10 onwards. You can download the latest installer from the [releases page](https://github.com/FelixdelasPozas/pomodorotimelapse/releases). Neither the application or the installers are digitally signed so the system will ask for approval before running it the first time.
+
+The last version supporting Windows 7 & 8 is 1.2.0, you can download it [here](https://github.com/FelixdelasPozas/pomodorotimelapse/releases/tag/1.2.0).
 
 # Screenshots
 Main dialog with the configuration options showing a preview of the captured area (whole 3840x1080 desktop) and the current position of the overlayed images (both camera and pomodoro statistics). Yeah, I always code with my monocle or my awesome face! ;-P
@@ -70,9 +72,9 @@ If the pomodoro timer is being used the statistics can be shown and the current 
 
 **cloc statistics**
 
-| Language                     |files          |blank        |comment           |code  |
-|:-----------------------------|--------------:|------------:|-----------------:|-----:|
-| C++                          |   10          |  754        |   420            | 3474
-| C/C++ Header                 |   11          |  328        |    829           | 793  |
-| CMake                        |    1          |   20        |      7           |  80  |
-| **Total**                    | **22**        | **1102**    | **1256**         | **4347** |
+| Language                     |files          |blank        |comment      |code  |
+|:-----------------------------|--------------:|------------:|------------:|-----:|
+| C++                          |   10          |  740        |   422       | 3107 |
+| C/C++ Header                 |   11          |  332        |   835       | 838  |
+| CMake                        |    1          |   18        |     5       |  73  |
+| **Total**                    | **22**        | **1090**    | **1262**    | **4018** |

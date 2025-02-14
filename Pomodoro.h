@@ -22,7 +22,7 @@
 
 // Qt
 #include <QTimer>
-#include <QTime>
+#include <QDateTime>
 #include <QStringList>
 #include <QObject>
 #include <QString>
@@ -104,7 +104,7 @@ class Pomodoro
      * \param[in] title task description.
      *
      */
-		void setTask(QString title);
+		void setTaskTitle(QString title);
 
     /** \brief Enables/disables the continuous tic-tac sound while the pomodoro is running.
      * \param[in] enabled boolean value
@@ -165,7 +165,7 @@ class Pomodoro
     /** \brief Returns the current task.
      *
      */
-		QString getTask() const
+		QString getTaskTitle() const
 		{ return m_task; };
 
     /** \brief Returns the completed pomodoros and their tasks.
@@ -205,14 +205,23 @@ class Pomodoro
     /** \brief Returns the time elapsed since the beginning of the current unit.
      *
      */
-		QTime elapsedTime();
+		QTime elapsedTime() const;
 
     /** \brief Resets the session.
      *
      */
 		void clear();
 
-    enum class Status: char { Pomodoro = 1, ShortBreak, LongBreak, Stopped, Paused };
+    /** \brief Pomodoro states.
+     */
+    enum class Status : char
+    {
+      Pomodoro = 1,
+      ShortBreak,
+      LongBreak,
+      Stopped,
+      Paused
+    };
 
     /** \brief Returns the current status of the session (Stopped/Paused/Current unit).
      *
@@ -236,7 +245,7 @@ class Pomodoro
 		void sessionEnded();
 
 	protected:
-		void timerEvent(QTimerEvent *e);
+		virtual void timerEvent(QTimerEvent *e) override;
 
 	private slots:
     /** \brief Updates the pomodoro icon for the completed unit intervals.
@@ -260,7 +269,16 @@ class Pomodoro
 	  void endLongBreak();
 
 	private:
-    enum class Sound { CRANK, TICTAC, RING, NONE };
+    /** \brief Types of sounds
+     */
+    enum class Sound
+    {
+      CRANK,
+      TICTAC,
+      RING,
+      NONE
+    };
+    
     static const int LENGTH_CRANK  = 530;
     static const int LENGTH_TICTAC = 450;
     static const int LENGTH_RING   = 1300;
@@ -317,7 +335,7 @@ class Pomodoro
     bool          m_continuousTicTac;    /** Continuous tic-tac sound.                                      */
     unsigned int  m_sessionPomodoros;    /** Number of pomodoros in a session.                              */
     bool          m_useSounds;           /** Use sounds.                                                    */
-    QTime         m_startTime;           /** Start time of the last interval, used for pausing.             */
+    QDateTime     m_startTime;           /** Start time of the last interval, used for pausing.             */
     unsigned int  m_elapsedMSeconds;     /** Elapsed seconds since the last time m_timer started.           */
     QMap<int, QString> m_completedTasks; /** Task names of completed pomodoros.                             */
 

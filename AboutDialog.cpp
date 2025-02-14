@@ -37,18 +37,17 @@
 #include <QUrl>
 #include <QDateTime>
 
-const QString AboutDialog::VERSION = QString("version 1.1.0");
+const QString AboutDialog::VERSION = QString("version 1.2.0");
 
 //-----------------------------------------------------------------
 AboutDialog::AboutDialog(QWidget *parent, Qt::WindowFlags f)
 : QDialog(parent, f)
 {
   setupUi(this);
-
   setWindowFlags(windowFlags() & ~(Qt::WindowContextHelpButtonHint) & ~(Qt::WindowMaximizeButtonHint) & ~(Qt::WindowMinimizeButtonHint));
 
-  auto compilation_date = QString(__DATE__);
-  auto compilation_time = QString(" (") + QString(__TIME__) + QString(")");
+  const auto compilation_date = QString(__DATE__);
+  const auto compilation_time = QString(" (") + QString(__TIME__) + QString(")");
 
   m_compilationDate->setText(tr("Compiled on ") + compilation_date + compilation_time);
   m_version->setText(VERSION);

@@ -21,7 +21,7 @@
 #define POMODORO_STATISTICS_H_
 
 // Project
-#include "Pomodoro.h"
+#include <Pomodoro.h>
 #include "ui_PomodoroStatistics.h"
 
 // Qt

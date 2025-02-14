@@ -18,8 +18,8 @@
  */
 
 // Project
-#include "webmEBMLwriter.h"
-#include "webmIDs.h"
+#include <webmEBMLwriter.h>
+#include <webmIDs.h>
 
 // C++
 #include <stdlib.h>
@@ -35,9 +35,7 @@ unsigned int murmur(const void *key, int len, unsigned int seed)
 {
 	const unsigned int m = 0x5bd1e995;
 	const int r = 24;
-
 	unsigned int h = seed ^ len;
-
 	const unsigned char *data = (const unsigned char *) key;
 
 	while (len >= 4)
@@ -134,9 +132,7 @@ void Ebml_WriteLen(EbmlGlobal *global, int64_t val)
 	for (size = 1; size < 8; size++)
 	{
 		if (val < minVal)
-		{
 			break;
-		}
 
 		minVal = (minVal << 7);
 	}
@@ -153,7 +149,7 @@ void Ebml_WriteString(EbmlGlobal *global, const char *str)
 	const uint64_t size = size_;
 	Ebml_WriteLen(global, size);
 	/* TODO: it's not clear from the spec whether the null terminator
-	 * should be serialized too.  For now we omit it.
+	 * should be serialized too. For now we omit it.
 	 */
 	Ebml_Write(global, str, (unsigned long) size);
 }
@@ -164,25 +160,17 @@ void Ebml_WriteID(EbmlGlobal *global, unsigned long class_id)
 	int len;
 
 	if (class_id >= 0x01000000)
-	{
 		len = 4;
-	}
 	else
 	{
 		if (class_id >= 0x00010000)
-		{
 			len = 3;
-		}
 		else
 		{
 			if (class_id >= 0x00000100)
-			{
 				len = 2;
-			}
 			else
-			{
 				len = 1;
-			}
 		}
 	}
 
@@ -192,7 +180,7 @@ void Ebml_WriteID(EbmlGlobal *global, unsigned long class_id)
 //------------------------------------------------------------------
 void Ebml_SerializeUnsigned64(EbmlGlobal *global, unsigned long class_id, uint64_t ui)
 {
-	unsigned char sizeSerialized = 8 | 0x80;
+	const unsigned char sizeSerialized = 8 | 0x80;
 	Ebml_WriteID(global, class_id);
 	Ebml_Serialize(global, &sizeSerialized, sizeof(sizeSerialized), 1);
 	Ebml_Serialize(global, &ui, sizeof(ui), 8);
@@ -220,9 +208,7 @@ void Ebml_SerializeUnsigned(EbmlGlobal *global, unsigned long class_id, unsigned
 	for (size = 1; size < 4; size++)
 	{
 		if (ui < minVal)
-		{
 			break;
-		}
 
 		minVal <<= 7;
 	}
@@ -239,9 +225,7 @@ void Ebml_SerializeBinary(EbmlGlobal *global, unsigned long class_id, unsigned l
 	for (size = 4; size > 1; size--)
 	{
 		if (bin & (unsigned int) 0x000000ff << ((size - 1) * 8))
-		{
 		  break;
-		}
 	}
 	Ebml_WriteID(global, class_id);
 	Ebml_WriteLen(global, size);
@@ -251,8 +235,7 @@ void Ebml_SerializeBinary(EbmlGlobal *global, unsigned long class_id, unsigned l
 //------------------------------------------------------------------
 void Ebml_SerializeFloat(EbmlGlobal *global, unsigned long class_id, double d)
 {
-	unsigned char len = 0x88;
-
+	const unsigned char len = 0x88;
 	Ebml_WriteID(global, class_id);
 	Ebml_Serialize(global, &len, sizeof(len), 1);
 	Ebml_Serialize(global, &d, sizeof(d), 8);
@@ -319,13 +302,9 @@ void write_webm_seek_info(EbmlGlobal *global)
 	pos = ftello(global->stream);
 
 	if (global->seek_info_pos)
-	{
 		fseeko(global->stream, global->seek_info_pos, SEEK_SET);
-	}
 	else
-	{
 		global->seek_info_pos = pos;
-	}
 
 	Ebml_StartSubElement(global, &start, SeekHead);
 	write_webm_seek_element(global, Tracks, global->track_pos);
@@ -416,29 +395,22 @@ void write_webm_block(EbmlGlobal *global, const vpx_codec_enc_cfg_t *cfg, const 
 	pts_ms = pkt->data.frame.pts * 1000 * static_cast<uint64_t>(cfg->g_timebase.num) / (uint64_t) cfg->g_timebase.den;
 
 	if (pts_ms <= global->last_pts_ms)
-	{
 		pts_ms = global->last_pts_ms + 1;
-	}
 
 	global->last_pts_ms = pts_ms;
 
 	/* Calculate the relative time of this block. */
 	if (pts_ms - global->cluster_timecode > SHRT_MAX)
-	{
 		start_cluster = 1;
-	}
 	else
-	{
 		block_timecode = static_cast<uint16_t>(pts_ms) - global->cluster_timecode;
-	}
 
 	is_keyframe = (pkt->data.frame.flags & VPX_FRAME_IS_KEY);
 	if (start_cluster || is_keyframe)
 	{
 		if (global->cluster_open)
-		{
 			Ebml_EndSubElement(global, &global->startCluster);
-		}
+
 		/* Open the new cluster. */
 		block_timecode = 0;
 		global->cluster_open = 1;
@@ -454,9 +426,7 @@ void write_webm_block(EbmlGlobal *global, const vpx_codec_enc_cfg_t *cfg, const 
 
 			new_cue_list = static_cast<struct cue_entry *>(realloc(global->cue_list, (global->cues + 1) * sizeof(struct cue_entry)));
 			if (new_cue_list)
-			{
 				global->cue_list = new_cue_list;
-			}
 			else
 			{
 				qDebug("Failed to realloc cue list.");
@@ -484,14 +454,11 @@ void write_webm_block(EbmlGlobal *global, const vpx_codec_enc_cfg_t *cfg, const 
 
 	flags = 0;
 	if (is_keyframe)
-	{
 		flags |= 0x80;
-	}
 
 	if (pkt->data.frame.flags & VPX_FRAME_IS_INVISIBLE)
-	{
 		flags |= 0x08;
-	}
+
 	Ebml_Write(global, &flags, 1);
 
 	Ebml_Write(global, pkt->data.frame.buf, (unsigned int) pkt->data.frame.sz);
@@ -506,9 +473,7 @@ void write_webm_file_footer(EbmlGlobal *global, int hash)
 	unsigned int i;
 
 	if (global->cluster_open)
-	{
 		Ebml_EndSubElement(global, &global->startCluster);
-	}
 
 	global->cue_pos = ftello(global->stream);
 	Ebml_StartSubElement(global, &start_cues, Cues);

@@ -18,7 +18,7 @@
  */
 
 // Project
-#include "DesktopCapture.h"
+#include <DesktopCapture.h>
 
 // Qt
 #include <QApplication>
@@ -31,7 +31,6 @@ int main(int argc, char *argv[])
 
 	// NOTE: this is needed to use QPixmaps inside threads,
 	// but only on linux because of X11 architecture.
-	app.setAttribute(Qt::AA_X11InitThreads, true);
 	app.setQuitOnLastWindowClosed(false);
 
 	// allow only one instance
@@ -51,7 +50,11 @@ int main(int argc, char *argv[])
 
 	DesktopCapture desktopCapture;
 	desktopCapture.show();
-	return app.exec();
+
+  const auto returnValue = app.exec();
+  qDebug() << "Application finished with return value" << returnValue;
+  
+	return returnValue;
 }
 
 

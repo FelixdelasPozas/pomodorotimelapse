@@ -28,7 +28,7 @@
 #include <QInputDialog>
 #include <QPainter>
 #include <QFontMetrics>
-#include <QDebug>
+#include <QStyleFactory>
 
 //-----------------------------------------------------------------
 PomodoroStatistics::PomodoroStatistics(std::shared_ptr<Pomodoro> pomodoro, QWidget* parent, Qt::WindowFlags f)
@@ -38,11 +38,10 @@ PomodoroStatistics::PomodoroStatistics(std::shared_ptr<Pomodoro> pomodoro, QWidg
 , m_result{Result::None}
 {
 	setupUi(this);
-	setWindowFlags(Qt::Window | Qt::CustomizeWindowHint | Qt::WindowTitleHint| Qt::WindowSystemMenuHint);
-	setWindowTitle("Pomodoro Statistics");
-	setWindowIcon(QIcon(":/DesktopCapture/2.ico"));
+	setWindowFlags(Qt::Window|Qt::CustomizeWindowHint|Qt::WindowTitleHint|Qt::WindowSystemMenuHint);
 
 	m_status->setTextFormat(Qt::RichText);
+	m_progress->setStyle(QStyleFactory::create("fusion"));
 
   connect(m_pomodoro.get(), SIGNAL(beginPomodoro()),
           this,             SLOT(updateGUI()));
@@ -69,7 +68,8 @@ PomodoroStatistics::PomodoroStatistics(std::shared_ptr<Pomodoro> pomodoro, QWidg
 	        this,   SLOT(pause()));
 
 	if(m_pomodoro->status() != Pomodoro::Status::Stopped)
-	{		m_timer.setInterval(1000);
+	{
+		m_timer.setInterval(1000);
 		m_timer.setSingleShot(false);
 
 		connect(&m_timer, SIGNAL(timeout()),
@@ -170,8 +170,8 @@ void PomodoroStatistics::updateProgress()
   totalSecs += time.secsTo(m_pomodoro->getShortBreakDuration()) * m_pomodoro->completedShortBreaks();
   totalSecs += time.secsTo(m_pomodoro->getLongBreakDuration()) * m_pomodoro->completedLongBreaks();
 
-  auto elapsedSecs = time.secsTo(m_pomodoro->elapsedTime());
-  auto sessionSecs = time.secsTo(m_pomodoro->sessionTime());
+  const auto elapsedSecs = time.secsTo(m_pomodoro->elapsedTime());
+  const auto sessionSecs = time.secsTo(m_pomodoro->sessionTime());
 
   m_progress->setValue(((totalSecs+elapsedSecs)*100)/sessionSecs);
 }
@@ -252,8 +252,7 @@ void PomodoroStatistics::updateGUI()
 	}
 
 	m_completedTime->setText(totalTime.toString(Qt::TextDate));
-
-	m_taskName->setText(m_pomodoro->getTask());
+	m_taskName->setText(m_pomodoro->getTaskTitle());
 
 	repaint();
 }
@@ -262,15 +261,15 @@ void PomodoroStatistics::updateGUI()
 void PomodoroStatistics::updateTask()
 {
 	 bool ok;
-	 auto text = QInputDialog::getText(this,
-			                               tr("Enter task name"),
-			                               tr("Task name:"),
-			                               QLineEdit::Normal,
-			                               m_taskName->text(), &ok);
+	 const auto text = QInputDialog::getText(this,
+			                                     tr("Enter task name"),
+			                                     tr("Task name:"),
+			                                     QLineEdit::Normal,
+			                                     m_taskName->text(), &ok);
 	 if (ok && !text.isEmpty())
 	 {
 		 m_taskName->setText(text);
-		 m_pomodoro->setTask(m_taskName->text());
+		 m_pomodoro->setTaskTitle(m_taskName->text());
 	 }
 
 	 m_taskButton->setDown(false);

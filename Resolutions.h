@@ -39,14 +39,14 @@ struct Resolution
 
 	bool operator==(const Resolution &lhs) const
 	{
-		return ((lhs.name == name) && (lhs.width == width) && (lhs.height == height));
+		return ((lhs.name.compare(name, Qt::CaseInsensitive) == 0) && (lhs.width == width) && (lhs.height == height));
 	}
 };
 
 
 using ResolutionList = QList<Resolution>;
 
-//
+// List of common resolutions according to Wikipedia.
 static const ResolutionList CommonResolutions = { { QString("SQCIF"), 128, 96 },
 																									{ QString("QQVGA"), 160, 120 },
 																									{ QString("QCIF"), 176, 144 },

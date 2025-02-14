@@ -22,12 +22,15 @@
 #define PROBERESOLUTIONSDIALOG_H_
 
 // Project
-#include "Resolutions.h"
+#include <Resolutions.h>
 #include "ui_ProbeResolutionsDialog.h"
 
 // Qt
 #include <QDialog>
 #include <QThread>
+
+// C++
+#include <memory>
 
 // OpenCV
 #include <opencv2/highgui/highgui.hpp>
@@ -128,8 +131,8 @@ class ProbeResolutionsDialog
 		void cancelThread();
 
 	private:
-		ProbeThread    *m_thread;
-		ResolutionList  m_availableResolutions;
+		std::unique_ptr<ProbeThread> m_thread;               /** resolution scanning thread.   */
+		ResolutionList               m_availableResolutions; /** found available resolutions.  */
 };
 
 

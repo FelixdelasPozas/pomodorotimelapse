@@ -30,7 +30,7 @@
  */
 class AboutDialog
 : public QDialog
-, public Ui_AboutDialog
+, public Ui::AboutDialog
 {
     Q_OBJECT
   public:
