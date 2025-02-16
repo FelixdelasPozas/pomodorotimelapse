@@ -35,6 +35,7 @@
 #include <QMutexLocker>
 #include <QFont>
 #include <QFontMetrics>
+#include <QFontDatabase>
 #include <QRgb>
 #include <QDir>
 #include <QScreen>
@@ -74,13 +75,15 @@ CaptureDesktopThread::CaptureDesktopThread(int monitor, Resolution cameraResolut
 , m_paused         {false}
 , m_cameraEnabled  {false}
 , m_compositionMode{COMPOSITION_MODE::COPY}
+, m_statisticsMode {COMPOSITION_MODE::COPY}
 , m_drawFrame      {false}
 , m_mask           {MASK::NONE}
 , m_trackFace      {false}
-, m_statisticsMode {COMPOSITION_MODE::COPY}
+, m_trackFaceSmooth{false}
 , m_ASCII_Art      {false}
 , m_ramp           {0}
 , m_rampCharSize   {10}
+, m_timeTextSize   {40}
 , m_pomodoro       {nullptr}
 {
 	setMonitor(monitor);
@@ -93,9 +96,11 @@ CaptureDesktopThread::CaptureDesktopThread(int monitor, Resolution cameraResolut
 	else
 		m_cameraEnabled = false;
 
+  QApplication::setOverrideCursor(Qt::WaitCursor);
   m_faceDetector = dlib::get_frontal_face_detector();
-  auto shapeFile = std::unique_ptr<QTemporaryFile>(QTemporaryFile::createNativeFile(":/DesktopCapture/shape_predictor_68_face_landmarks.dat"));
+  auto shapeFile = std::unique_ptr<QTemporaryFile>(QTemporaryFile::createNativeFile(":/Face/shape_predictor_68_face_landmarks.dat"));
   dlib::deserialize(shapeFile->fileName().toStdString().c_str()) >> m_faceShape;
+  QApplication::restoreOverrideCursor();
 }
 
 //-----------------------------------------------------------------
@@ -208,6 +213,12 @@ void CaptureDesktopThread::setCameraOverlayPosition(const POSITION position)
 }
 
 //-----------------------------------------------------------------
+QPoint CaptureDesktopThread::getTimeOverlayPosition() const
+{
+  return m_timePosition;
+}
+
+//-----------------------------------------------------------------
 void CaptureDesktopThread::run()
 {
 	setPriority(Priority::NormalPriority);
@@ -304,6 +315,15 @@ void CaptureDesktopThread::setTrackFace(bool enabled)
 }
 
 //-----------------------------------------------------------------
+void CaptureDesktopThread::setTrackFaceSmooth(bool enabled)
+{
+  QMutexLocker lock(&m_mutex);
+
+  if(enabled != m_trackFaceSmooth)
+    m_trackFaceSmooth = enabled;
+}
+
+//-----------------------------------------------------------------
 void CaptureDesktopThread::setCameraAsASCII(bool enabled)
 {
   QMutexLocker lock(&m_mutex);
@@ -313,11 +333,25 @@ void CaptureDesktopThread::setCameraAsASCII(bool enabled)
 }
 
 //-----------------------------------------------------------------
+void CaptureDesktopThread::setTimeOverlayTextSize(int value)
+{
+  m_timeTextSize = value;
+}
+
+//-----------------------------------------------------------------
 void CaptureDesktopThread::drawMask(QImage& cameraImage, dlib::full_object_detection shapes)
 {
   static CircularBuffer<QPoint> leftEyes;
-  // static CircularBuffer<QPoint> rightEyes;
-  // static CircularBuffer<QPoint> mouths;
+  static CircularBuffer<QPoint> rightEyes;
+  static CircularBuffer<QPoint> mouths;
+  static bool previousSmoothValue = true;
+
+  if(m_trackFaceSmooth != previousSmoothValue)
+  {
+    leftEyes.clear();
+    rightEyes.clear();
+    mouths.clear();
+  }
 
   const auto maskIndex = static_cast<int>(m_mask);
 
@@ -330,8 +364,8 @@ void CaptureDesktopThread::drawMask(QImage& cameraImage, dlib::full_object_detec
   }
   lx /= 6;
   ly /= 6;
-  leftEyes.add(QPoint{lx,ly});
-
+  if(m_trackFaceSmooth)
+    leftEyes.add(QPoint{lx,ly});
 
   // right eye coordinate
   int rx = 0, ry = 0;
@@ -342,22 +376,26 @@ void CaptureDesktopThread::drawMask(QImage& cameraImage, dlib::full_object_detec
   }
   rx /= 6;
   ry /= 6;
-  // rightEyes.add(QPoint{rx,ry});
+  if(m_trackFaceSmooth)
+    rightEyes.add(QPoint{rx,ry});
 
   // mouth coordinate
   int mx = shapes.part(51).x();
   int my = shapes.part(51).y();
-  // mouths.add(QPoint{mx,my});
+  if(m_trackFaceSmooth) 
+  {
+    mouths.add(QPoint{mx,my});
 
-  const auto leftEye = leftEyes.value();
-  // const auto rightEye = rightEyes.value();
-  // const auto mouth = mouths.value();
-  lx = leftEye.x();
-  ly = leftEye.y();
-  // rx = rightEye.x();
-  // ry = rightEye.y();
-  // mx = mouth.x();
-  // my = mouth.y();
+    const auto leftEye = leftEyes.value();
+    const auto rightEye = rightEyes.value();
+    const auto mouth = mouths.value();
+    lx = leftEye.x();
+    ly = leftEye.y();
+    rx = rightEye.x();
+    ry = rightEye.y();
+    mx = mouth.x();
+    my = mouth.y();
+  }
  
   // Transform and paint the mask.
   QImage mask;
@@ -385,7 +423,7 @@ void CaptureDesktopThread::drawMask(QImage& cameraImage, dlib::full_object_detec
 }
 
 //-----------------------------------------------------------------
-void CaptureDesktopThread::drawFrame(QImage &image)
+void CaptureDesktopThread::drawCameraImageFrame(QImage &image)
 {
   const QPoint middle(m_cameraPosition.x() + m_cameraResolution.width/2, m_cameraPosition.y() + m_cameraResolution.height/2);
   const int minimum = ((m_cameraResolution.width/2 < m_cameraResolution.height/2) ? m_cameraResolution.width/8 : m_cameraResolution.height/8);
@@ -486,6 +524,40 @@ void CaptureDesktopThread::setStatisticsOverlayCompositionMode(const COMPOSITION
 }
 
 //-----------------------------------------------------------------
+void CaptureDesktopThread::setTimeOverlayEnabled(bool value)
+{
+  m_timeOverlayEnabled = value;
+}
+
+//-----------------------------------------------------------------
+void CaptureDesktopThread::setTimeOverlayPosition(const QPoint &point)
+{
+	QMutexLocker lock(&m_mutex);
+
+	m_timePosition = point;
+
+  const auto timeRect = computeTimeOverlayRect(m_timeTextSize, m_timePosition);
+  const int xLimit = m_geometry.width() - timeRect.width();
+  const int yLimit = m_geometry.height() - timeRect.height();
+
+	if (m_timePosition.x() < 0) m_timePosition.setX(0);
+	if (m_timePosition.y() < 0) m_timePosition.setY(0);
+
+	if (m_timePosition.x() > xLimit) m_timePosition.setX(xLimit);
+	if (m_timePosition.y() > yLimit) m_timePosition.setY(yLimit);
+}
+
+//-----------------------------------------------------------------
+void CaptureDesktopThread::setTimeOverlayPosition(const POSITION position)
+{
+  if(position != POSITION::FREE)
+  {
+    const auto timeRect = computeTimeOverlayRect(m_timeTextSize, QPoint{0,0});
+    m_timePosition = computePosition(position, timeRect);
+  }
+}
+
+//-----------------------------------------------------------------
 QImage CaptureDesktopThread::MatToQImage(const cv::Mat& mat)
 {
   if (mat.type() == CV_8UC1) // 8-bits unsigned, NO. OF CHANNELS=1
@@ -579,7 +651,7 @@ void CaptureDesktopThread::overlayCameraImage(QImage &baseImage, QImage &overlay
   painter.end();
 
   if (m_drawFrame)
-    drawFrame(baseImage);
+    drawCameraImageFrame(baseImage);
 }
 
 //-----------------------------------------------------------------
@@ -681,7 +753,6 @@ void CaptureDesktopThread::overlayPomodoro(QImage &image)
 	static unsigned long total = 0;
 	const auto compositionMode = COMPOSITION_MODES_QT.at(static_cast<int>(m_statisticsMode));
 
-  QMutexLocker lock(&m_mutex);
 	QPainter painter(&image);
 	painter.setCompositionMode(compositionMode);
 
@@ -791,6 +862,49 @@ void CaptureDesktopThread::overlayPomodoro(QImage &image)
 }
 
 //-----------------------------------------------------------------
+void CaptureDesktopThread::overlayTime(QImage &baseImage)
+{
+  const auto timeRect = computeTimeOverlayRect(m_timeTextSize, m_timePosition);
+  const QPoint diff{static_cast<int>(timeRect.width()*0.1), static_cast<int>(timeRect.height()*0.05)};
+  const auto textRect = QRect{QPoint{timeRect.topLeft()+diff}, timeRect.bottomRight()};
+  const auto timeText = QDateTime::currentDateTime().time().toString("hh:mm:ss");
+
+	QPainter painter;
+  painter.begin(&baseImage);
+	QColor color = Qt::lightGray;
+	color.setAlphaF(0.33);
+	painter.fillRect(timeRect, color);
+
+	painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
+  painter.setRenderHint(QPainter::RenderHint::Antialiasing, true);
+
+	QFont font = painter.font();
+	font.setBold(true);
+  font.setPixelSize(m_timeTextSize);
+  painter.setFont(font);
+
+  painter.setPen(Qt::white);
+  painter.drawText(textRect, timeText);
+
+	if (m_drawFrame)
+	{
+	 	QPolygon poly(5);
+    painter.setPen(QColor(Qt::green));
+  	for (int i = 0; i < 5; ++i)
+  	{
+    	poly.setPoint(0, m_timePosition.x()+i, m_timePosition.y()+i);
+    	poly.setPoint(1, m_timePosition.x()+ timeRect.width()-i, m_timePosition.y()+i);
+    	poly.setPoint(2, m_timePosition.x()+ timeRect.width()-i, m_timePosition.y()+ timeRect.height()-i);
+    	poly.setPoint(3, m_timePosition.x()+i, m_timePosition.y()+ timeRect.height()-i);
+    	poly.setPoint(4, m_timePosition.x()+i, m_timePosition.y()+i);
+    	painter.drawConvexPolygon(poly);
+  	}
+  }
+
+  painter.end();
+}
+
+//-----------------------------------------------------------------
 void CaptureDesktopThread::setCameraOverlayCompositionMode(COMPOSITION_MODE mode)
 {
 	m_compositionMode = mode;
@@ -808,7 +922,7 @@ void CaptureDesktopThread::takeScreenshot()
 	// capture desktop
   auto desktopPixmap = QApplication::screens().first()->grabWindow(0, m_geometry.x(), m_geometry.y(), m_geometry.width(), m_geometry.height());
 
-	if(m_pomodoro || m_cameraEnabled)
+	if(m_pomodoro || m_cameraEnabled || m_timeOverlayEnabled)
 	{
 	  auto desktopImage = desktopPixmap.toImage();
 
@@ -825,6 +939,9 @@ void CaptureDesktopThread::takeScreenshot()
 
 	  if(m_pomodoro)
 	    overlayPomodoro(desktopImage);
+
+    if(m_timeOverlayEnabled)
+      overlayTime(desktopImage);
 
 	  desktopPixmap = QPixmap::fromImage(desktopImage);
 	}

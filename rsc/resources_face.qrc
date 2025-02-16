@@ -1,0 +1,5 @@
+<RCC>
+  <qresource prefix="/Face">
+	<file compress="19" compress-algo="zstd">shape_predictor_68_face_landmarks.dat</file>
+  </qresource>
+</RCC>

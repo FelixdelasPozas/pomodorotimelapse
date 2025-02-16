@@ -37,6 +37,7 @@
 #include <QPainter>
 #include <QWaitCondition>
 
+
 // dLib
 #include <dlib/image_processing/frontal_face_detector.h>
 #include <dlib/image_processing/render_face_detections.h>
@@ -58,7 +59,7 @@ class CaptureDesktopThread
 	   */
 		enum class COMPOSITION_MODE : char
 		{
-			COPY,
+			COPY = 0,
 			PLUS,
 			MULTIPLY
 		};
@@ -68,7 +69,7 @@ class CaptureDesktopThread
 	   */
 		enum class POSITION : char
 		{
-			FREE,
+			FREE = 0,
 			TOP_LEFT,
 			TOP_CENTER,
 			TOP_RIGHT,
@@ -85,7 +86,7 @@ class CaptureDesktopThread
 	   */
 		enum class MASK : char
 		{
-			GENTLEMAN,
+			GENTLEMAN = 0,
 			ANONYMOUS,
 			PIRATE,
 			AWESOME,
@@ -158,12 +159,13 @@ class CaptureDesktopThread
 		void setCameraOverlayPosition(const QPoint &point);
 
     /** \brief Sets the position where the camera picture will be placed in the captured desktop image.
-     * \param[in] position
+		 * \param[in] position POSITION value.
      *
      */
 		void setCameraOverlayPosition(const POSITION position);
 
     /** \brief Sets the composition mode of the camera picture.
+		 * \param[in] mode Overlay mode.		
      *
      */
 		void setCameraOverlayCompositionMode(const COMPOSITION_MODE mode);
@@ -175,15 +177,34 @@ class CaptureDesktopThread
 		void setStatsOverlayPosition(const QPoint &point);
 
 		/** \brief Sets the position where the statistics will be places in the captured desktop image.
-		 * \param[in] position
+		 * \param[in] position POSITION value.
 		 *
 		 */
 		void setStatsOverlayPosition(const POSITION position);
 
     /** \brief Sets the composition mode of the statistics.
+		 * \param[in] mode Overlay mode.		
      *
      */
     void setStatisticsOverlayCompositionMode(const COMPOSITION_MODE mode);
+
+		/** \brief Enables/Disables the time overlay.
+		 * \param[in] value True to enable and false otherwise. 
+		 *
+		 */
+		void setTimeOverlayEnabled(bool value);
+
+    /** \brief Sets the position where the time overlay picture will be placed in the captured desktop image.
+     * \param[in] point top-left point of the area to put the picture.
+     *
+     */
+		void setTimeOverlayPosition(const QPoint &point);
+
+    /** \brief Sets the position where the time overlay will be placed in the captured desktop image.
+		 * \param[in] position POSITION value.
+     *
+     */
+		void setTimeOverlayPosition(const POSITION position);
 
     /** \brief Enables/disables the frame that shows the position of the camera and pomodoro overlays.
      *
@@ -205,6 +226,11 @@ class CaptureDesktopThread
      *
      */
 		QPoint getStatsOverlayPosition() const;
+
+    /** \brief Returns the top-left point of the time overlay area.
+     *
+     */
+		QPoint getTimeOverlayPosition() const;
 
 		virtual void run() final;
 
@@ -239,11 +265,22 @@ class CaptureDesktopThread
 		 */
 		void setTrackFace(bool enabled);
 
+		/** \brief Enables/disables face coordinates smoothing.
+		 * \param[in] enabled boolean value.
+		 */
+		void setTrackFaceSmooth(bool enabled);
+
 		/** \brief Enable/disable the conversion of the camera picture to ASCII art.
 		 * \param[in] enabled boolean value.
 		 *
 		 */
 		void setCameraAsASCII(bool enabled);
+
+		/** \brief Sets the time overlay text size. 
+		 * \param[in] value Pixel size of time overlay font. 
+		 *
+		 */
+		void setTimeOverlayTextSize(int value);
 
     struct Mask
     {
@@ -300,6 +337,12 @@ class CaptureDesktopThread
      */
 		void overlayPomodoro(QImage &baseImage);
 
+		/** \brief Overlays the time over the desktop captured image. 
+     * \param[inout] baseImage captured desktop image.		
+		 *
+		 */
+		void overlayTime(QImage &baseImage);
+
     /** \brief Draws a single pomodoro unit.
      * \param[inout] painter painter object reference.
      * \param[in] color color of the unit.
@@ -321,7 +364,7 @@ class CaptureDesktopThread
      * \param[in] cameraImage camera image.
 		 *
 		 */
-		void drawFrame(QImage &cameraImage);
+		void drawCameraImageFrame(QImage &cameraImage);
 
 		/** \brief Centers the face in the picture.
      * \param[in] cameraImage camera image.
@@ -364,16 +407,20 @@ class CaptureDesktopThread
 		cv::VideoCapture m_camera;               /** opencv camera                                                 */
 		cv::Mat          m_frame;                /** opencv frame.                                                 */
 		bool             m_cameraEnabled;        /** true if camera capture is enabled.                            */
+		bool             m_timeOverlayEnabled;   /** true if time overaly is enabled.                              */
 		QPoint           m_cameraPosition;       /** position of the camera overlay                                */
-		QPoint           m_statsPosition;        /** position of the statistics overlay                            */
+		QPoint           m_statsPosition;        /** position of the statistics overlay.                           */
+		QPoint           m_timePosition;         /** position of the time overlay.                                 */
 		COMPOSITION_MODE m_compositionMode;      /** composition mode for the camera overlay.                      */
+		COMPOSITION_MODE m_statisticsMode;       /** composition mode for the statistics overlay.                  */
 		bool             m_drawFrame;            /** true to paint a frame of the overlayed camera and statistics. */
 		MASK             m_mask;                 /** mask to paint in the camera image.                            */
 		bool             m_trackFace;            /** true to track and center the face in the camera picture.      */
-		COMPOSITION_MODE m_statisticsMode;       /** composition mode for the statistics overlay.                  */
+		bool             m_trackFaceSmooth;      /** true to smooth face coordinates and false otherwise.          */
 		bool             m_ASCII_Art;            /** true to convert the camera image to ASCII art.                */
 		int              m_ramp;                 /** index of the character ramp used in the ASCII art.            */
 		int              m_rampCharSize;         /** Qt font size of the characters used in the ramp.              */
+		int              m_timeTextSize;         /** Pixel size of Qt font used in time overlay text.              */
 
 		std::shared_ptr<Pomodoro> m_pomodoro;    /** pomodoro shared pointer */
 

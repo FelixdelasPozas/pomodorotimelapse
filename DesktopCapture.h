@@ -24,6 +24,7 @@
 #include <CaptureDesktopThread.h>
 #include <Resolutions.h>
 #include <PomodoroStatistics.h>
+#include <Utils.h>
 #include "ui_MainWindow.h"
 
 // Qt
@@ -247,6 +248,11 @@ class DesktopCapture
      */
     void onFaceTrackingChanged(int status);
 
+		/** \brief Activates/Deactivates face coordinates smoothing. 
+		 * \param[in] value QCheckbox value.
+		 */
+		void onFaceCoordinatesSmoothChanged(int value);
+
     /** \brief Updates the conversion to ASCII art of the camera picture.
      * \param[in] bool check status value.
      *
@@ -263,6 +269,18 @@ class DesktopCapture
      *
      */
     void onPomodoroPositionChanged(int index);
+
+    /** \brief Updates the position of the time overlay.
+     * \param[in] index combo box index.
+     *
+     */
+    void onTimePositionChanged(int index);
+
+		/** \brief Updates the time overlay text size. 
+		 * \param[in] value Pixel size value.
+		 * 
+		 */
+		void onTimeTextSizeChanged(int value);
 
     /** \brief Updates the camera composition mode.
      * \param[in] index composition combo box index.
@@ -293,15 +311,10 @@ class DesktopCapture
 	   */
 	  QString timeToText(const QTime &time) const;
 
-	  /** \brief Loads the configuration from the ini file.
+	  /** \brief Applies the configuration to the UI.
 	   *
 	   */
-	  void loadConfiguration();
-
-	  /** \brief Saves the configuration to the ini file.
-	   *
-	   */
-	  void saveConfiguration();
+	  void applyConfiguration();
 
 	  /** \brief Setups the camera resolutions and launches the probe resolutions thread if necessary.
 	   *
@@ -343,6 +356,13 @@ class DesktopCapture
      */
 	  QPoint computeNewStatsPosition(const QPoint &dragPoint = QPoint(0,0), const QPoint &point = QPoint(0,0));
 
+    /** \brief Computes the position of the time overlayin the captured image.
+     * \param[in] dragPoint initial drag point.
+     * \param[in] point actual drag point.
+     *
+     */
+		QPoint computeNewTimePosition(const QPoint &dragPoint = QPoint(0,0), const QPoint &point = QPoint(0,0));
+
 	  /** \brief Returns the geometry of the captured area.
 	   *
 	   */
@@ -363,21 +383,18 @@ class DesktopCapture
 	   */
 	  void recomputeOverlaysPositions();
 
-		/** \brief Returns the appropiate QSettings object depending on the presence of the INI file.
+		/** \brief Helper method that returns the list of monitors as string.
 		 *
 		 */
-		std::unique_ptr<QSettings> applicationSettings() const;
+		QStringList detectedMonitors() const;
 
 		QStringList                           m_cameraResolutionsNames; /** camera resolution strings.                   */
 		ResolutionList                        m_cameraResolutions;      /** camera resolution structs.                   */
-		int                                   m_selectedResolution;     /** selected camera resolution position.         */
 		std::shared_ptr<Pomodoro>             m_pomodoro;               /** pomodoro object.                             */
 		QPixmap                               m_desktopCapture;         /** pixmap of captured desktop.                  */
 		std::unique_ptr<QSystemTrayIcon>      m_trayIcon;               /** tray icon object.                            */
 		std::unique_ptr<CaptureDesktopThread> m_captureThread;          /** capture and composition thread.              */
 		QMutex                                m_mutex;                  /** mutex for data integrity.                    */
-		QPoint                                m_PIPposition;            /** position of camera image.                    */
-		QPoint                                m_statsPosition;          /** position of pomodoro statistics.             */
 		QTimer                                m_timer;                  /** timer.                                       */
 		unsigned long                         m_secuentialNumber;       /** frame number.                                */
 		bool                                  m_started;                /** true if capturing, false otherwise.          */
@@ -393,6 +410,8 @@ class DesktopCapture
 		QAction *m_menuChangeTask;    /** tray menu change pomodoro task.     */
 		QAction *m_menuAbout;         /** tray menu about application.        */
 		QAction *m_menuQuit;          /** tray menu quit application.         */
+
+		Configuration m_config; /** application configuration struct. */
 };
 
 #endif // DESKTOP_CAPTURE_H_

@@ -22,16 +22,89 @@
 
 // Qt
 #include <QLabel>
+#include <QPoint>
+#include <QTime>
+
+class QSettings;
+class QShowEvent;
 
 // C++
 #include <vector>
+
+struct Configuration
+{
+  bool captureEnabled = true;                    /** true to capture desktop and false otherwise. */
+  QTime captureTime = QTime(0, 0, 30);           /** time between captures. */
+  bool captureVideo = true;                      /** true to capture video, capture screenshots otherwise. */
+  int captureVideoFPS = 15;                      /** frames per second when capturing video. */
+  bool captureAnimateIcon = true;                /** true to animate the tray when when doing a frame/screenshot capture, false otherwise. */
+  int captureMonitor = -1;                       /** -1 to capture all displays, otherwise index of the monitor to capture. */
+  QString captureOutputDir;                      /** directory to store captures. */
+  int captureScale = 0;                          /** index of the scale combo box. */
+  QStringList monitors;                          /** detected monitors list. */
+  QByteArray appGeometry;                        /** application geometry. */
+  QByteArray appState;                           /** application state. */
+  bool cameraEnabled = false;                    /** true if camera enabled and false otherwise. */
+  QStringList cameraResolutions;                 /** list of detected camera resolutions. */
+  int cameraResolution;                          /** index of selected camera resolution in the resolutions list. */
+  QPoint cameraOverlayPosition = QPoint{0, 0};   /** coordinates of the camera overlay in the output image. */
+  int cameraOverlayCompositionMode = 0;          /** index in the list of composition modes of the combobox for the camera overlay. */
+  int cameraOverlayFixedPosition = 0;            /** index in the list of fixed positions for the camera overlay. */
+  int cameraMask = 0;                            /** index in the list of masks. */
+  bool cameraCenterFace = false;                 /** true to track and center the face int he camera image, false otherwise. */
+  bool cameraFaceSmooth = true;                  /** smooth face coordinates processing. */
+  bool cameraASCIIart = false;                   /** true to convert tha camera image to ASCII art, false otherwise. */
+  bool pomodoroEnabled = true;                   /** true to use pomodoros and false otherwise. */
+  QTime pomodoroTime = QTime(0, 25, 0);          /** time of pomodoro. */
+  QTime pomodoroShortBreak = QTime(0, 5, 0);     /** time of pomodoro short break. */
+  QTime pomodoroLongBreak = QTime(0, 15, 0);     /** time of pomodoro long break; */
+  int pomodorosBeforeBreak = 4;                  /** number of pomodoros after a long break. */
+  bool pomodoroAnimatedIcon = true;              /** true to animate the tray icon when doing a pomodoro, false otherwise. */
+  bool pomodoroUseSounds = true;                 /** true to use sounds when doing a pomodoro, false otherwise. */
+  bool pomodoroSoundTicTac = false;              /** true to use continuous tic-tac sounds when doing a pomodoro, false otherwise. */
+  int pomodorosNumber = 12;                      /** number of pomodoros in a session. */
+  bool pomodoroOverlay = true;                   /** true to overlay the pomodoro statistics in the output image. */
+  QString pomodoroTask = "Unknown";              /** name of the last pomodoro task. */
+  QPoint pomodoroOverlayPosition = QPoint{0, 0}; /** coordinates of the pomodoro overlay in the output image. */
+  int pomodoroOverlayFixedPosition = 0;          /** index in the list of fixed positions for the pomodoro overlay. */
+  int pomodoroOverlayCompositionMode = 0;        /** index in the list of composition modes of the combobox for the pomodoro overlay. */
+  int cameraASCIIArtRamp = 0;                    /** index the ASCII ramp list for the ramp to use. */
+  int cameraASCIIArtCharacterSize = 8;           /** size of the font in the ASCII art image. */
+  bool timeOverlay = false;                      /** true to overlay the time on the output image. */
+  QPoint timeOverlayPosition = QPoint{0, 0};     /** coordinates of the time overlay in the outout image. */
+  int timeOverlayFixedPosition = 0;              /** index in the list of fixed positions for the time overlay. */
+  int timeOverlayTextSize = 40;                  /** size of the font to use in the time overlay. */
+
+  /** \brief Helper method to load the configuration.
+   *
+   */
+  void load();
+
+  /** \brief Helper method to save the configuration.
+   *
+   */
+  void save();
+};
+
+
+/** \brief Returns the appropiate QSettings object depending on the presence of the INI file.
+ *
+ */
+std::unique_ptr<QSettings> applicationSettings();
+
+/** \brief Helper method that computes the QRect of the time overlay.
+ * \param[in] pixelSize Pixel size of the font. 
+ * \param[in] p left-top point of the position to compute rect.
+ *
+ */
+QRect computeTimeOverlayRect(int pixelSize, const QPoint &p);
 
 /** \class ClickableHoverLabel
  * \brief ClickableLabel subclass that changes the mouse cursor when hovered.
  *
  */
 class ClickableHoverLabel
-: public QLabel
+    : public QLabel
 {
     Q_OBJECT
   public:
@@ -107,6 +180,12 @@ class CircularBuffer
      *
      */
     T value() const;
+
+    /** \brief Clears the buffers.
+     *
+     */
+    void clear()
+    { init = false; }
 
   private:
     const int BUFFER_SIZE = 5;

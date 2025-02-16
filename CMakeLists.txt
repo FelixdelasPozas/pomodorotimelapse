@@ -47,11 +47,11 @@ include_directories(
   ${CMAKE_CURRENT_BINARY_DIR}  # For wrap/ui files
   )
 
-#set(CMAKE_CXX_FLAGS " -Wall -Wno-deprecated -std=c++17 -mwindows")
-set(CMAKE_CXX_FLAGS " -Wall -Wno-deprecated -std=c++17 -mconsole -flarge-source-files")
+set(CMAKE_CXX_FLAGS " -Wall -Wno-deprecated -std=c++17 -mwindows -flarge-source-files")
 
 qt6_add_resources(RESOURCES
 	rsc/resources.qrc
+  rsc/resources_face.qrc
 	)
 
 qt6_wrap_ui(CORE_UI
