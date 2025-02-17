@@ -39,6 +39,7 @@
 #include <QMessageBox>
 #include <QSettings>
 #include <QInputDialog>
+#include <QColorDialog>
 #include <QFileDialog>
 
 // TEST & TIME
@@ -217,21 +218,31 @@ void DesktopCapture::applyConfiguration()
 
   m_trackFace->setChecked(m_config.cameraCenterFace);
 	m_maskSmooth->setChecked(m_config.cameraFaceSmooth);
-	m_maskSmooth->setEnabled(m_config.cameraMask != CaptureDesktopThread::MASKS.size());
+	m_maskSmooth->setEnabled(m_config.cameraMask != CaptureDesktopThread::MASKS.size() && m_config.cameraEnabled);
 
   m_ASCIIart->setChecked(m_config.cameraASCIIart);
 
 	m_screenshotAnimateTray->setChecked(m_config.captureAnimateIcon);
 
   if (!m_config.cameraResolutions.isEmpty())
+	{
     m_cameraResolutionsNames = m_config.cameraResolutions;
-
-	m_cameraResolutionsNames.removeAll("");
+		m_cameraResolutionsNames.removeAll("");
+		m_cameraResolutionComboBox->clear();
+		m_cameraResolutionComboBox->insertItems(0, m_cameraResolutionsNames);
+	}
 
 	m_timeSize->setValue(m_config.timeOverlayTextSize);
 	m_timeGroupBox->setChecked(m_config.timeOverlay);
   m_timePositionComboBox->insertItems(0, POSITION_NAMES);	
 	m_timePositionComboBox->setCurrentIndex(m_config.timeOverlayFixedPosition);
+	m_drawBorder->setChecked(m_config.timeOverlayTextBorder);
+	m_drawBackground->setChecked(m_config.timeOverlayBackground);
+
+	QPixmap icon(QSize(64,64));
+  icon.fill(m_config.timeOverlayTextColor);
+  m_textColorButton->setIcon(QIcon(icon));
+  m_textColorButton->setProperty("iconColor", m_config.timeOverlayTextColor.name(QColor::HexArgb));
 
 	computeVideoTime();
 }
@@ -340,6 +351,15 @@ void DesktopCapture::connectSignals() const
 
 	connect(m_timeSize, SIGNAL(valueChanged(int)), 
 	        this,       SLOT(onTimeTextSizeChanged(int)));
+
+	connect(m_drawBorder, SIGNAL(stateChanged(int)), 
+	        this,         SLOT(onTimeTextBorderChanged(int)));
+
+	connect(m_drawBackground, SIGNAL(stateChanged(int)), 
+	        this,             SLOT(onTimeBackgroundChanged(int)));
+
+	connect(m_textColorButton, SIGNAL(clicked()), 
+	        this,              SLOT(onTimeTextColorButtonClicked()));
 }
 
 //-----------------------------------------------------------------
@@ -355,9 +375,14 @@ void DesktopCapture::setupCameraResolutions()
 		m_cameraEnabled->setChecked(false);
 		m_cameraEnabled->blockSignals(false);
 		m_cameraResolutions.clear();
+		m_cameraResolutionComboBox->clear();
 		m_cameraResolutionComboBox->insertItem(0, QString("No cameras detected."));
 		m_cameraResolutionComboBox->setEnabled(false);
 		m_cameraEnabled->setEnabled(false);
+
+		m_config.cameraResolution = 0;
+		m_config.cameraResolutions.clear();
+		m_config.cameraEnabled = false;
 	}
 	else
 	{
@@ -383,6 +408,17 @@ void DesktopCapture::setupCameraResolutions()
 
 				m_cameraResolutions << getResolution(width, height);
 			}
+
+			m_cameraResolutionComboBox->clear();
+			m_cameraResolutionComboBox->insertItems(0, m_cameraResolutionsNames);
+			m_cameraResolutionComboBox->setCurrentIndex(m_config.cameraResolution);
+
+			if (m_captureThread)
+			{
+				m_captureThread->setCameraResolution(m_cameraResolutions.at(m_config.cameraResolution));
+				m_captureThread->setCameraEnabled(true);
+			}
+
 		}
 		else
 		{
@@ -398,6 +434,7 @@ void DesktopCapture::setupCameraResolutions()
 				for (auto resolution: m_cameraResolutions)
 					m_cameraResolutionsNames << getResolutionAsString(resolution);
 
+				m_cameraResolutionComboBox->clear();
 				m_cameraResolutionComboBox->insertItems(0, m_cameraResolutionsNames);
 				m_cameraResolutionComboBox->setCurrentIndex(m_cameraResolutionsNames.size() / 2);
 
@@ -406,6 +443,10 @@ void DesktopCapture::setupCameraResolutions()
 					m_captureThread->setCameraResolution(m_cameraResolutions.at(m_config.cameraResolution));
 					m_captureThread->setCameraEnabled(true);
 				}
+
+				m_config.cameraEnabled = true;
+				m_config.cameraResolutions = m_cameraResolutionsNames;
+				m_config.cameraResolution = m_cameraResolutionsNames.size() / 2;
 			}
 			else
 			{
@@ -416,15 +457,23 @@ void DesktopCapture::setupCameraResolutions()
 
 				if (m_captureThread)
 					m_captureThread->setCameraEnabled(false);
+
+				m_config.cameraResolution = 0;
+				m_config.cameraResolutions.clear();
+				m_config.cameraEnabled = false;
 			}
 		}
 	}
 
-  m_cameraResolutionComboBox->setCurrentIndex(std::min(m_config.cameraResolution, m_cameraResolutionComboBox->count()));
-	m_cameraResolutionComboBox->setEnabled(m_cameraEnabled->isChecked());
+	if (m_captureThread)
+	{
+		m_captureThread->setCameraEnabled(m_config.cameraEnabled);
 
-	if (m_captureThread && m_captureGroupBox->isChecked())
+		if(!m_cameraResolutions.isEmpty())
+			m_captureThread->setCameraResolution(m_cameraResolutions.at(m_config.cameraResolution));
+
 		m_captureThread->resume();
+	}
 }
 
 //-----------------------------------------------------------------
@@ -551,6 +600,57 @@ void DesktopCapture::onRampCharSizeChanged(int size)
 }
 
 //-----------------------------------------------------------------
+void DesktopCapture::onTimeTextBorderChanged(int value)
+{
+	m_config.timeOverlayTextBorder = (value == Qt::Checked);
+
+	if(m_captureThread)
+		m_captureThread->setTimeOverlayTextBorder(m_config.timeOverlayTextBorder);
+}
+
+//-----------------------------------------------------------------
+void DesktopCapture::onTimeBackgroundChanged(int value)
+{
+	m_config.timeOverlayBackground = (value == Qt::Checked);
+
+	if(m_captureThread)
+		m_captureThread->setTimeOverlayDrawBackground(m_config.timeOverlayBackground);
+}
+
+//-----------------------------------------------------------------
+void DesktopCapture::onTimeTextColorButtonClicked()
+{
+	auto button = qobject_cast<QToolButton *>(sender());
+  auto color  = QColor(button->property("iconColor").toString());
+
+  QColorDialog dialog;
+  dialog.setCurrentColor(color);
+  dialog.setWindowIcon(QIcon(":/DesktopCapture/application.svg"));
+
+  if(dialog.exec() != QColorDialog::Accepted) return;
+
+	const auto selectedColor = dialog.selectedColor();
+  QPixmap icon(QSize(64,64));
+  icon.fill(selectedColor);
+  button->setIcon(QIcon(icon));
+  button->setProperty("iconColor", selectedColor.name(QColor::HexArgb));
+
+	m_config.timeOverlayTextColor = selectedColor;
+
+	if(m_captureThread)
+		m_captureThread->setTimeOverlayTextColor(selectedColor);
+}
+
+//-----------------------------------------------------------------
+void DesktopCapture::onTimeOverlayStateChanged(bool value)
+{
+	m_config.timeOverlay = value;
+
+	if(m_captureThread)
+		m_captureThread->setTimeOverlayEnabled(m_config.timeOverlay);
+}
+
+//-----------------------------------------------------------------
 void DesktopCapture::onCameraStateChanged(bool enabled)
 {
 	m_config.cameraEnabled = enabled;
@@ -563,7 +663,11 @@ void DesktopCapture::onCameraStateChanged(bool enabled)
 		setupCameraResolutions();
 
 	if (m_captureThread)
+	{
+		if(!m_cameraResolutions.isEmpty())
+			m_captureThread->setCameraResolution(m_cameraResolutions.at(m_config.cameraResolution));
 		m_captureThread->setCameraEnabled(enabled);
+	}
 }
 
 //-----------------------------------------------------------------
@@ -701,6 +805,7 @@ void DesktopCapture::setupCaptureThread()
 	m_captureThread->setRamp(m_rampCombo->currentIndex());
 	m_captureThread->setRampCharSize(m_rampCharacterSize->value());
 	m_captureThread->setCameraAsASCII(m_ASCIIart->isChecked());
+	m_captureThread->setCameraEnabled(m_config.cameraEnabled);
 
 	if(m_cameraPositionComboBox->currentIndex() != 0)
 	{
@@ -728,8 +833,8 @@ void DesktopCapture::setupCaptureThread()
 	    m_captureThread->setStatsOverlayPosition(m_config.pomodoroOverlayPosition);
 	}
 
-	m_captureThread->setTimeOverlayEnabled(m_config.timeOverlay);
 	m_captureThread->setTimeOverlayTextSize(m_config.timeOverlayTextSize);
+	m_captureThread->setTimeOverlayEnabled(m_config.timeOverlay);
 	if (m_timePositionComboBox->currentIndex() != 0)
 	{
 		const auto position = static_cast<CaptureDesktopThread::POSITION>(m_timePositionComboBox->currentIndex());
@@ -738,6 +843,10 @@ void DesktopCapture::setupCaptureThread()
 	}
 	else
 		m_captureThread->setTimeOverlayPosition(m_config.timeOverlayPosition);
+
+	m_captureThread->setTimeOverlayDrawBackground(m_config.timeOverlayBackground);
+	m_captureThread->setTimeOverlayTextBorder(m_config.timeOverlayTextBorder);
+	m_captureThread->setTimeOverlayTextColor(m_config.timeOverlayTextColor);
 
 	connect(m_captureThread.get(), SIGNAL(imageAvailable()),
 	        this,                  SLOT(renderImage()), Qt::QueuedConnection);
@@ -771,10 +880,10 @@ void DesktopCapture::onDirButtonPressed()
 //-----------------------------------------------------------------
 void DesktopCapture::onCameraResolutionChanged(int index)
 {
+	m_config.cameraResolution = index;
+
 	if (m_captureThread)
 	{
-		m_config.cameraResolution = index;
-
 		m_captureThread->setCameraResolution(m_cameraResolutions.at(index));
 		const auto position = m_cameraPositionComboBox->currentIndex();
 		if(position != 0)
@@ -1551,7 +1660,7 @@ void DesktopCapture::onMaskIndexChanged(int value)
   const auto mask = static_cast<CaptureDesktopThread::MASK>(value);
   m_captureThread->setMask(mask);
 	m_config.cameraMask = value;
-	m_maskSmooth->setEnabled(m_config.cameraMask != CaptureDesktopThread::MASKS.size());
+	m_maskSmooth->setEnabled(m_config.cameraMask != CaptureDesktopThread::MASKS.size() && m_config.cameraEnabled);
 }
 
 //-----------------------------------------------------------------

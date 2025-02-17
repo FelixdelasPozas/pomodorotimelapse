@@ -304,6 +304,30 @@ class DesktopCapture
 		 */
 		void onRampCharSizeChanged(int size);
 
+		/** \brief Updates the drawing of the text border in the time overlay.
+		 * \param[in] value Checkbox state value.
+		 *
+		 */
+		void onTimeTextBorderChanged(int value);
+
+		/** \brief Updates the drawing of the background in the time overlay.
+		 * \param[in] value Checkbox state value.
+		 *
+		 */
+		void onTimeBackgroundChanged(int value);
+
+		/** \brief Sets the color of the text in the time overlay.
+		 * \param[in] value Checkbox state value.
+		 *
+		 */
+		void onTimeTextColorButtonClicked();
+
+		/** \brief Enable/disable the time overlay. 
+		 * \param[in] value Boolean value.
+		 *
+		 */
+		void onTimeOverlayStateChanged(bool value);
+
 	private:
 	  /** \brief Returns the time in text.
 	   * \param[in] time

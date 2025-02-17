@@ -40,6 +40,7 @@
 #include <QDir>
 #include <QScreen>
 #include <QTemporaryFile>
+#include <QGraphicsPixmapItem>
 #include <QDebug>
 
 // dLib
@@ -84,6 +85,9 @@ CaptureDesktopThread::CaptureDesktopThread(int monitor, Resolution cameraResolut
 , m_ramp           {0}
 , m_rampCharSize   {10}
 , m_timeTextSize   {40}
+, m_timeDrawBorder {true}
+, m_timeBackground {true}
+, m_timeTextColor  {QColor(255,255,255)}
 , m_pomodoro       {nullptr}
 {
 	setMonitor(monitor);
@@ -336,6 +340,24 @@ void CaptureDesktopThread::setCameraAsASCII(bool enabled)
 void CaptureDesktopThread::setTimeOverlayTextSize(int value)
 {
   m_timeTextSize = value;
+}
+
+//-----------------------------------------------------------------
+void CaptureDesktopThread::setTimeOverlayTextBorder(bool value)
+{
+  m_timeDrawBorder = value;
+}
+
+//-----------------------------------------------------------------
+void CaptureDesktopThread::setTimeOverlayDrawBackground(bool value)
+{
+  m_timeBackground = value;
+}
+
+//-----------------------------------------------------------------
+void CaptureDesktopThread::setTimeOverlayTextColor(const QColor &color)
+{
+  m_timeTextColor = color;
 }
 
 //-----------------------------------------------------------------
@@ -865,15 +887,17 @@ void CaptureDesktopThread::overlayPomodoro(QImage &image)
 void CaptureDesktopThread::overlayTime(QImage &baseImage)
 {
   const auto timeRect = computeTimeOverlayRect(m_timeTextSize, m_timePosition);
-  const QPoint diff{static_cast<int>(timeRect.width()*0.1), static_cast<int>(timeRect.height()*0.05)};
-  const auto textRect = QRect{QPoint{timeRect.topLeft()+diff}, timeRect.bottomRight()};
   const auto timeText = QDateTime::currentDateTime().time().toString("hh:mm:ss");
 
 	QPainter painter;
   painter.begin(&baseImage);
-	QColor color = Qt::lightGray;
-	color.setAlphaF(0.33);
-	painter.fillRect(timeRect, color);
+
+  if(m_timeBackground)
+  {
+    QColor color = Qt::lightGray;
+    color.setAlphaF(0.33);
+    painter.fillRect(timeRect, color);
+  }
 
 	painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
   painter.setRenderHint(QPainter::RenderHint::Antialiasing, true);
@@ -883,10 +907,33 @@ void CaptureDesktopThread::overlayTime(QImage &baseImage)
   font.setPixelSize(m_timeTextSize);
   painter.setFont(font);
 
-  painter.setPen(Qt::white);
-  painter.drawText(textRect, timeText);
+  if(m_timeDrawBorder)
+  {
+    const auto invertedColor = QColor{m_timeTextColor.red() ^ 0xFF, m_timeTextColor.green() ^ 0xFF, m_timeTextColor.blue() ^ 0xFF};
+    QPixmap tempPix(QSize{timeRect.width(), timeRect.height()});
+    tempPix.fill(Qt::transparent);
+    QPainter newPainter(&tempPix);
+    newPainter.setCompositionMode(QPainter::CompositionMode_SourceOver);
+    newPainter.setPen(QColor{m_timeTextColor});
+    newPainter.setFont(font);
+    newPainter.drawText(tempPix.rect(), Qt::AlignCenter, timeText);
+    // constructing temporal object only to get path for border.
+    QGraphicsPixmapItem tempItem(tempPix);
+    tempItem.setShapeMode(QGraphicsPixmapItem::MaskShape);
+    const auto path = tempItem.shape();
 
-	if (m_drawFrame)
+    QPen ipen(invertedColor, m_timeTextSize*0.2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
+    newPainter.setPen(ipen);
+    newPainter.drawPath(path);
+    newPainter.end();
+
+    painter.drawImage(timeRect.topLeft(), tempPix.toImage());
+  }
+
+  painter.setPen(QColor{m_timeTextColor});
+  painter.drawText(timeRect, Qt::AlignCenter, timeText);
+
+  if (m_drawFrame)
 	{
 	 	QPolygon poly(5);
     painter.setPen(QColor(Qt::green));

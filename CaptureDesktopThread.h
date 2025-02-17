@@ -282,6 +282,25 @@ class CaptureDesktopThread
 		 */
 		void setTimeOverlayTextSize(int value);
 
+		/** \brief Enables or disables the drawing of the text border in the time overlay.
+		 * \param[in] value True to draw and false otherwise. 
+		 *
+		 */
+		void setTimeOverlayTextBorder(bool value);
+
+		/** \brief Enables or disables the drawing of the background in the time overlay.
+		 * \param[in] value True to draw and false otherwise. 
+		 *
+		 */
+		void setTimeOverlayDrawBackground(bool value);
+
+		/** \brief Sets the color of the text in the time overlay.
+		 * \param[in] color QColor object.
+		 *
+		 */
+		void setTimeOverlayTextColor(const QColor &color);
+
+
     struct Mask
     {
       QString name;
@@ -421,6 +440,9 @@ class CaptureDesktopThread
 		int              m_ramp;                 /** index of the character ramp used in the ASCII art.            */
 		int              m_rampCharSize;         /** Qt font size of the characters used in the ramp.              */
 		int              m_timeTextSize;         /** Pixel size of Qt font used in time overlay text.              */
+		bool             m_timeDrawBorder;       /** true to draw the text border in the time overlay.             */
+		bool             m_timeBackground;       /** true to draw the background in the time overlay.              */
+		QColor           m_timeTextColor;        /** color of the text in the time overlay.                        */
 
 		std::shared_ptr<Pomodoro> m_pomodoro;    /** pomodoro shared pointer */
 

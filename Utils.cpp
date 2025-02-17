@@ -72,6 +72,9 @@ const QString TIME_OVERLAY_POSITION              = "Time Overlay Position";
 const QString TIME_OVERLAY_COMPOSITION_MODE      = "Time Overlay Composition Mode";
 const QString TIME_OVERLAY_FIXED_POSITION        = "Time Overlay Fixed Position";
 const QString TIME_OVERLAY_TEXT_SIZE             = "Time Overlay Text Size";
+const QString TIME_OVERLAY_TEXT_COLOR            = "Time Overlay Text Color";
+const QString TIME_OVERLAY_TEXT_BORDER           = "Time Overlay Text Border";
+const QString TIME_OVERLAY_BACKGROUND            = "Time Overlay Background";
 
 const QString INI_FILENAME{"DesktopCapture.ini"};
 
@@ -160,6 +163,10 @@ void Configuration::load()
   timeOverlayPosition = settings->value(TIME_OVERLAY_POSITION, QPoint{0,0}).toPoint();
   timeOverlayFixedPosition = settings->value(TIME_OVERLAY_FIXED_POSITION, 0).toInt();
   timeOverlayTextSize = settings->value(TIME_OVERLAY_TEXT_SIZE, 40).toInt();
+  timeOverlayTextColor = settings->value(TIME_OVERLAY_TEXT_COLOR, QColor(255,255,255)).value<QColor>();
+  timeOverlayTextBorder = settings->value(TIME_OVERLAY_TEXT_BORDER, true).toBool();
+  timeOverlayBackground = settings->value(TIME_OVERLAY_BACKGROUND, true).toBool();
+
 }
 
 //-----------------------------------------------------------------------
@@ -212,7 +219,9 @@ void Configuration::save()
   settings->setValue(TIME_OVERLAY_POSITION, timeOverlayPosition);
   settings->setValue(TIME_OVERLAY_FIXED_POSITION, timeOverlayFixedPosition);
   settings->setValue(TIME_OVERLAY_TEXT_SIZE, timeOverlayTextSize);
-
+  settings->setValue(TIME_OVERLAY_TEXT_COLOR, timeOverlayTextColor);
+  settings->setValue(TIME_OVERLAY_TEXT_BORDER, timeOverlayTextBorder);
+  settings->setValue(TIME_OVERLAY_BACKGROUND, timeOverlayBackground);
 
 	settings->sync();
 }
@@ -223,7 +232,7 @@ std::unique_ptr<QSettings> applicationSettings()
   QDir applicationDir{QCoreApplication::applicationDirPath()};
   if(applicationDir.exists(INI_FILENAME))
   {
-    return std::make_unique<QSettings>(INI_FILENAME, QSettings::IniFormat);
+    return std::make_unique<QSettings>(applicationDir.absoluteFilePath(INI_FILENAME), QSettings::IniFormat);
   }
 
   return std::make_unique<QSettings>("Felix de las Pozas Alvarez", "DesktopCapture");
