@@ -56,9 +56,12 @@ The last version supporting Windows 7 & 8 is 1.2.0, you can download it [here](h
 > [!NOTE] 
 > Some screenshots are from the Windows 7 version. 
 
-Main dialog with the configuration options showing a preview of the captured area (whole 3840x1080 desktop) and the current position of the overlayed images (both camera and pomodoro statistics). Yeah, I always code with my monocle or my awesome face! ;-P
+Main dialog with the configuration options showing a preview of the captured area (whole 3840x1080 desktop) and the current position of the overlayed images (both camera and pomodoro statistics). Yeah, I always code with my monocle or my awesome face! ;-P (Screenshot from the Windows 7 version).
 
 ![interface](https://cloud.githubusercontent.com/assets/12167134/8397664/aa0231c2-1dd3-11e5-94dc-4c00ae932324.jpg)
+
+The application will produce a series of screenshots (like the next screenshot) or a webm vídeo.
+
 ![interface2](https://github.com/user-attachments/assets/ac6014ed-e977-4f51-800d-2456d40fb01c)
 
 Once started the tray icon will provide the information on the progression of the timer and the session.
@@ -69,11 +72,11 @@ If the pomodoro timer is being used the statistics can be shown and the current 
 
 ![statistics](https://cloud.githubusercontent.com/assets/12167134/8397665/aa08269a-1dd3-11e5-864e-ee362e6f52a0.jpg)
 
-All the options present in the main dialog to control the presence and position of the desktop widgets. 
+All the options present in the main dialog to control the presence and position of the desktop widgets (screenshot from the Windows 11 version). 
 
 ![options](https://github.com/user-attachments/assets/c26a8fa9-6c5d-4025-a1e9-75a7d3b12487)
 
-The three options of the ASCII art camera image.
+The three options of the ASCII art camera image (long, short and blocks ramps).
 
 ![asciiart](https://github.com/user-attachments/assets/8246580c-2c05-4cee-b91c-e980b143703c)
 
