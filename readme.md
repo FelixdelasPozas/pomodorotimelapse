@@ -75,7 +75,7 @@ All the options present in the main dialog to control the presence and position 
 
 The three options of the ASCII art camera image.
 
-![asciiart](https://github.com/user-attachments/assets/8246580c-2c05-4cee-b91c-e980b143703)
+![asciiart](https://github.com/user-attachments/assets/8246580c-2c05-4cee-b91c-e980b143703c)
 
 # Repository information
 
