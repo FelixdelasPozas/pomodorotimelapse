@@ -52,9 +52,14 @@ DesktopCapture is available for Windows 10 onwards. You can download the latest 
 The last version supporting Windows 7 & 8 is 1.2.0, you can download it [here](https://github.com/FelixdelasPozas/pomodorotimelapse/releases/tag/1.2.0).
 
 # Screenshots
+
+> [!NOTE] 
+> Some screenshots are from the Windows 7 version. 
+
 Main dialog with the configuration options showing a preview of the captured area (whole 3840x1080 desktop) and the current position of the overlayed images (both camera and pomodoro statistics). Yeah, I always code with my monocle or my awesome face! ;-P
 
 ![interface](https://cloud.githubusercontent.com/assets/12167134/8397664/aa0231c2-1dd3-11e5-94dc-4c00ae932324.jpg)
+![interface2](https://github.com/user-attachments/assets/ac6014ed-e977-4f51-800d-2456d40fb01c)
 
 Once started the tray icon will provide the information on the progression of the timer and the session.
 
@@ -63,6 +68,14 @@ Once started the tray icon will provide the information on the progression of th
 If the pomodoro timer is being used the statistics can be shown and the current task can be changed while in a session. 
 
 ![statistics](https://cloud.githubusercontent.com/assets/12167134/8397665/aa08269a-1dd3-11e5-864e-ee362e6f52a0.jpg)
+
+All the options present in the main dialog to control the presence and position of the desktop widgets. 
+
+![options](https://github.com/user-attachments/assets/c26a8fa9-6c5d-4025-a1e9-75a7d3b12487)
+
+The three options of the ASCII art camera image.
+
+![asciiart](https://github.com/user-attachments/assets/8246580c-2c05-4cee-b91c-e980b143703)
 
 # Repository information
 

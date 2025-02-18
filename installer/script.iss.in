@@ -29,12 +29,12 @@ WizardSmallImageFile=@CMAKE_SOURCE_DIR@/installer/smallimage.bmp
 [Files]
 Source: "DesktopCapture.exe"; DestDir: "{app}";
 Source: "*.dll"; DestDir: "{app}";
-Source: "audio/*.*"; DestDir: "{app}/audio/";
-Source: "mediaservice/*.*"; DestDir: "{app}/mediaservice/";
 Source: "iconengines/*.*"; DestDir: "{app}/iconengines/";
 Source: "imageformats/*.*"; DestDir: "{app}/imageformats/";
 Source: "platforms/*.*"; DestDir: "{app}/platforms/";
-Source: "shape_predictor_68_face_landmarks.dat"; DestDir: "{app}";
+Source: "multimedia/*.*"; DestDir: "{app}/platforms/";
+Source: "networkinformation/*.*"; DestDir: "{app}/platforms/";
+Source: "styles/*.*"; DestDir: "{app}/platforms/";
 
 [Run]
 Filename: "{app}\DesktopCapture.exe"; Description: "Launch Desktop Capture"; Flags: postinstall nowait skipifsilent unchecked
